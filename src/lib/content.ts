@@ -257,6 +257,7 @@ const FALLBACK_PLANS: Plan[] = [
   ...RUNNER_PLANS.map((p, i) => ({
     id: `fallback-runner-${i}`,
     category: 'runner' as const,
+    plan_category_id: null,
     name: p.name,
     name_display: p.name,
     badge: p.badge,
@@ -267,6 +268,7 @@ const FALLBACK_PLANS: Plan[] = [
   ...TRIATHLON_PLANS.map((p, i) => ({
     id: `fallback-tri-${i}`,
     category: 'triathlon' as const,
+    plan_category_id: null,
     name: p.name,
     name_display: p.name,
     badge: p.badge,
@@ -277,6 +279,7 @@ const FALLBACK_PLANS: Plan[] = [
   ...GROUP_PLANS.map((p, i) => ({
     id: `fallback-group-${i}`,
     category: 'group' as const,
+    plan_category_id: null,
     name: p.name,
     name_display: 'nameDisplay' in p ? (p.nameDisplay as string) : p.name,
     badge: p.badge,

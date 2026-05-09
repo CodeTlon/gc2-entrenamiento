@@ -27,8 +27,8 @@ async function getData(): Promise<{ posts: PostSummary[]; categories: Category[]
   if (catsRes.error) console.error('Categories fetch error:', catsRes.error)
 
   return {
-    posts: (postsRes.data ?? []) as PostSummary[],
-    categories: (catsRes.data ?? []) as Category[],
+    posts: (postsRes.data ?? []) as unknown as PostSummary[],
+    categories: (catsRes.data ?? []) as unknown as Category[],
   }
 }
 
