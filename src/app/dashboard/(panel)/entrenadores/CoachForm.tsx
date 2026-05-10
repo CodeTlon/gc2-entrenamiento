@@ -1,15 +1,31 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { createCoachAction, updateCoachAction, type CoachState } from '@/actions/coaches'
 import type { Coach } from '@/lib/content'
 import { TextField, TextArea, ImageUpload, StringList } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 
-export default function CoachForm({ coach }: { coach?: Coach }) {
+export default function CoachForm({
+  coach,
+  takenOrders = [],
+}: {
+  coach?: Coach
+  takenOrders?: number[]
+}) {
   const isEdit = !!coach
   const action = isEdit ? updateCoachAction.bind(null, coach!.id) : createCoachAction
   const [state, dispatch] = useActionState<CoachState, FormData>(action, undefined)
+  const [orderError, setOrderError] = useState<string | null>(null)
+
+  function handleOrderChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const val = parseInt(e.target.value, 10)
+    if (!isNaN(val) && takenOrders.includes(val)) {
+      setOrderError('Este orden ya está en uso por otro entrenador')
+    } else {
+      setOrderError(null)
+    }
+  }
 
   return (
     <form action={dispatch} className="space-y-6 max-w-3xl">
@@ -67,16 +83,24 @@ export default function CoachForm({ coach }: { coach?: Coach }) {
         placeholder="Ej: Plan personalizado de triatlón"
       />
 
-      <TextField
-        label="Orden de visualización"
-        name="display_order"
-        type="number"
-        defaultValue={String(coach?.display_order ?? 0)}
-        hint="Menor primero. 0, 1, 2…"
-      />
+      <div>
+        <label htmlFor="display_order" className="field-label">Orden de visualización</label>
+        <input
+          id="display_order"
+          name="display_order"
+          type="number"
+          defaultValue={String(coach?.display_order ?? 0)}
+          onChange={handleOrderChange}
+          className="field-input"
+        />
+        {orderError
+          ? <p className="text-red-400 text-xs mt-1.5">{orderError}</p>
+          : <p className="text-white/35 text-xs mt-1.5">Menor primero. 0, 1, 2…</p>
+        }
+      </div>
 
       <div className="flex items-center gap-4 pt-2">
-        <SaveButton label={isEdit ? 'Guardar cambios' : 'Crear entrenador'} />
+        <SaveButton label={isEdit ? 'Guardar cambios' : 'Crear entrenador'} disabled={!!orderError} />
         <SaveStatus state={state} />
       </div>
     </form>

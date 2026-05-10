@@ -3,14 +3,15 @@
 import { useFormStatus } from 'react-dom'
 import { Loader2, Check, AlertCircle } from 'lucide-react'
 
-export function SaveButton({ label = 'Guardar cambios' }: { label?: string }) {
+export function SaveButton({ label = 'Guardar cambios', disabled = false }: { label?: string; disabled?: boolean }) {
   const { pending } = useFormStatus()
+  const isDisabled = pending || disabled
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={isDisabled}
       className="btn btn--primary"
-      style={pending ? { opacity: 0.7, cursor: 'wait' } : undefined}
+      style={isDisabled ? { opacity: 0.7, cursor: isDisabled ? 'not-allowed' : 'wait' } : undefined}
     >
       {pending ? (
         <>
