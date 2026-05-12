@@ -26,6 +26,22 @@ const SLUG_TO_ENUM: Record<string, string> = {
   grupales: 'group',
 }
 
+async function checkDuplicateName(
+  supabase: SupabaseClient,
+  name: string,
+  plan_category_id: string | null,
+  excludeId?: string,
+): Promise<boolean> {
+  let query = supabase
+    .from('plans')
+    .select('id')
+    .eq('plan_category_id', plan_category_id ?? '')
+    .ilike('name', name)
+  if (excludeId) query = query.neq('id', excludeId)
+  const { data } = await query
+  return (data?.length ?? 0) > 0
+}
+
 async function checkDuplicateNameDisplay(
   supabase: SupabaseClient,
   name_display: string | null,
@@ -72,6 +88,8 @@ export async function createPlanAction(_prev: PlanState, formData: FormData): Pr
     const supabase = await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
+    const isDuplicateName = await checkDuplicateName(supabase, data.name, data.plan_category_id)
+    if (isDuplicateName) return { error: 'Ya existe un plan con ese nombre interno en esta categoría.' }
     const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id)
     if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
     const category = await resolveCategory(supabase, data.plan_category_id)
@@ -93,6 +111,8 @@ export async function updatePlanAction(
     const supabase = await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
+    const isDuplicateName = await checkDuplicateName(supabase, data.name, data.plan_category_id, id)
+    if (isDuplicateName) return { error: 'Ya existe un plan con ese nombre interno en esta categoría.' }
     const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id, id)
     if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
     const category = await resolveCategory(supabase, data.plan_category_id)
