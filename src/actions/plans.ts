@@ -17,6 +17,15 @@ async function requireUser() {
   return supabase
 }
 
+const SLUG_TO_ENUM: Record<string, string> = {
+  runner: 'runner',
+  corredores: 'runner',
+  triathlon: 'triathlon',
+  triatletas: 'triathlon',
+  group: 'group',
+  grupales: 'group',
+}
+
 async function resolveCategory(supabase: SupabaseClient, plan_category_id: string | null): Promise<string> {
   if (!plan_category_id) return 'runner'
   const { data } = await supabase
@@ -24,7 +33,8 @@ async function resolveCategory(supabase: SupabaseClient, plan_category_id: strin
     .select('slug')
     .eq('id', plan_category_id)
     .single()
-  return data?.slug ?? 'runner'
+  const slug = data?.slug ?? 'runner'
+  return SLUG_TO_ENUM[slug] ?? 'runner'
 }
 
 function parseFormData(formData: FormData) {
