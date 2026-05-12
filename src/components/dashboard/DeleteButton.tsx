@@ -16,12 +16,13 @@ export default function DeleteButton({
   confirmText: string
 }) {
   const [open, setOpen] = useState(false)
-  const formRef = useRef<HTMLFormElement>(null)
+  const submitRef = useRef<HTMLButtonElement>(null)
 
   return (
     <>
-      <form ref={formRef} action={action}>
+      <form action={action}>
         <input type="hidden" name="id" value={id} />
+        <button ref={submitRef} type="submit" style={{ display: 'none' }} />
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -35,7 +36,7 @@ export default function DeleteButton({
         open={open}
         title="Confirmar eliminación"
         message={confirmText}
-        onConfirm={() => formRef.current?.requestSubmit()}
+        onConfirm={() => submitRef.current?.click()}
         onCancel={() => setOpen(false)}
       />
     </>
