@@ -26,6 +26,23 @@ const SLUG_TO_ENUM: Record<string, string> = {
   grupales: 'group',
 }
 
+async function checkDuplicateNameDisplay(
+  supabase: SupabaseClient,
+  name_display: string | null,
+  plan_category_id: string | null,
+  excludeId?: string,
+): Promise<boolean> {
+  if (!name_display) return false
+  let query = supabase
+    .from('plans')
+    .select('id')
+    .eq('plan_category_id', plan_category_id ?? '')
+    .ilike('name_display', name_display)
+  if (excludeId) query = query.neq('id', excludeId)
+  const { data } = await query
+  return (data?.length ?? 0) > 0
+}
+
 async function resolveCategory(supabase: SupabaseClient, plan_category_id: string | null): Promise<string> {
   if (!plan_category_id) return 'runner'
   const { data } = await supabase
@@ -55,6 +72,8 @@ export async function createPlanAction(_prev: PlanState, formData: FormData): Pr
     const supabase = await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
+    const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id)
+    if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
     const category = await resolveCategory(supabase, data.plan_category_id)
     const { error } = await supabase.from('plans').insert({ ...data, category })
     if (error) return { error: error.message }
@@ -74,6 +93,8 @@ export async function updatePlanAction(
     const supabase = await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
+    const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id, id)
+    if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
     const category = await resolveCategory(supabase, data.plan_category_id)
     const { error } = await supabase
       .from('plans')
