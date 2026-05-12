@@ -23,9 +23,9 @@ function parseForm(formData: FormData) {
     content: String(formData.get('content') ?? ''),
     cover_image: String(formData.get('cover_image') ?? '') || null,
     youtube_url: String(formData.get('youtube_url') ?? '') || null,
-    category_id: String(formData.get('category_id') ?? '') || null,
     coach_id: String(formData.get('coach_id') ?? '') || null,
     published: formData.get('published') === 'on',
+    category_ids: formData.getAll('category_ids').map(String).filter(Boolean),
   }
 }
 
@@ -44,13 +44,24 @@ async function uniqueSlug(supabase: Awaited<ReturnType<typeof requireUser>>['sup
 export async function createPostAction(_prev: PostState, formData: FormData): Promise<PostState> {
   try {
     const { supabase, user } = await requireUser()
-    const data = parseForm(formData)
+    const { category_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const baseSlug = slugify(data.title, { lower: true, strict: true })
     const slug = await uniqueSlug(supabase, baseSlug)
-    const { error } = await supabase.from('posts').insert({ ...data, slug, author_id: user.id })
+
+    const { data: inserted, error } = await supabase
+      .from('posts')
+      .insert({ ...data, slug, author_id: user.id })
+      .select('id')
+      .single()
     if (error) return { error: error.message }
+
+    if (category_ids.length > 0) {
+      await supabase.from('post_categories').insert(
+        category_ids.map((cid) => ({ post_id: inserted.id, category_id: cid }))
+      )
+    }
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
@@ -67,7 +78,7 @@ export async function updatePostAction(
 ): Promise<PostState> {
   try {
     const { supabase } = await requireUser()
-    const data = parseForm(formData)
+    const { category_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const { data: existing } = await supabase.from('posts').select('slug, title').eq('id', id).single()
@@ -82,6 +93,13 @@ export async function updatePostAction(
       .update({ ...data, slug, updated_at: new Date().toISOString() })
       .eq('id', id)
     if (error) return { error: error.message }
+
+    await supabase.from('post_categories').delete().eq('post_id', id)
+    if (category_ids.length > 0) {
+      await supabase.from('post_categories').insert(
+        category_ids.map((cid) => ({ post_id: id, category_id: cid }))
+      )
+    }
 
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)

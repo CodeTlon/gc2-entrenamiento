@@ -53,10 +53,12 @@ export default function PostForm({
   post,
   categories = [],
   coaches = [],
+  postCategoryIds = [],
 }: {
   post?: Post
   categories?: Category[]
   coaches?: Coach[]
+  postCategoryIds?: string[]
 }) {
   const isEdit = !!post
   const action = isEdit ? updatePostAction.bind(null, post!.id) : createPostAction
@@ -78,19 +80,22 @@ export default function PostForm({
       />
 
       <div>
-        <label htmlFor="category_id" className="field-label">Categoría</label>
+        <label className="field-label">Categorías</label>
         {categories.length > 0 ? (
-          <select
-            id="category_id"
-            name="category_id"
-            defaultValue={post?.category_id ?? ''}
-            className="field-input"
-          >
-            <option value="">Sin categoría</option>
+          <div className="flex flex-wrap gap-3 mt-1">
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
+              <label key={cat.id} className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  name="category_ids"
+                  value={cat.id}
+                  defaultChecked={postCategoryIds.includes(cat.id)}
+                  className="accent-accent w-4 h-4"
+                />
+                <span className="text-white/80 text-sm">{cat.name}</span>
+              </label>
             ))}
-          </select>
+          </div>
         ) : (
           <p className="text-white/40 text-sm mt-1">
             No hay categorías creadas todavía.{' '}

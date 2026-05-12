@@ -24,8 +24,7 @@ export interface PostSummary {
   cover_image: string | null
   youtube_url: string | null
   created_at: string
-  category_id: string | null
-  categories: { name: string; slug: string } | null
+  post_categories: { category_id: string; categories: { name: string; slug: string } | null }[]
   coaches: { name: string; photo_url: string | null } | null
 }
 
@@ -75,13 +74,16 @@ function ArticleRow({ post }: { post: PostSummary }) {
             <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2px]">
               {formatDate(post.created_at)}
             </p>
-            {post.categories && (
-              <span
-                className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
-                style={{ background: '#38BDF8' }}
-              >
-                {post.categories.name}
-              </span>
+            {post.post_categories.map(({ categories: cat }) =>
+              cat ? (
+                <span
+                  key={cat.slug}
+                  className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
+                  style={{ background: '#38BDF8' }}
+                >
+                  {cat.name}
+                </span>
+              ) : null
             )}
           </div>
           <h2 className="font-heading font-bold text-white uppercase leading-tight mb-2 line-clamp-2"
@@ -231,7 +233,9 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
   const filtered = useMemo(() => {
     let result = posts
     if (activeCategory) {
-      result = result.filter((p) => p.categories?.slug === activeCategory)
+      result = result.filter((p) =>
+        p.post_categories.some((pc) => pc.categories?.slug === activeCategory)
+      )
     }
     const q = search.toLowerCase().trim()
     if (q) {

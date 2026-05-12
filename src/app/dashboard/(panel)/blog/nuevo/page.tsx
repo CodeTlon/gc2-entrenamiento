@@ -16,7 +16,7 @@ export default async function NewPostPage() {
         title="Nuevo post"
         back={{ href: '/dashboard/blog', label: 'Volver al blog' }}
       />
-      <PostForm categories={cats ?? []} coaches={coaches ?? []} />
+      <PostForm categories={cats ?? []} coaches={coaches ?? []} postCategoryIds={[]} />
     </div>
   )
 }

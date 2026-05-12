@@ -10,12 +10,15 @@ import { deletePostAction } from '@/actions/posts'
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createSupabaseServerClient()
-  const [{ data, error }, { data: cats }, { data: coaches }] = await Promise.all([
+  const [{ data, error }, { data: cats }, { data: coaches }, { data: postCats }] = await Promise.all([
     supabase.from('posts').select('*').eq('id', id).single(),
     supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
     supabase.from('coaches').select('id, name, specialty').order('display_order', { ascending: true }),
+    supabase.from('post_categories').select('category_id').eq('post_id', id),
   ])
   if (error || !data) notFound()
+
+  const postCategoryIds = postCats?.map((r) => r.category_id) ?? []
 
   return (
     <div>
@@ -44,7 +47,12 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           </div>
         }
       />
-      <PostForm post={data} categories={cats ?? []} coaches={coaches ?? []} />
+      <PostForm
+        post={data}
+        categories={cats ?? []}
+        coaches={coaches ?? []}
+        postCategoryIds={postCategoryIds}
+      />
     </div>
   )
 }

@@ -14,7 +14,7 @@ async function getData(): Promise<{ posts: PostSummary[]; categories: Category[]
   const [postsRes, catsRes] = await Promise.all([
     supabase
       .from('posts')
-      .select('id, title, slug, excerpt, cover_image, youtube_url, created_at, category_id, categories(name, slug), coaches(name, photo_url)')
+      .select('id, title, slug, excerpt, cover_image, youtube_url, created_at, post_categories(category_id, categories(name, slug)), coaches(name, photo_url)')
       .eq('published', true)
       .order('created_at', { ascending: false }),
     supabase

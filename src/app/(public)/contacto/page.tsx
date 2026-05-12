@@ -5,7 +5,8 @@ import ScrollReveal from '@/components/ui/ScrollReveal'
 import ContactForm from '@/components/sections/ContactForm'
 import WhatsAppIcon from '@/components/ui/WhatsAppIcon'
 import { createSupabaseClient } from '@/lib/supabase'
-import { IMG_ABOUT, INSTAGRAM_LINK, INSTAGRAM_USER, WHATSAPP_LINK, EMAIL } from '@/lib/constants'
+import { getSiteSettings } from '@/lib/content'
+import { IMG_ABOUT } from '@/lib/constants'
 
 export const metadata: Metadata = {
   title: 'Contacto',
@@ -18,6 +19,7 @@ export default async function ContactoPage({
   searchParams: Promise<{ coach?: string }>
 }) {
   const { coach: coachSlug } = await searchParams
+  const { contact } = await getSiteSettings()
   const supabase = createSupabaseClient()
 
   const { data: coaches } = await supabase
@@ -72,7 +74,7 @@ export default async function ContactoPage({
             <ScrollReveal>
               <div className="grid grid-cols-3 gap-3">
                 <a
-                  href={WHATSAPP_LINK}
+                  href={contact.whatsapp_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
@@ -91,7 +93,7 @@ export default async function ContactoPage({
                 </a>
 
                 <a
-                  href={INSTAGRAM_LINK}
+                  href={contact.instagram_link}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
@@ -105,12 +107,12 @@ export default async function ContactoPage({
                   </span>
                   <div className="min-w-0">
                     <p className="font-body font-semibold text-white text-sm leading-none">Instagram</p>
-                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{INSTAGRAM_USER}</p>
+                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{contact.instagram_user}</p>
                   </div>
                 </a>
 
                 <a
-                  href={`mailto:${EMAIL}`}
+                  href={`mailto:${contact.email}`}
                   className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
@@ -122,7 +124,7 @@ export default async function ContactoPage({
                   </span>
                   <div className="min-w-0">
                     <p className="font-body font-semibold text-white text-sm leading-none">Email</p>
-                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{EMAIL}</p>
+                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{contact.email}</p>
                   </div>
                 </a>
               </div>
