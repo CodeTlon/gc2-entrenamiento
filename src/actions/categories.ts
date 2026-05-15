@@ -7,11 +7,24 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export type CategoryState = { ok?: boolean; error?: string } | undefined
 
+type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+
 async function requireUser() {
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado.')
   return supabase
+}
+
+async function checkDuplicateCategoryName(
+  supabase: SupabaseClient,
+  name: string,
+  excludeId?: string,
+): Promise<boolean> {
+  let query = supabase.from('categories').select('id').ilike('name', name)
+  if (excludeId) query = query.neq('id', excludeId)
+  const { data } = await query
+  return (data?.length ?? 0) > 0
 }
 
 export async function createCategoryAction(
@@ -23,6 +36,9 @@ export async function createCategoryAction(
     const name = String(formData.get('name') ?? '').trim()
     const display_order = Number(formData.get('display_order') ?? 0)
     if (!name) return { error: 'El nombre es obligatorio.' }
+
+    const isDuplicate = await checkDuplicateCategoryName(supabase, name)
+    if (isDuplicate) return { error: 'Ya existe una categoría con ese nombre.' }
 
     const slug = slugify(name, { lower: true, strict: true })
     const { error } = await supabase.from('categories').insert({ name, slug, display_order })
@@ -45,6 +61,9 @@ export async function updateCategoryAction(
     const name = String(formData.get('name') ?? '').trim()
     const display_order = Number(formData.get('display_order') ?? 0)
     if (!name) return { error: 'El nombre es obligatorio.' }
+
+    const isDuplicate = await checkDuplicateCategoryName(supabase, name, id)
+    if (isDuplicate) return { error: 'Ya existe una categoría con ese nombre.' }
 
     const slug = slugify(name, { lower: true, strict: true })
     const { error } = await supabase

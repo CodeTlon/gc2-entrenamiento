@@ -37,13 +37,14 @@ npx playwright test tests/contact.spec.ts
 ### Database (Supabase/PostgreSQL)
 All tables use Row-Level Security:
 - `contact_leads` — contact form submissions (public insert, service-role read)
-- `posts` — blog articles linked to `coaches` via `coach_id` (public read when published)
+- `posts` — blog articles linked to `coaches` via `coach_id` (public read when published). Legacy `category_id` column is kept for backward compat but is no longer written by the dashboard.
 - `coaches` — team member profiles with arrays for certifications/achievements/services
 - `plans` — training packages categorized by `runner | triathlon | group`
 - `site_settings` — JSONB key/value store for frontend sections (hero, about, disciplines, group_classes, team_gallery, contact)
 - `categories` / `plan_categories` — classification tables
+- `post_categories` — N:N junction between `posts` and `categories`. Source of truth for blog category filtering on the public site.
 
-Migration files are in `supabase/migrations/` numbered 001–006.
+Migration files are in `supabase/migrations/` numbered 001–007.
 
 ### Key Patterns
 - **Server Components by default** — pages and section components are RSC; interactive components are `'use client'`

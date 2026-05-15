@@ -20,7 +20,7 @@ const barlowCondensed = Barlow_Condensed({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamiento.com.ar',
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar',
   ),
   title: {
     default: 'GC² Entrenamiento de la Resistencia | Córdoba',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_AR',
-    url: 'https://gc2entrenamiento.com.ar',
+    url: 'https://gc2entrenamientoderesistencia.com.ar',
     siteName: 'GC² Entrenamiento de la Resistencia',
     title: 'GC² Entrenamiento de la Resistencia | Córdoba',
     description:
@@ -79,7 +79,7 @@ const schemaOrg = {
   name: 'GC² Entrenamiento de la Resistencia',
   description:
     'Equipo de entrenamiento para corredores, duatletas y triatletas. Planificación individualizada y grupal, presencial y a distancia.',
-  url: 'https://gc2entrenamiento.com.ar',
+  url: 'https://gc2entrenamientoderesistencia.com.ar',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Córdoba',

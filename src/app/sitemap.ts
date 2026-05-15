@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { createSupabaseClient } from '@/lib/supabase'
 
-const BASE_URL = 'https://gc2entrenamiento.com.ar'
+const BASE_URL = 'https://gc2entrenamientoderesistencia.com.ar'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [

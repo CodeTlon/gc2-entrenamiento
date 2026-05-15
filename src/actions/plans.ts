@@ -32,11 +32,10 @@ async function checkDuplicateName(
   plan_category_id: string | null,
   excludeId?: string,
 ): Promise<boolean> {
-  let query = supabase
-    .from('plans')
-    .select('id')
-    .eq('plan_category_id', plan_category_id ?? '')
-    .ilike('name', name)
+  let query = supabase.from('plans').select('id').ilike('name', name)
+  query = plan_category_id
+    ? query.eq('plan_category_id', plan_category_id)
+    : query.is('plan_category_id', null)
   if (excludeId) query = query.neq('id', excludeId)
   const { data } = await query
   return (data?.length ?? 0) > 0
@@ -49,11 +48,10 @@ async function checkDuplicateNameDisplay(
   excludeId?: string,
 ): Promise<boolean> {
   if (!name_display) return false
-  let query = supabase
-    .from('plans')
-    .select('id')
-    .eq('plan_category_id', plan_category_id ?? '')
-    .ilike('name_display', name_display)
+  let query = supabase.from('plans').select('id').ilike('name_display', name_display)
+  query = plan_category_id
+    ? query.eq('plan_category_id', plan_category_id)
+    : query.is('plan_category_id', null)
   if (excludeId) query = query.neq('id', excludeId)
   const { data } = await query
   return (data?.length ?? 0) > 0
