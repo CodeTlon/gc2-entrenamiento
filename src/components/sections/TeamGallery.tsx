@@ -55,7 +55,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
             const tall = fourUp && i === 0
             const wide = fourUp && i === 3
             const spanClass = tall
-              ? ' md:row-span-2 md:aspect-[1/2]'
+              ? ' md:row-span-2 md:aspect-auto'
               : wide
                 ? ' md:col-span-2 md:aspect-[2/1]'
                 : ''
@@ -72,6 +72,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
                 alt={item.label}
                 fill
                 sizes={sizes}
+                style={{ objectPosition: item.position ?? '50% 50%' }}
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div

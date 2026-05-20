@@ -110,6 +110,8 @@ export interface TeamGalleryItem {
   image: string
   label: string
   large: boolean
+  /** CSS object-position (ej: "50% 50%", "left top"). Default: "50% 50%". */
+  position?: string
 }
 
 export interface TeamGallerySettings {

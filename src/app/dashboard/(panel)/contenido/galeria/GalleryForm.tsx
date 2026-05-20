@@ -5,7 +5,15 @@ import { saveSiteSettingAction, uploadMediaAction, type SaveState } from '@/acti
 import type { TeamGallerySettings, TeamGalleryItem } from '@/lib/content'
 import { TextField, TextArea } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
+import FocalPicker from '@/components/dashboard/FocalPicker'
 import { Plus, Trash2, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
+
+function previewAspectFor(index: number, total: number): string {
+  if (total !== 4) return '1 / 1'
+  if (index === 0) return '1 / 2'
+  if (index === 3) return '2 / 1'
+  return '1 / 1'
+}
 
 async function action(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const items = JSON.parse(String(formData.get('items') ?? '[]')) as TeamGalleryItem[]
@@ -41,11 +49,18 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
 
       <div>
         <label className="field-label">Fotos</label>
+        {items.length === 4 && (
+          <p className="text-white/40 text-xs mb-3">
+            Layout fijo con 4 fotos: la primera ocupa el costado izquierdo (alta),
+            la 2da y 3ra van arriba, la 4ta ocupa el ancho de abajo.
+          </p>
+        )}
         <div className="space-y-3">
           {items.map((it, i) => (
             <GalleryRow
               key={i}
               item={it}
+              previewAspect={previewAspectFor(i, items.length)}
               onChange={(patch) => update(i, patch)}
               onRemove={() => setItems(items.filter((_, idx) => idx !== i))}
             />
@@ -53,7 +68,7 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
         </div>
         <button
           type="button"
-          onClick={() => setItems([...items, { image: '', label: '', large: false }])}
+          onClick={() => setItems([...items, { image: '', label: '', large: false, position: '50% 50%' }])}
           className="mt-3 inline-flex items-center gap-2 text-xs text-accent hover:text-white transition-colors"
         >
           <Plus size={14} /> Agregar foto
@@ -70,10 +85,12 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
 
 function GalleryRow({
   item,
+  previewAspect,
   onChange,
   onRemove,
 }: {
   item: TeamGalleryItem
+  previewAspect: string
   onChange: (patch: Partial<TeamGalleryItem>) => void
   onRemove: () => void
 }) {
@@ -149,15 +166,16 @@ function GalleryRow({
               <input type="file" accept="image/*" onChange={pick} disabled={busy} className="hidden" />
             </label>
           </div>
-          <label className="inline-flex items-center gap-2 text-sm text-white/75 cursor-pointer select-none mt-1">
-            <input
-              type="checkbox"
-              checked={item.large}
-              onChange={(e) => onChange({ large: e.target.checked })}
-              className="w-4 h-4 accent-accent"
-            />
-            Foto grande (ocupa 2 filas)
-          </label>
+          {item.image && (
+            <div className="mt-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <FocalPicker
+                image={item.image}
+                value={item.position}
+                onChange={(position) => onChange({ position })}
+                previewAspect={previewAspect}
+              />
+            </div>
+          )}
           {err && <p className="text-xs text-red-400">{err}</p>}
         </div>
       </div>
