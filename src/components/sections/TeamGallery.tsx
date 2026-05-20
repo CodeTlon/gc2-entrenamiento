@@ -55,9 +55,9 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
             const tall = fourUp && i === 0
             const wide = fourUp && i === 3
             const spanClass = tall
-              ? ' md:row-span-2 md:aspect-auto'
+              ? ' md:row-span-2 md:aspect-[1/2]'
               : wide
-                ? ' md:col-span-2 md:aspect-auto'
+                ? ' md:col-span-2 md:aspect-[2/1]'
                 : ''
             const sizes = wide
               ? '(max-width: 768px) 50vw, 66vw'

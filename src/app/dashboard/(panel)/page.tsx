@@ -1,8 +1,14 @@
 import Link from 'next/link'
-import { Users, ListChecks, FileText, Tag, Settings, ArrowRight } from 'lucide-react'
+import { Users, ListChecks, FileText, Tag, Settings, ArrowRight, LayoutGrid } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const SECTIONS = [
+  {
+    href: '/dashboard/contenido',
+    title: 'Contenido del sitio',
+    desc: 'Editá hero, sección "Nosotros", disciplinas, clases grupales y galería.',
+    icon: LayoutGrid,
+  },
   {
     href: '/dashboard/entrenadores',
     title: 'Entrenadores',
