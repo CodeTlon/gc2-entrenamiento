@@ -46,18 +46,32 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
 
         <div
           ref={gridRef}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
+          className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
         >
-          {data.items.map((item, i) => (
+          {data.items.map((item, i) => {
+            // Layout fijo para 4 items: A grande izquierda (col 1, 2 filas),
+            // B y C cuadrados arriba (cols 2 y 3), D ancho abajo (cols 2-3).
+            const fourUp = data.items.length === 4
+            const tall = fourUp && i === 0
+            const wide = fourUp && i === 3
+            const spanClass = tall
+              ? ' md:row-span-2 md:aspect-auto'
+              : wide
+                ? ' md:col-span-2 md:aspect-auto'
+                : ''
+            const sizes = wide
+              ? '(max-width: 768px) 50vw, 66vw'
+              : '(max-width: 768px) 50vw, 33vw'
+            return (
             <div
               key={`${item.label}-${i}`}
-              className={`gallery-item reveal relative rounded-xl overflow-hidden group${item.large ? ' row-span-2' : ' aspect-square'}`}
+              className={`gallery-item reveal relative rounded-xl overflow-hidden group aspect-square${spanClass}`}
             >
               <Image
                 src={item.image}
                 alt={item.label}
                 fill
-                sizes="(max-width: 768px) 50vw, 33vw"
+                sizes={sizes}
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div
@@ -75,7 +89,8 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
                 </span>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>
