@@ -26,7 +26,7 @@ export interface PostSummary {
   youtube_url: string | null
   created_at: string
   post_categories: { category_id: string; categories: { name: string; slug: string } | null }[]
-  coaches: { name: string; photo_url: string | null } | null
+  post_authors: { coaches: { name: string; photo_url: string | null } | null }[]
 }
 
 function ArticleRow({ post }: { post: PostSummary }) {
@@ -102,19 +102,25 @@ function ArticleRow({ post }: { post: PostSummary }) {
           )}
         </div>
         <div className="flex items-center justify-between mt-3">
-          {post.coaches ? (
-            <div className="flex items-center gap-2">
-              {post.coaches.photo_url && (() => {
-                const fp = focalImageProps(post.coaches.photo_url)
-                return (
-                  <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                    <Image src={fp.src} alt={post.coaches.name} fill sizes="20px" style={fp.style} className="object-cover" />
-                  </div>
-                )
-              })()}
-              <span className="text-white/40 text-[11px] truncate">{post.coaches.name}</span>
-            </div>
-          ) : <span />}
+          {(() => {
+            const firstAuthor = post.post_authors[0]?.coaches ?? null
+            return firstAuthor ? (
+              <div className="flex items-center gap-2">
+                {firstAuthor.photo_url && (() => {
+                  const fp = focalImageProps(firstAuthor.photo_url!)
+                  return (
+                    <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                      <Image src={fp.src} alt={firstAuthor.name} fill sizes="20px" style={fp.style} className="object-cover" />
+                    </div>
+                  )
+                })()}
+                <span className="text-white/40 text-[11px] truncate">
+                  {firstAuthor.name}
+                  {post.post_authors.length > 1 && ` +${post.post_authors.length - 1}`}
+                </span>
+              </div>
+            ) : <span />
+          })()}
           <span className="text-accent text-xs font-body font-bold uppercase tracking-widest group-hover:tracking-[3px] transition-all duration-300 flex-shrink-0">
             Leer artículo
           </span>

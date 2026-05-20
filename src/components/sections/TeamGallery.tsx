@@ -50,33 +50,36 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
           className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
         >
           {data.items.map((item, i) => {
-            // Layout fijo para 4 items: A grande izquierda (col 1, 2 filas),
-            // B y C cuadrados arriba (cols 2 y 3), D ancho abajo (cols 2-3).
-            const fourUp = data.items.length === 4
-            const tall = fourUp && i === 0
-            const wide = fourUp && i === 3
+            const wide = item.size === 'wide'
+            const tall = item.size === 'tall'
             const spanClass = tall
               ? ' md:row-span-2 md:aspect-auto'
               : wide
                 ? ' md:col-span-2 md:aspect-[2/1]'
                 : ''
             const sizes = wide
-              ? '(max-width: 768px) 50vw, 66vw'
+              ? '(max-width: 768px) 100vw, 66vw'
               : '(max-width: 768px) 50vw, 33vw'
             const fp = focalImageProps(item.image)
+            const focalScale = fp.style.transform
+              ? { transform: fp.style.transform, transformOrigin: fp.style.transformOrigin }
+              : undefined
             return (
             <div
               key={`${item.label}-${i}`}
               className={`gallery-item reveal relative rounded-xl overflow-hidden group aspect-square${spanClass}`}
             >
-              <Image
-                src={fp.src}
-                alt={item.label}
-                fill
-                sizes={sizes}
-                style={fp.style}
-                className="object-cover transition-transform duration-700 group-hover:scale-110"
-              />
+              {/* Focal scale sits on its own layer so hover scale-110 on Image compounds correctly */}
+              <div className="absolute inset-0" style={focalScale}>
+                <Image
+                  src={fp.src}
+                  alt={item.label}
+                  fill
+                  sizes={sizes}
+                  style={{ objectPosition: fp.style.objectPosition }}
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+              </div>
               <div
                 className="absolute bottom-0 left-0 right-0 px-4 pt-8 pb-3"
                 style={{

@@ -54,11 +54,13 @@ export default function PostForm({
   categories = [],
   coaches = [],
   postCategoryIds = [],
+  postCoachIds = [],
 }: {
   post?: Post
   categories?: Category[]
   coaches?: Coach[]
   postCategoryIds?: string[]
+  postCoachIds?: string[]
 }) {
   const isEdit = !!post
   const action = isEdit ? updatePostAction.bind(null, post!.id) : createPostAction
@@ -106,24 +108,27 @@ export default function PostForm({
         )}
       </div>
 
-      {coaches.length > 0 && (
-        <div>
-          <label htmlFor="coach_id" className="field-label">Autor / Entrenador</label>
-          <select
-            id="coach_id"
-            name="coach_id"
-            defaultValue={post?.coach_id ?? ''}
-            className="field-input"
-          >
-            <option value="">Sin autor asignado</option>
+      <div>
+        <label className="field-label">Autores / Entrenadores</label>
+        {coaches.length > 0 ? (
+          <div className="flex flex-wrap gap-3 mt-1">
             {coaches.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} — {c.specialty}
-              </option>
+              <label key={c.id} className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  name="coach_ids"
+                  value={c.id}
+                  defaultChecked={postCoachIds.includes(c.id)}
+                  className="accent-accent w-4 h-4"
+                />
+                <span className="text-white/80 text-sm">{c.name} — {c.specialty}</span>
+              </label>
             ))}
-          </select>
-        </div>
-      )}
+          </div>
+        ) : (
+          <p className="text-white/40 text-sm mt-1">No hay entrenadores creados todavía.</p>
+        )}
+      </div>
 
       <TextArea
         label="Resumen / extracto"

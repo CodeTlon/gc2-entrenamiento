@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
-import { getCoaches } from '@/lib/content'
+import type { Coach } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
@@ -19,21 +19,21 @@ interface Post {
   content: string
   cover_image: string | null
   youtube_url: string | null
-  coach_id: string | null
   created_at: string
+  post_authors: { coaches: Coach | null }[]
 }
 
 async function getPost(slug: string): Promise<Post | null> {
   const supabase = createSupabaseClient()
   const { data, error } = await supabase
     .from('posts')
-    .select('*')
+    .select('id, title, slug, excerpt, content, cover_image, youtube_url, created_at, post_authors(coaches(*))')
     .eq('slug', slug)
     .eq('published', true)
     .single()
 
   if (error) return null
-  return data
+  return data as unknown as Post
 }
 
 async function getAllSlugs(): Promise<{ slug: string }[]> {
@@ -80,11 +80,11 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
-  const [post, coaches] = await Promise.all([getPost(slug), getCoaches()])
+  const post = await getPost(slug)
   if (!post) notFound()
 
   const ytEmbed = youtubeEmbedUrl(post.youtube_url)
-  const author = post.coach_id ? coaches.find((c) => c.id === post.coach_id) ?? null : null
+  const authors = post.post_authors.map((pa) => pa.coaches).filter((c): c is Coach => c !== null)
 
   return (
     <>
@@ -160,9 +160,11 @@ export default async function BlogPostPage({
             }}
           />
 
-          {author && (
-            <div className="mt-12">
-              <AuthorCard coach={author} />
+          {authors.length > 0 && (
+            <div className="mt-12 space-y-4">
+              {authors.map((author) => (
+                <AuthorCard key={author.id} coach={author} />
+              ))}
             </div>
           )}
 

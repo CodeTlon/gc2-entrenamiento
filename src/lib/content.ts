@@ -109,7 +109,8 @@ export interface GroupClassesSettings {
 export interface TeamGalleryItem {
   image: string
   label: string
-  large: boolean
+  /** 'wide' = col-span-2 (ancho ×2), 'tall' = row-span-2 (largo ×2). Undefined = normal. */
+  size?: 'wide' | 'tall'
   /** CSS object-position (ej: "50% 50%", "left top"). Default: "50% 50%". */
   position?: string
 }
@@ -212,10 +213,10 @@ const FALLBACK_TEAM_GALLERY: TeamGallerySettings = {
   description:
     'Más que un equipo de entrenamiento, somos una comunidad de atletas apasionados por superarse.',
   items: [
-    { image: '/images/carrera.jpeg', label: 'Running', large: false },
-    { image: IMG_CYCLING, label: 'Ciclismo', large: false },
-    { image: IMG_SWIMMING, label: 'Natación', large: false },
-    { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80', label: 'Fuerza', large: false },
+    { image: '/images/carrera.jpeg', label: 'Running' },
+    { image: IMG_CYCLING, label: 'Ciclismo' },
+    { image: IMG_SWIMMING, label: 'Natación' },
+    { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80', label: 'Fuerza' },
   ],
 }
 

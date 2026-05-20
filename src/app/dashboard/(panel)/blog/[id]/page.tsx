@@ -10,15 +10,17 @@ import { deletePostAction } from '@/actions/posts'
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createSupabaseServerClient()
-  const [{ data, error }, { data: cats }, { data: coaches }, { data: postCats }] = await Promise.all([
+  const [{ data, error }, { data: cats }, { data: coaches }, { data: postCats }, { data: postAuthors }] = await Promise.all([
     supabase.from('posts').select('*').eq('id', id).single(),
     supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
     supabase.from('coaches').select('id, name, specialty').order('display_order', { ascending: true }),
     supabase.from('post_categories').select('category_id').eq('post_id', id),
+    supabase.from('post_authors').select('coach_id').eq('post_id', id),
   ])
   if (error || !data) notFound()
 
   const postCategoryIds = postCats?.map((r) => r.category_id) ?? []
+  const postCoachIds = postAuthors?.map((r) => r.coach_id) ?? []
 
   return (
     <div>
@@ -52,6 +54,7 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         categories={cats ?? []}
         coaches={coaches ?? []}
         postCategoryIds={postCategoryIds}
+        postCoachIds={postCoachIds}
       />
     </div>
   )

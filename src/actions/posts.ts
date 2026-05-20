@@ -23,9 +23,9 @@ function parseForm(formData: FormData) {
     content: String(formData.get('content') ?? ''),
     cover_image: String(formData.get('cover_image') ?? '') || null,
     youtube_url: String(formData.get('youtube_url') ?? '') || null,
-    coach_id: String(formData.get('coach_id') ?? '') || null,
     published: formData.get('published') === 'on',
     category_ids: formData.getAll('category_ids').map(String).filter(Boolean),
+    coach_ids: formData.getAll('coach_ids').map(String).filter(Boolean),
   }
 }
 
@@ -44,7 +44,7 @@ async function uniqueSlug(supabase: Awaited<ReturnType<typeof requireUser>>['sup
 export async function createPostAction(_prev: PostState, formData: FormData): Promise<PostState> {
   try {
     const { supabase, user } = await requireUser()
-    const { category_ids, ...data } = parseForm(formData)
+    const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const baseSlug = slugify(data.title, { lower: true, strict: true })
@@ -63,6 +63,12 @@ export async function createPostAction(_prev: PostState, formData: FormData): Pr
       )
     }
 
+    if (coach_ids.length > 0) {
+      await supabase.from('post_authors').insert(
+        coach_ids.map((cid) => ({ post_id: inserted.id, coach_id: cid }))
+      )
+    }
+
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
   } catch (e) {
@@ -78,7 +84,7 @@ export async function updatePostAction(
 ): Promise<PostState> {
   try {
     const { supabase } = await requireUser()
-    const { category_ids, ...data } = parseForm(formData)
+    const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const { data: existing } = await supabase.from('posts').select('slug, title').eq('id', id).single()
@@ -98,6 +104,13 @@ export async function updatePostAction(
     if (category_ids.length > 0) {
       await supabase.from('post_categories').insert(
         category_ids.map((cid) => ({ post_id: id, category_id: cid }))
+      )
+    }
+
+    await supabase.from('post_authors').delete().eq('post_id', id)
+    if (coach_ids.length > 0) {
+      await supabase.from('post_authors').insert(
+        coach_ids.map((cid) => ({ post_id: id, coach_id: cid }))
       )
     }
 

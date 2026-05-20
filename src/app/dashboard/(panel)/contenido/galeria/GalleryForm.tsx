@@ -3,17 +3,11 @@
 import { useActionState, useState } from 'react'
 import { saveSiteSettingAction, uploadMediaAction, type SaveState } from '@/actions/settings'
 import type { TeamGallerySettings, TeamGalleryItem } from '@/lib/content'
+type ItemSize = TeamGalleryItem['size']
 import { TextField, TextArea } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 import FocalPicker from '@/components/dashboard/FocalPicker'
-import { Plus, Trash2, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
-
-function previewAspectFor(index: number, total: number): string {
-  if (total !== 4) return '1 / 1'
-  if (index === 0) return '1 / 2'
-  if (index === 3) return '2 / 1'
-  return '1 / 1'
-}
+import { Plus, Trash2, Upload, Loader2, Image as ImageIcon, RectangleHorizontal, RectangleVertical } from 'lucide-react'
 
 async function action(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const items = JSON.parse(String(formData.get('items') ?? '[]')) as TeamGalleryItem[]
@@ -30,7 +24,7 @@ async function action(_prev: SaveState, formData: FormData): Promise<SaveState> 
 export default function GalleryForm({ initial }: { initial: TeamGallerySettings }) {
   const [state, dispatch] = useActionState<SaveState, FormData>(action, undefined)
   const [items, setItems] = useState<TeamGalleryItem[]>(
-    initial.items.length ? initial.items : [{ image: '', label: '', large: false }],
+    initial.items.length ? initial.items : [{ image: '', label: '' }],
   )
 
   function update(i: number, patch: Partial<TeamGalleryItem>) {
@@ -49,18 +43,14 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
 
       <div>
         <label className="field-label">Fotos</label>
-        {items.length === 4 && (
-          <p className="text-white/40 text-xs mb-3">
-            Layout fijo con 4 fotos: la primera ocupa el costado izquierdo (alta),
-            la 2da y 3ra van arriba, la 4ta ocupa el ancho de abajo.
-          </p>
-        )}
+        <p className="text-white/40 text-xs mb-3">
+          Activá &quot;Ancho × 2&quot; en cualquier foto para que ocupe 2 columnas en la grilla.
+        </p>
         <div className="space-y-3">
           {items.map((it, i) => (
             <GalleryRow
               key={i}
               item={it}
-              previewAspect={previewAspectFor(i, items.length)}
               onChange={(patch) => update(i, patch)}
               onRemove={() => setItems(items.filter((_, idx) => idx !== i))}
             />
@@ -68,7 +58,7 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
         </div>
         <button
           type="button"
-          onClick={() => setItems([...items, { image: '', label: '', large: false }])}
+          onClick={() => setItems([...items, { image: '', label: '' }])}
           className="mt-3 inline-flex items-center gap-2 text-xs text-accent hover:text-white transition-colors"
         >
           <Plus size={14} /> Agregar foto
@@ -85,12 +75,10 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
 
 function GalleryRow({
   item,
-  previewAspect,
   onChange,
   onRemove,
 }: {
   item: TeamGalleryItem
-  previewAspect: string
   onChange: (patch: Partial<TeamGalleryItem>) => void
   onRemove: () => void
 }) {
@@ -165,13 +153,14 @@ function GalleryRow({
               {busy ? 'Subiendo…' : 'Subir'}
               <input type="file" accept="image/*" onChange={pick} disabled={busy} className="hidden" />
             </label>
+            <SizeToggle size={13} value={item.size} onChange={(s) => onChange({ size: s })} />
           </div>
           {item.image && (
             <div className="mt-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <FocalPicker
                 value={item.image}
                 onChange={(url) => onChange({ image: url })}
-                previewAspect={previewAspect}
+                previewAspect={item.size === 'wide' ? '2 / 1' : item.size === 'tall' ? '1 / 2' : '1 / 1'}
               />
             </div>
           )}
@@ -179,5 +168,39 @@ function GalleryRow({
         </div>
       </div>
     </div>
+  )
+}
+
+function SizeToggle({
+  value,
+  onChange,
+  size: iconSize,
+}: {
+  value: ItemSize
+  onChange: (s: ItemSize) => void
+  size: number
+}) {
+  function btn(label: string, icon: React.ReactNode, next: ItemSize) {
+    const active = value === next
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(active ? undefined : next)}
+        className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-body font-semibold transition-colors ${
+          active
+            ? 'bg-accent/20 text-accent border border-accent/40'
+            : 'bg-white/5 text-white/40 border border-white/10 hover:text-white/70'
+        }`}
+      >
+        {icon}
+        {label}
+      </button>
+    )
+  }
+  return (
+    <>
+      {btn('Ancho × 2', <RectangleHorizontal size={iconSize} />, 'wide')}
+      {btn('Largo × 2', <RectangleVertical size={iconSize} />, 'tall')}
+    </>
   )
 }
