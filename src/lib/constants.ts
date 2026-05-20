@@ -22,7 +22,7 @@ export const IMG_RUNNING = 'https://images.unsplash.com/photo-1571008887538-b36b
 export const IMG_CYCLING = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600&q=80'
 export const IMG_SWIMMING = 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=80'
 export const IMG_GROUP = 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1920&q=80'
-export const IMG_GROUP_SIDE = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80'
+export const IMG_GROUP_SIDE = 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80#focal=50,10'
 
 export const RUNNER_PLANS = [
   {

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { Check } from 'lucide-react'
+import { Check, Clock, CalendarDays } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { GroupClassesSettings } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
@@ -40,19 +40,38 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
             </h2>
 
             {/* Time */}
-            <div className="inline-flex items-baseline gap-2 mb-8">
-              <span
-                className="font-heading font-black text-accent leading-none"
-                style={{ fontSize: '72px' }}
-              >
-                {data.time}
-              </span>
-              <span
-                className="text-white/50 font-body font-semibold uppercase text-lg"
-                style={{ letterSpacing: '2px' }}
-              >
-                HS
-              </span>
+            <div
+              className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl mb-8"
+              style={{
+                background: 'rgba(13,34,71,0.60)',
+                border: '1px solid rgba(56,189,248,0.20)',
+                backdropFilter: 'blur(10px)',
+                WebkitBackdropFilter: 'blur(10px)',
+              }}
+            >
+              <Clock size={30} className="text-accent flex-shrink-0" />
+              <div>
+                <p
+                  className="text-white/40 text-[10px] font-body font-semibold uppercase mb-0.5"
+                  style={{ letterSpacing: '3px' }}
+                >
+                  Horario
+                </p>
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    className="font-heading font-black text-accent leading-none"
+                    style={{ fontSize: '52px' }}
+                  >
+                    {data.time}
+                  </span>
+                  <span
+                    className="text-white/50 font-body font-semibold uppercase text-base"
+                    style={{ letterSpacing: '2px' }}
+                  >
+                    HS
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Days */}
@@ -60,13 +79,14 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
               {data.days.map((day) => (
                 <span
                   key={day}
-                  className="px-5 py-2.5 text-[13px] font-body font-bold text-accent rounded-md"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-body font-bold text-white"
                   style={{
-                    background: 'rgba(56,189,248,0.12)',
-                    border: '1px solid rgba(56,189,248,0.25)',
-                    letterSpacing: '2px',
+                    background: 'linear-gradient(135deg, #1d4ed8, #38BDF8)',
+                    boxShadow: '0 4px 14px rgba(56,189,248,0.25)',
+                    letterSpacing: '1.5px',
                   }}
                 >
+                  <CalendarDays size={13} />
                   {day}
                 </span>
               ))}
