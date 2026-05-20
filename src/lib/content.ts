@@ -204,17 +204,16 @@ const FALLBACK_GROUP_CLASSES: GroupClassesSettings = {
 }
 
 const FALLBACK_TEAM_GALLERY: TeamGallerySettings = {
-  label: '● Comunidad',
-  title_line_1: 'NUESTRO',
-  title_line_2: 'EQUIPO',
+  label: '● En acción',
+  title_line_1: 'ENTRENAMIENTO',
+  title_line_2: 'EN ACCIÓN',
   description:
-    'Más que un equipo de entrenamiento, somos una comunidad de atletas apasionados por superarse.',
+    'Running, ciclismo, natación y trabajo de fuerza.',
   items: [
-    { image: '/images/carrera.jpeg', label: 'Carrera', large: true },
+    { image: '/images/carrera.jpeg', label: 'Running', large: false },
+    { image: IMG_CYCLING, label: 'Ciclismo', large: false },
     { image: IMG_SWIMMING, label: 'Natación', large: false },
-    { image: 'https://images.unsplash.com/photo-1534787238916-9ba6764efd4f?w=400&q=80', label: 'Ciclismo', large: false },
-    { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80', label: 'Fuerza', large: false },
-    { image: IMG_ABOUT, label: 'Equipo', large: false },
+    { image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80', label: 'Fuerza', large: false },
   ],
 }
 

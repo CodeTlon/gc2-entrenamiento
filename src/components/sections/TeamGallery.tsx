@@ -46,7 +46,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
 
         <div
           ref={gridRef}
-          className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
         >
           {data.items.map((item, i) => (
             <div
