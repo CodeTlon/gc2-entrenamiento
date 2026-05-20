@@ -1,114 +1,169 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useRef, useState } from 'react'
+import { RotateCcw } from 'lucide-react'
+import { parseFocal, encodeFocal } from '@/lib/image-focal'
 
 /**
- * Selector 3×3 para elegir el "focal point" de una imagen.
- * Devuelve un string `objectPosition` (ej: "50% 0%", "100% 50%").
+ * Picker visual para elegir el "focal point" + zoom de una imagen.
+ * Trabaja sobre URLs con fragmento (ver `lib/image-focal.ts`).
  *
- * Si la imagen está dada, se usa como preview. La marca azul muestra
- * la posición elegida.
+ *   value: URL con o sin fragment (`#focal=X,Y&scale=N`).
+ *   onChange: recibe la URL ya codificada con el nuevo fragment.
  */
-const POSITIONS: { value: string; label: string }[] = [
-  { value: '0% 0%', label: 'Arriba izquierda' },
-  { value: '50% 0%', label: 'Arriba centro' },
-  { value: '100% 0%', label: 'Arriba derecha' },
-  { value: '0% 50%', label: 'Centro izquierda' },
-  { value: '50% 50%', label: 'Centro' },
-  { value: '100% 50%', label: 'Centro derecha' },
-  { value: '0% 100%', label: 'Abajo izquierda' },
-  { value: '50% 100%', label: 'Abajo centro' },
-  { value: '100% 100%', label: 'Abajo derecha' },
-]
-
 export default function FocalPicker({
-  image,
   value,
   onChange,
   previewAspect = '1 / 1',
+  previewWidth = 200,
 }: {
-  image?: string
   value?: string
-  onChange: (position: string) => void
-  /** CSS aspect-ratio string para el preview (ej: "1 / 1", "2 / 1", "1 / 2"). */
+  onChange: (url: string) => void
   previewAspect?: string
+  previewWidth?: number
 }) {
-  const current = value || '50% 50%'
+  const { src, position, scale } = parseFocal(value)
+  const previewRef = useRef<HTMLDivElement>(null)
+  const [dragging, setDragging] = useState(false)
 
-  const dotPos = useMemo(() => {
-    const [x, y] = current.split(' ')
-    return { x: x ?? '50%', y: y ?? '50%' }
-  }, [current])
+  if (!src) return null
+
+  const [xs, ys] = position.split(' ')
+  const x = parseFloat(xs)
+  const y = parseFloat(ys)
+
+  function setPosition(clientX: number, clientY: number) {
+    const el = previewRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const px = ((clientX - rect.left) / rect.width) * 100
+    const py = ((clientY - rect.top) / rect.height) * 100
+    const cx = Math.max(0, Math.min(100, px))
+    const cy = Math.max(0, Math.min(100, py))
+    onChange(encodeFocal(src, `${cx}% ${cy}%`, scale))
+  }
+
+  function setScale(s: number) {
+    onChange(encodeFocal(src, position, s))
+  }
+
+  function reset() {
+    onChange(encodeFocal(src, '50% 50%', 1))
+  }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3 flex-wrap">
-        {/* Preview */}
+    <div className="space-y-3">
+      <div className="flex items-start gap-4 flex-wrap">
         <div
-          className="relative rounded-md overflow-hidden flex-shrink-0"
+          ref={previewRef}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId)
+            setDragging(true)
+            setPosition(e.clientX, e.clientY)
+          }}
+          onPointerMove={(e) => {
+            if (dragging) setPosition(e.clientX, e.clientY)
+          }}
+          onPointerUp={(e) => {
+            e.currentTarget.releasePointerCapture(e.pointerId)
+            setDragging(false)
+          }}
+          onPointerCancel={() => setDragging(false)}
+          className="relative rounded-md overflow-hidden cursor-crosshair select-none flex-shrink-0"
           style={{
-            width: '120px',
+            width: `${previewWidth}px`,
             aspectRatio: previewAspect,
             background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            touchAction: 'none',
           }}
         >
-          {image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={image}
-              alt=""
-              className="w-full h-full object-cover"
-              style={{ objectPosition: current }}
-            />
-          ) : null}
-          {/* Punto que muestra la posición */}
-          <span
-            className="absolute w-3 h-3 rounded-full pointer-events-none"
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={src}
+            alt=""
+            className="w-full h-full object-cover pointer-events-none"
+            draggable={false}
             style={{
-              left: dotPos.x,
-              top: dotPos.y,
+              objectPosition: position,
+              transform: scale > 1 ? `scale(${scale})` : undefined,
+              transformOrigin: scale > 1 ? position : undefined,
+            }}
+          />
+          {/* Punto que indica la posición */}
+          <span
+            className="absolute pointer-events-none"
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              width: '16px',
+              height: '16px',
               transform: 'translate(-50%, -50%)',
+              borderRadius: '50%',
               background: '#38BDF8',
-              boxShadow: '0 0 0 2px rgba(13,34,71,0.9)',
+              boxShadow: '0 0 0 2px rgba(13,34,71,0.95), 0 0 12px rgba(56,189,248,0.6)',
+            }}
+          />
+          {/* Mira (cross-hair) */}
+          <span
+            className="absolute pointer-events-none"
+            style={{
+              left: `${x}%`,
+              top: 0,
+              bottom: 0,
+              width: '1px',
+              background: 'rgba(56,189,248,0.25)',
+            }}
+          />
+          <span
+            className="absolute pointer-events-none"
+            style={{
+              top: `${y}%`,
+              left: 0,
+              right: 0,
+              height: '1px',
+              background: 'rgba(56,189,248,0.25)',
             }}
           />
         </div>
 
-        {/* Grilla 3x3 */}
-        <div
-          className="grid grid-cols-3 gap-1 flex-shrink-0"
-          style={{ width: '96px' }}
-          role="group"
-          aria-label="Posición del foco de la imagen"
-        >
-          {POSITIONS.map((p) => {
-            const active = p.value === current
-            return (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => onChange(p.value)}
-                title={p.label}
-                aria-label={p.label}
-                aria-pressed={active}
-                className="rounded-sm transition-colors"
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  background: active ? '#38BDF8' : 'rgba(255,255,255,0.06)',
-                  border: active
-                    ? '1px solid #38BDF8'
-                    : '1px solid rgba(255,255,255,0.12)',
-                }}
-              />
-            )
-          })}
+        <div className="flex-1 min-w-[200px] space-y-3">
+          <div>
+            <label className="block text-white/65 text-xs font-body font-semibold mb-1.5">
+              Zoom <span className="text-white/40 font-normal">({scale.toFixed(2)}×)</span>
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.05"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+              className="w-full accent-accent"
+            />
+            <div className="flex justify-between text-[10px] text-white/35 mt-1">
+              <span>1×</span>
+              <span>2×</span>
+              <span>3×</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-white/45 text-xs leading-snug mb-2">
+              <strong className="text-white/65">Click o arrastrá</strong> sobre la imagen para mover el foco.
+              Subí el zoom para recortar más cerca de ese punto.
+            </p>
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
+            >
+              <RotateCcw size={12} /> Restablecer
+            </button>
+          </div>
+          <p className="text-white/30 text-[11px] font-mono">
+            focal: {Math.round(x)}%, {Math.round(y)}%
+          </p>
         </div>
-
-        <p className="text-white/40 text-xs leading-snug max-w-[200px]">
-          Elegí qué zona de la foto se ve cuando se recorta al tamaño del layout.
-        </p>
       </div>
     </div>
   )

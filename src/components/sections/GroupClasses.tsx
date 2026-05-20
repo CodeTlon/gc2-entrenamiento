@@ -2,17 +2,21 @@ import Image from 'next/image'
 import { Check } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { GroupClassesSettings } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
+  const bg = focalImageProps(data.bg_image)
+  const side = focalImageProps(data.side_image)
   return (
     <section className="relative py-section overflow-hidden" id="grupales">
       {/* Background */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         <Image
-          src={data.bg_image}
+          src={bg.src}
           alt="Entrenamiento grupal"
           fill
           sizes="100vw"
+          style={bg.style}
           className="object-cover"
         />
         <div
@@ -107,10 +111,11 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
               style={{ height: '520px' }}
             >
               <Image
-                src={data.side_image}
+                src={side.src}
                 alt="Clases grupales"
                 fill
                 sizes="50vw"
+                style={side.style}
                 className="object-cover"
               />
             </div>

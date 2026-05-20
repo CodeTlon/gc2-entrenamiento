@@ -138,6 +138,7 @@ export default function PostForm({
         name="cover_image"
         defaultValue={post?.cover_image}
         folder="blog"
+        previewAspect="16 / 9"
       />
 
       <div>

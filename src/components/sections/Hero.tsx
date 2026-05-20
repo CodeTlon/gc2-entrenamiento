@@ -5,22 +5,25 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import type { HeroSettings } from '@/lib/content'
+import { parseFocal } from '@/lib/image-focal'
 
 const CHEVRONS = [0, 1, 2, 3]
 
 export default function Hero({ data }: { data: HeroSettings }) {
   const bgRef = useRef<HTMLImageElement>(null)
+  const { src: heroSrc, position: heroPos, scale: heroScale } = parseFocal(data.bg_image)
 
   useEffect(() => {
     const img = bgRef.current
     if (!img || window.innerWidth < 768) return
 
+    const baseScale = heroScale > 1 ? ` scale(${heroScale})` : ''
     let rafId = 0
     const handleScroll = () => {
       cancelAnimationFrame(rafId)
       rafId = requestAnimationFrame(() => {
         const yPos = window.scrollY * 0.4
-        img.style.transform = `translate3d(0, ${yPos}px, 0)`
+        img.style.transform = `translate3d(0, ${yPos}px, 0)${baseScale}`
       })
     }
 
@@ -29,7 +32,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       window.removeEventListener('scroll', handleScroll)
       cancelAnimationFrame(rafId)
     }
-  }, [])
+  }, [heroScale])
 
   useEffect(() => {
     const section = document.getElementById('inicio')
@@ -60,14 +63,18 @@ export default function Hero({ data }: { data: HeroSettings }) {
       <div className="absolute inset-0 overflow-hidden">
         <Image
           ref={bgRef}
-          src={data.bg_image}
+          src={heroSrc}
           alt="Atleta entrenando"
           fill
           priority
           sizes="100vw"
           quality={85}
           className="object-cover will-change-transform"
-          style={{ transformOrigin: 'center top' }}
+          style={{
+            transformOrigin: heroScale > 1 ? heroPos : 'center top',
+            objectPosition: heroPos,
+            transform: heroScale > 1 ? `scale(${heroScale})` : undefined,
+          }}
         />
       </div>
 

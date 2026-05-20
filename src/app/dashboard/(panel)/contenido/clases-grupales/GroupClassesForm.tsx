@@ -65,8 +65,8 @@ export default function GroupClassesForm({ initial }: { initial: GroupClassesSet
           </div>
         )}
       />
-      <ImageUpload label="Imagen de fondo" name="bg_image" defaultValue={initial.bg_image} folder="group" />
-      <ImageUpload label="Imagen lateral" name="side_image" defaultValue={initial.side_image} folder="group" />
+      <ImageUpload label="Imagen de fondo" name="bg_image" defaultValue={initial.bg_image} folder="group" previewAspect="16 / 9" />
+      <ImageUpload label="Imagen lateral" name="side_image" defaultValue={initial.side_image} folder="group" previewAspect="3 / 4" />
       <div className="flex items-center gap-4 pt-2">
         <SaveButton />
         <SaveStatus state={state} />

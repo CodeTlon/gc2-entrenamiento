@@ -46,6 +46,7 @@ export default function AboutForm({ initial }: { initial: AboutSettings }) {
         name="image"
         defaultValue={initial.image}
         folder="about"
+        previewAspect="4 / 3"
       />
       <div className="flex items-center gap-4 pt-2">
         <SaveButton />

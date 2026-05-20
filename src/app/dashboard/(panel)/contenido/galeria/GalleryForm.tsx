@@ -68,7 +68,7 @@ export default function GalleryForm({ initial }: { initial: TeamGallerySettings 
         </div>
         <button
           type="button"
-          onClick={() => setItems([...items, { image: '', label: '', large: false, position: '50% 50%' }])}
+          onClick={() => setItems([...items, { image: '', label: '', large: false }])}
           className="mt-3 inline-flex items-center gap-2 text-xs text-accent hover:text-white transition-colors"
         >
           <Plus size={14} /> Agregar foto
@@ -169,9 +169,8 @@ function GalleryRow({
           {item.image && (
             <div className="mt-2 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
               <FocalPicker
-                image={item.image}
-                value={item.position}
-                onChange={(position) => onChange({ position })}
+                value={item.image}
+                onChange={(url) => onChange({ image: url })}
                 previewAspect={previewAspect}
               />
             </div>

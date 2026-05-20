@@ -52,6 +52,7 @@ export default function HeroForm({ initial }: { initial: HeroSettings }) {
         name="bg_image"
         defaultValue={initial.bg_image}
         folder="hero"
+        previewAspect="16 / 9"
       />
 
       <ObjectList<{ number: string; label: string }>

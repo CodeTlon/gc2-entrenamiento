@@ -4,6 +4,7 @@ import { useRef, useEffect } from 'react'
 import Image from 'next/image'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { TeamGallerySettings } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
   const gridRef = useRef<HTMLDivElement>(null)
@@ -62,17 +63,18 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
             const sizes = wide
               ? '(max-width: 768px) 50vw, 66vw'
               : '(max-width: 768px) 50vw, 33vw'
+            const fp = focalImageProps(item.image)
             return (
             <div
               key={`${item.label}-${i}`}
               className={`gallery-item reveal relative rounded-xl overflow-hidden group aspect-square${spanClass}`}
             >
               <Image
-                src={item.image}
+                src={fp.src}
                 alt={item.label}
                 fill
                 sizes={sizes}
-                style={{ objectPosition: item.position ?? '50% 50%' }}
+                style={fp.style}
                 className="object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div

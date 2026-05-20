@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Instagram, Award, Trophy, Briefcase } from 'lucide-react'
 import Modal from '@/components/ui/Modal'
 import type { Coach } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 interface Props {
   coach: Coach | null
@@ -17,16 +18,20 @@ export default function CoachModal({ coach, onClose }: Props) {
       {coach && (
         <div className="grid grid-cols-1 md:grid-cols-[280px_1fr]">
           {/* Photo */}
-          <div className="relative h-72 md:h-auto md:min-h-[420px]">
-            {coach.photo_url && (
-              <Image
-                src={coach.photo_url}
-                alt={coach.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 280px"
-                className="object-cover md:rounded-l-xl"
-              />
-            )}
+          <div className="relative h-72 md:h-auto md:min-h-[420px] overflow-hidden md:rounded-l-xl">
+            {coach.photo_url && (() => {
+              const fp = focalImageProps(coach.photo_url)
+              return (
+                <Image
+                  src={fp.src}
+                  alt={coach.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 280px"
+                  style={fp.style}
+                  className="object-cover"
+                />
+              )
+            })()}
             <div
               className="absolute inset-0 md:rounded-l-xl"
               style={{

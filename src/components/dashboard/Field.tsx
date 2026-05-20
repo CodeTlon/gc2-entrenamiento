@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Trash2, Plus, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
 import { uploadMediaAction } from '@/actions/settings'
+import FocalPicker from '@/components/dashboard/FocalPicker'
 
 export function TextField({
   label,
@@ -94,12 +95,15 @@ export function ImageUpload({
   defaultValue,
   folder = 'uploads',
   hint,
+  previewAspect = '1 / 1',
 }: {
   label: string
   name: string
   defaultValue?: string | null
   folder?: string
   hint?: string
+  /** Aspect ratio del preview del FocalPicker (ej: "16 / 9", "1 / 1"). */
+  previewAspect?: string
 }) {
   const [url, setUrl] = useState<string>(defaultValue ?? '')
   const [busy, setBusy] = useState(false)
@@ -179,6 +183,11 @@ export function ImageUpload({
           {err && <p className="text-xs text-red-400">{err}</p>}
         </div>
       </div>
+      {url && (
+        <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <FocalPicker value={url} onChange={setUrl} previewAspect={previewAspect} />
+        </div>
+      )}
       {hint && <p className="text-white/35 text-xs mt-1.5">{hint}</p>}
     </div>
   )

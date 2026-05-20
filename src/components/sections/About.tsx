@@ -2,8 +2,10 @@ import Image from 'next/image'
 import { Check } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { AboutSettings } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 export default function About({ data }: { data: AboutSettings }) {
+  const fp = focalImageProps(data.image)
   return (
     <section className="py-section bg-blue-900 relative" id="nosotros">
       <div
@@ -22,10 +24,11 @@ export default function About({ data }: { data: AboutSettings }) {
               style={{ height: '480px' }}
             >
               <Image
-                src={data.image}
+                src={fp.src}
                 alt="Atleta entrenando"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
+                style={fp.style}
                 className="object-cover"
               />
             </div>

@@ -7,6 +7,7 @@ import { createSupabaseClient } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
 import { getCoaches } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
@@ -88,14 +89,17 @@ export default async function BlogPostPage({
   return (
     <>
       {/* Hero */}
-      {post.cover_image && (
+      {post.cover_image && (() => {
+        const fp = focalImageProps(post.cover_image)
+        return (
         <section className="relative overflow-hidden" style={{ height: '60vh', minHeight: '400px' }}>
           <Image
-            src={post.cover_image}
+            src={fp.src}
             alt={post.title}
             fill
             priority
             sizes="100vw"
+            style={fp.style}
             className="object-cover"
           />
           <div
@@ -111,7 +115,8 @@ export default async function BlogPostPage({
             </div>
           </div>
         </section>
-      )}
+        )
+      })()}
 
       {/* Content */}
       <section className="py-section bg-blue-900">

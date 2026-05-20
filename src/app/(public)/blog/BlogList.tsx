@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Search, X, PlayCircle } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { parseYoutubeId } from '@/lib/youtube'
+import { focalImageProps } from '@/lib/image-focal'
 
 export interface Category {
   id: string
@@ -49,14 +50,17 @@ function ArticleRow({ post }: { post: PostSummary }) {
       }}
     >
       {/* Media */}
-      {hasMedia && (
+      {hasMedia && (() => {
+        const fp = focalImageProps(thumb!)
+        return (
         <div className="relative flex-shrink-0 w-36 sm:w-52 rounded-lg overflow-hidden"
           style={{ aspectRatio: '16/10' }}>
           <Image
-            src={thumb!}
+            src={fp.src}
             alt={post.title}
             fill
             sizes="(max-width: 640px) 144px, 208px"
+            style={fp.style}
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
           {ytId && !post.cover_image && (
@@ -65,7 +69,8 @@ function ArticleRow({ post }: { post: PostSummary }) {
             </div>
           )}
         </div>
-      )}
+        )
+      })()}
 
       {/* Content */}
       <div className={`flex flex-col justify-between min-w-0 flex-1 ${!hasMedia ? 'border-l-2 border-accent/30 pl-5' : ''}`}>
@@ -99,11 +104,14 @@ function ArticleRow({ post }: { post: PostSummary }) {
         <div className="flex items-center justify-between mt-3">
           {post.coaches ? (
             <div className="flex items-center gap-2">
-              {post.coaches.photo_url && (
-                <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                  <Image src={post.coaches.photo_url} alt={post.coaches.name} fill sizes="20px" className="object-cover" />
-                </div>
-              )}
+              {post.coaches.photo_url && (() => {
+                const fp = focalImageProps(post.coaches.photo_url)
+                return (
+                  <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                    <Image src={fp.src} alt={post.coaches.name} fill sizes="20px" style={fp.style} className="object-cover" />
+                  </div>
+                )
+              })()}
               <span className="text-white/40 text-[11px] truncate">{post.coaches.name}</span>
             </div>
           ) : <span />}
@@ -199,17 +207,21 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
                 href={`/blog/${post.slug}`}
                 className="flex gap-3 group"
               >
-                {post.cover_image && (
-                  <div className="relative flex-shrink-0 w-14 h-14 rounded overflow-hidden">
-                    <Image
-                      src={post.cover_image}
-                      alt={post.title}
-                      fill
-                      sizes="56px"
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                )}
+                {post.cover_image && (() => {
+                  const fp = focalImageProps(post.cover_image)
+                  return (
+                    <div className="relative flex-shrink-0 w-14 h-14 rounded overflow-hidden">
+                      <Image
+                        src={fp.src}
+                        alt={post.title}
+                        fill
+                        sizes="56px"
+                        style={fp.style}
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  )
+                })()}
                 <div className="min-w-0">
                   <p className="text-white/80 text-xs leading-snug line-clamp-2 group-hover:text-accent transition-colors font-body">
                     {post.title}

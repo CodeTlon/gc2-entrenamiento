@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { DisciplinesSettings } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 export default function Disciplines({ data }: { data: DisciplinesSettings }) {
   return (
@@ -21,17 +22,20 @@ export default function Disciplines({ data }: { data: DisciplinesSettings }) {
         </ScrollReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {data.items.map((d, i) => (
+          {data.items.map((d, i) => {
+            const fp = focalImageProps(d.image)
+            return (
             <ScrollReveal key={`${d.title}-${i}`} delay={(i + 1) as 1 | 2 | 3}>
               <div
                 className="relative rounded-xl overflow-hidden group cursor-default"
                 style={{ height: '440px' }}
               >
                 <Image
-                  src={d.image}
+                  src={fp.src}
                   alt={d.title}
                   fill
                   sizes="(max-width: 768px) 100vw, 33vw"
+                  style={fp.style}
                   className="object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 {/* Overlay: dark from bottom, transparent at 70% */}
@@ -62,7 +66,8 @@ export default function Disciplines({ data }: { data: DisciplinesSettings }) {
                 </div>
               </div>
             </ScrollReveal>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

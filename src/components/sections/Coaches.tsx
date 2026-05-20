@@ -6,6 +6,7 @@ import { Instagram } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import CoachModal from '@/components/sections/CoachModal'
 import type { Coach } from '@/lib/content'
+import { focalImageProps } from '@/lib/image-focal'
 
 export default function Coaches({ coaches }: { coaches: Coach[] }) {
   const [selected, setSelected] = useState<Coach | null>(null)
@@ -36,15 +37,19 @@ export default function Coaches({ coaches }: { coaches: Coach[] }) {
                 aria-label={`Ver perfil de ${coach.name}`}
               >
                 <div className="relative overflow-hidden flex-shrink-0" style={{ height: '320px' }}>
-                  {coach.photo_url && (
-                    <Image
-                      src={coach.photo_url}
-                      alt={`Coach ${coach.name}`}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    />
-                  )}
+                  {coach.photo_url && (() => {
+                    const fp = focalImageProps(coach.photo_url)
+                    return (
+                      <Image
+                        src={fp.src}
+                        alt={`Coach ${coach.name}`}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        style={fp.style}
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    )
+                  })()}
                   <div
                     className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0"
                     style={{
