@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import sharp from 'sharp'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
@@ -38,15 +39,41 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const supabase = await requireUser()
     const file = formData.get('file')
     if (!(file instanceof File)) return { error: 'Archivo inválido.' }
-    if (file.size > 8 * 1024 * 1024) return { error: 'Máximo 8MB.' }
+    if (file.size > 12 * 1024 * 1024) return { error: 'Máximo 12MB.' }
 
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-    const path = `${formData.get('folder') ?? 'uploads'}/${crypto.randomUUID()}.${ext}`
-    const buf = Buffer.from(await file.arrayBuffer())
+    const folder = String(formData.get('folder') ?? 'uploads')
+    const id = crypto.randomUUID()
+    const original = Buffer.from(await file.arrayBuffer())
+    const mime = file.type || ''
+
+    // Pasamos por sharp solo si es una imagen rasterizada: SVG queda vectorial
+    // y GIF lo dejamos tal cual para preservar animaciones.
+    const optimizable =
+      mime.startsWith('image/') && mime !== 'image/svg+xml' && mime !== 'image/gif'
+
+    let buf: Buffer
+    let ext: string
+    let contentType: string
+
+    if (optimizable) {
+      buf = await sharp(original)
+        .rotate()
+        .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: 82, effort: 4 })
+        .toBuffer()
+      ext = 'webp'
+      contentType = 'image/webp'
+    } else {
+      buf = original
+      ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
+      contentType = mime || 'application/octet-stream'
+    }
+
+    const path = `${folder}/${id}.${ext}`
 
     const { error: upErr } = await supabase.storage
       .from('media')
-      .upload(path, buf, { contentType: file.type, upsert: false })
+      .upload(path, buf, { contentType, upsert: false })
     if (upErr) return { error: upErr.message }
 
     const { data } = supabase.storage.from('media').getPublicUrl(path)
