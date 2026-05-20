@@ -16,11 +16,13 @@ import {
   X,
   ExternalLink,
   ChevronRight,
+  LayoutGrid,
 } from 'lucide-react'
 import { signOutAction } from '@/actions/auth'
 
 const NAV = [
   { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard, exact: true },
+  { href: '/dashboard/contenido', label: 'Contenido', icon: LayoutGrid },
   { href: '/dashboard/entrenadores', label: 'Entrenadores', icon: Users },
   { href: '/dashboard/planes', label: 'Planes', icon: ListChecks },
   { href: '/dashboard/blog', label: 'Blog', icon: FileText },

@@ -204,11 +204,11 @@ const FALLBACK_GROUP_CLASSES: GroupClassesSettings = {
 }
 
 const FALLBACK_TEAM_GALLERY: TeamGallerySettings = {
-  label: '● En acción',
-  title_line_1: 'ENTRENAMIENTO',
-  title_line_2: 'EN ACCIÓN',
+  label: '● Nuestro equipo',
+  title_line_1: 'NUESTRO',
+  title_line_2: 'EQUIPO',
   description:
-    'Running, ciclismo, natación y trabajo de fuerza.',
+    'Más que un equipo de entrenamiento, somos una comunidad de atletas apasionados por superarse.',
   items: [
     { image: '/images/carrera.jpeg', label: 'Running', large: false },
     { image: IMG_CYCLING, label: 'Ciclismo', large: false },
