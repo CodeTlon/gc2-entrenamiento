@@ -15,7 +15,6 @@ export default function Coaches({ coaches }: { coaches: Coach[] }) {
     <section className="py-section bg-blue-900" id="profes">
       <div className="container">
         <ScrollReveal className="text-center mb-14">
-          <p className="section-label">● Nuestro Staff</p>
           <h2 className="section-title">
             LOS PROFESIONALES <br />
             <span className="gradient-text">DETRÁS DEL EQUIPO</span>

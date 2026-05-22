@@ -30,10 +30,17 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
   }, [])
 
   return (
-    <section className="py-section bg-blue-900" id="equipo">
+    <section className="py-section bg-blue-700 relative" id="equipo">
+      {/* Transición suave desde Coaches (blue-900) */}
+      <div
+        className="absolute inset-x-0 top-0 h-24 pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(180deg, rgba(10,22,40,0.55) 0%, transparent 100%)',
+        }}
+      />
       <div className="container">
         <ScrollReveal className="text-center mb-14">
-          <p className="section-label">{data.label}</p>
           <h2 className="section-title">
             {data.title_line_1}{' '}
             <span className="gradient-text">{data.title_line_2}</span>

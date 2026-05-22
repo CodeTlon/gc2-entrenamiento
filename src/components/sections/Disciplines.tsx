@@ -14,7 +14,6 @@ export default function Disciplines({ data }: { data: DisciplinesSettings }) {
     >
       <div className="container">
         <ScrollReveal className="text-center mb-14">
-          <p className="section-label">{data.label}</p>
           <h2 className="section-title">
             {data.title_line_1}{' '}
             <span className="gradient-text">{data.title_line_2}</span>

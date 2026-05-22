@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import { Check } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { AboutSettings } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
@@ -7,65 +6,83 @@ import { focalImageProps } from '@/lib/image-focal'
 export default function About({ data }: { data: AboutSettings }) {
   const fp = focalImageProps(data.image)
   return (
-    <section className="py-section bg-blue-900 relative" id="nosotros">
+    <section
+      className="relative py-section overflow-hidden bg-blue-900"
+      id="nosotros"
+    >
+      {/* Halos sutiles */}
       <div
-        className="absolute top-0 left-0 right-0 h-px"
+        className="absolute -top-32 -left-20 w-[520px] h-[520px] rounded-full pointer-events-none"
         style={{
           background:
-            'linear-gradient(90deg, transparent, rgba(26,68,148,0.25), transparent)',
+            'radial-gradient(circle, rgba(37,99,235,0.10) 0%, transparent 65%)',
+          filter: 'blur(40px)',
         }}
       />
-      <div className="container">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Image */}
-          <ScrollReveal>
+      <div
+        className="absolute bottom-0 right-0 w-[600px] h-[600px] rounded-full pointer-events-none"
+        style={{
+          background:
+            'radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 70%)',
+          filter: 'blur(50px)',
+        }}
+      />
+
+      <div className="container relative">
+        {/* Bloque de texto, centrado */}
+        <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
+          <h2 className="section-title mb-7">
+            {data.title_line_1}{' '}
+            <span className="gradient-text">{data.title_line_2}</span>
+          </h2>
+
+          <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base">
+            {data.paragraphs.map((p, i) => (
+              <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
+            ))}
+          </div>
+        </ScrollReveal>
+
+        {/* Foto del equipo: banner horizontal panorámico, responsive */}
+        <ScrollReveal delay={2}>
+          <div className="relative max-w-5xl mx-auto">
+            {/* Halo accent detrás */}
             <div
-              className="relative rounded-xl overflow-hidden shadow-xl"
-              style={{ height: '480px' }}
+              className="absolute -inset-6 md:-inset-10 rounded-3xl pointer-events-none"
+              style={{
+                background:
+                  'radial-gradient(ellipse at center, rgba(56,189,248,0.16) 0%, transparent 70%)',
+                filter: 'blur(40px)',
+              }}
+              aria-hidden
+            />
+            <div
+              className="relative w-full rounded-2xl overflow-hidden"
+              style={{
+                aspectRatio: '21 / 9',
+                boxShadow:
+                  '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(56,189,248,0.12)',
+              }}
             >
               <Image
                 src={fp.src}
-                alt="Atleta entrenando"
+                alt="Equipo de GC²"
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                sizes="(max-width: 1024px) 100vw, 1024px"
                 style={fp.style}
                 className="object-cover"
               />
+              {/* Vignette inferior para integrar con la sección */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    'linear-gradient(180deg, transparent 70%, rgba(10,22,40,0.40) 100%)',
+                }}
+              />
             </div>
-          </ScrollReveal>
-
-          {/* Content */}
-          <ScrollReveal delay={2}>
-            <p className="section-label flex items-center gap-2.5">
-              <span className="inline-block w-7 h-px bg-accent" />
-              {data.label}
-            </p>
-            <h2 className="section-title mb-6">
-              {data.title_line_1}{' '}
-              <span className="gradient-text">{data.title_line_2}</span>
-            </h2>
-            <div className="space-y-4 mb-8 text-white/55 leading-relaxed font-light">
-              {data.paragraphs.map((p, i) => (
-                <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
-              ))}
-            </div>
-
-            {/* Features */}
-            <div className="space-y-3">
-              {data.features.map((feature, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span
-                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #2563EB, #38BDF8)' }}
-                  >
-                    <Check size={14} className="text-white" />
-                  </span>
-                  <span className="text-white/70 text-sm">{feature}</span>
-                </div>
-              ))}
-            </div>
-          </ScrollReveal>
-        </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   )

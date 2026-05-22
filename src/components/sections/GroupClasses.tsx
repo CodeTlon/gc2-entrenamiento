@@ -1,15 +1,17 @@
+import { Fragment } from 'react'
 import Image from 'next/image'
-import { Check, Clock, CalendarDays } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { GroupClassesSettings } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
 
 export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
   const bg = focalImageProps(data.bg_image)
-  const side = focalImageProps(data.side_image)
   return (
-    <section className="relative py-section overflow-hidden" id="grupales">
-      {/* Background */}
+    <section
+      className="relative py-section overflow-hidden"
+      id="grupales"
+    >
+      {/* Fondo: foto full-bleed + overlay */}
       <div className="absolute inset-0 overflow-hidden">
         <Image
           src={bg.src}
@@ -19,128 +21,77 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
           style={bg.style}
           className="object-cover"
         />
+        {/* Degradado azul desde arriba para que el título y el horario respiren */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(135deg, rgba(10,22,40,0.94) 0%, rgba(13,34,71,0.87) 50%, rgba(16,46,102,0.8) 100%)',
+              'linear-gradient(180deg, #0A1628 0%, rgba(10,22,40,0.92) 22%, rgba(13,34,71,0.70) 55%, rgba(13,34,71,0.55) 100%)',
+          }}
+        />
+        {/* Tinte general + vignette para borde inferior */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse at center, transparent 35%, rgba(10,22,40,0.45) 100%)',
           }}
         />
       </div>
 
-      <div className="container relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Content */}
-          <ScrollReveal>
-            <p className="section-label">{data.label}</p>
-            <h2 className="section-title mb-7">
-              {data.title_line_1}
-              <br />
-              <span className="gradient-text">{data.title_line_2}</span>
-            </h2>
+      <div
+        className="absolute top-0 left-0 right-0 h-px z-10"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, rgba(56,189,248,0.30), transparent)',
+        }}
+      />
 
-            {/* Time */}
+      <div className="container relative z-10">
+        {/* Título */}
+        <ScrollReveal className="text-center mb-14 max-w-3xl mx-auto">
+          <h2 className="section-title">
+            {data.title_line_1}{' '}
+            <span className="gradient-text">{data.title_line_2}</span>
+          </h2>
+        </ScrollReveal>
+
+        {/* Horario tipográfico, sin cards: días + hora como statement */}
+        <ScrollReveal delay={1}>
+          <div className="text-center">
             <div
-              className="inline-flex items-center gap-4 px-6 py-4 rounded-2xl mb-8"
+              className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-8 gap-y-2 font-heading font-bold text-white"
               style={{
-                background: 'rgba(13,34,71,0.60)',
-                border: '1px solid rgba(56,189,248,0.20)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
+                fontSize: 'clamp(1.75rem, 4.5vw, 3rem)',
+                letterSpacing: '0.04em',
               }}
             >
-              <Clock size={30} className="text-accent flex-shrink-0" />
-              <div>
-                <p
-                  className="text-white/40 text-[10px] font-body font-semibold uppercase mb-0.5"
-                  style={{ letterSpacing: '3px' }}
-                >
-                  Horario
-                </p>
-                <div className="flex items-baseline gap-1.5">
-                  <span
-                    className="font-heading font-black text-accent leading-none"
-                    style={{ fontSize: '52px' }}
-                  >
-                    {data.time}
-                  </span>
-                  <span
-                    className="text-white/50 font-body font-semibold uppercase text-base"
-                    style={{ letterSpacing: '2px' }}
-                  >
-                    HS
-                  </span>
-                </div>
-              </div>
+              {data.days.map((day, i) => (
+                <Fragment key={day}>
+                  {i > 0 && (
+                    <span className="text-accent/40 font-light" aria-hidden>
+                      /
+                    </span>
+                  )}
+                  <span>{day}</span>
+                </Fragment>
+              ))}
             </div>
-
-            {/* Days */}
-            <div className="flex flex-wrap gap-3 mb-9">
-              {data.days.map((day) => (
-                <span
-                  key={day}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-body font-bold text-white"
-                  style={{
-                    background: 'linear-gradient(135deg, #1d4ed8, #38BDF8)',
-                    boxShadow: '0 4px 14px rgba(56,189,248,0.25)',
-                    letterSpacing: '1.5px',
-                  }}
-                >
-                  <CalendarDays size={13} />
-                  {day}
+            <div className="mt-5 flex items-center justify-center gap-3">
+              <span className="h-px w-10 bg-accent/40" />
+              <p className="text-white/70 text-sm md:text-base font-body">
+                a las{' '}
+                <span className="text-accent font-heading font-bold text-lg md:text-xl">
+                  {data.time}
+                </span>{' '}
+                <span className="text-accent/80 font-body font-semibold uppercase text-xs tracking-widest">
+                  hs
                 </span>
-              ))}
+              </p>
+              <span className="h-px w-10 bg-accent/40" />
             </div>
-
-            {/* Plans */}
-            <div className="space-y-4">
-              {data.plans.map((plan, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-4 px-6 py-5 rounded-xl"
-                  style={{
-                    background: 'rgba(13,34,71,0.56)',
-                    backdropFilter: 'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    border: '1px solid rgba(26,68,148,0.25)',
-                  }}
-                >
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: 'linear-gradient(135deg, #2563EB, #38BDF8)',
-                    }}
-                  >
-                    <Check size={15} className="text-white" />
-                  </span>
-                  <div>
-                    <p className="font-heading font-bold text-white text-lg leading-snug">
-                      {plan.name}
-                    </p>
-                    <p className="text-white/45 text-sm font-light">{plan.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </ScrollReveal>
-
-          {/* Side image */}
-          <ScrollReveal delay={2}>
-            <div
-              className="relative rounded-xl overflow-hidden shadow-xl hidden lg:block"
-              style={{ height: '520px' }}
-            >
-              <Image
-                src={side.src}
-                alt="Clases grupales"
-                fill
-                sizes="50vw"
-                style={side.style}
-                className="object-cover"
-              />
-            </div>
-          </ScrollReveal>
-        </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   )
