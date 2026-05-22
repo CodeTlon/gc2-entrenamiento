@@ -55,6 +55,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
         <div
           ref={gridRef}
           className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4"
+          style={{ gridAutoFlow: 'dense' }}
         >
           {data.items.map((item, i) => {
             const wide = item.size === 'wide'
