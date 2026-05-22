@@ -21,24 +21,25 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
           style={bg.style}
           className="object-cover"
         />
-        {/* Degradado azul desde arriba para que el título y el horario respiren */}
+        {/* Degradado en blue-700 (#102E66) para diferenciar de Disciplines (blue-800→900) */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, #0A1628 0%, rgba(10,22,40,0.92) 22%, rgba(13,34,71,0.70) 55%, rgba(13,34,71,0.55) 100%)',
+              'linear-gradient(180deg, #102E66 0%, rgba(16,46,102,0.92) 22%, rgba(16,46,102,0.70) 55%, rgba(16,46,102,0.55) 100%)',
           }}
         />
-        {/* Tinte general + vignette para borde inferior */}
+        {/* Vignette suave para borde inferior */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at center, transparent 35%, rgba(10,22,40,0.45) 100%)',
+              'radial-gradient(ellipse at center, transparent 35%, rgba(16,46,102,0.45) 100%)',
           }}
         />
       </div>
 
+      {/* Hairline accent superior */}
       <div
         className="absolute top-0 left-0 right-0 h-px z-10"
         style={{

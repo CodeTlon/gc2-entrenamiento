@@ -29,23 +29,9 @@ export default function About({ data }: { data: AboutSettings }) {
       />
 
       <div className="container relative">
-        {/* Bloque de texto, centrado */}
-        <ScrollReveal className="text-center max-w-3xl mx-auto mb-14">
-          <h2 className="section-title mb-7">
-            {data.title_line_1}{' '}
-            <span className="gradient-text">{data.title_line_2}</span>
-          </h2>
-
-          <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base">
-            {data.paragraphs.map((p, i) => (
-              <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
-            ))}
-          </div>
-        </ScrollReveal>
-
-        {/* Foto del equipo: banner horizontal panorámico, responsive */}
-        <ScrollReveal delay={2}>
-          <div className="relative max-w-5xl mx-auto">
+        {/* Foto del equipo: banner horizontal arriba — la imagen lidera */}
+        <ScrollReveal>
+          <div className="relative mb-14 lg:mb-16">
             {/* Halo accent detrás */}
             <div
               className="absolute -inset-6 md:-inset-10 rounded-3xl pointer-events-none"
@@ -59,7 +45,8 @@ export default function About({ data }: { data: AboutSettings }) {
             <div
               className="relative w-full rounded-2xl overflow-hidden"
               style={{
-                aspectRatio: '21 / 9',
+                aspectRatio: '16 / 9',
+                maxHeight: '560px',
                 boxShadow:
                   '0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(56,189,248,0.12)',
               }}
@@ -68,19 +55,31 @@ export default function About({ data }: { data: AboutSettings }) {
                 src={fp.src}
                 alt="Equipo de GC²"
                 fill
-                sizes="(max-width: 1024px) 100vw, 1024px"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1200px"
                 style={fp.style}
                 className="object-cover"
               />
-              {/* Vignette inferior para integrar con la sección */}
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   background:
-                    'linear-gradient(180deg, transparent 70%, rgba(10,22,40,0.40) 100%)',
+                    'linear-gradient(180deg, transparent 65%, rgba(10,22,40,0.50) 100%)',
                 }}
               />
             </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Contenido: bloque unificado a todo el ancho de la imagen */}
+        <ScrollReveal delay={1}>
+          <h2 className="section-title mb-6">
+            {data.title_line_1}{' '}
+            <span className="gradient-text">{data.title_line_2}</span>
+          </h2>
+          <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base">
+            {data.paragraphs.map((p, i) => (
+              <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
+            ))}
           </div>
         </ScrollReveal>
       </div>
