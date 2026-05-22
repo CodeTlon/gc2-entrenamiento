@@ -9,7 +9,6 @@ export default function PrivacidadPage() {
   return (
     <section className="py-section bg-blue-900 min-h-screen">
       <div className="container max-w-3xl pt-24">
-        <p className="section-label mb-4">Legal</p>
         <h1
           className="font-heading font-black uppercase leading-tight mb-10"
           style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}
