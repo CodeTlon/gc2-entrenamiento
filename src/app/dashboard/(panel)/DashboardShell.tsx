@@ -100,10 +100,10 @@ export default function DashboardShell({
             <Image
               src="/images/logo.png"
               alt="GC2"
-              width={80}
-              height={26}
-              className="h-6 w-auto"
-              sizes="80px"
+              width={706}
+              height={309}
+              sizes="55px"
+              style={{ height: '24px', width: 'auto' }}
             />
           </Link>
 
@@ -162,10 +162,10 @@ function SidebarContent({
           <Image
             src="/images/logo.png"
             alt="GC2"
-            width={90}
-            height={28}
-            className="h-7 w-auto"
-            sizes="90px"
+            width={706}
+            height={309}
+            sizes="64px"
+            style={{ height: '28px', width: 'auto' }}
           />
           <span
             className="text-[10px] font-body font-bold uppercase tracking-[2px] text-white/35 leading-none"

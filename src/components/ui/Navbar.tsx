@@ -68,10 +68,11 @@ export default function Navbar({ contact }: Props) {
             <Image
               src="/images/logo.png"
               alt="GC2 Entrenamiento"
-              width={120}
-              height={40}
-              className="h-10 w-auto"
-              sizes="120px"
+              width={706}
+              height={309}
+              sizes="92px"
+              priority
+              style={{ height: '40px', width: 'auto' }}
             />
           </Link>
 

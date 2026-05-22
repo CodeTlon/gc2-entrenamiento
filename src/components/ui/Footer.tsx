@@ -22,10 +22,10 @@ export default function Footer({ contact }: Props) {
             <Image
               src="/images/logo.png"
               alt="GC2 Entrenamiento"
-              width={140}
-              height={48}
-              className="h-12 w-auto"
-              sizes="140px"
+              width={706}
+              height={309}
+              sizes="110px"
+              style={{ height: '48px', width: 'auto' }}
             />
           </Link>
 

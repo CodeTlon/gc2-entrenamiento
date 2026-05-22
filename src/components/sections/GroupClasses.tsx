@@ -17,6 +17,7 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
           src={bg.src}
           alt="Entrenamiento grupal"
           fill
+          priority
           sizes="100vw"
           style={bg.style}
           className="object-cover"
