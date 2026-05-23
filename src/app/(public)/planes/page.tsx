@@ -3,7 +3,6 @@ import { Check } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import { getSiteSettings, type Plan, type PlanCategoryItem } from '@/lib/content'
 import { createSupabaseClient } from '@/lib/supabase'
-import { IMG_RUNNING } from '@/lib/constants'
 import MiniHero from '@/components/ui/MiniHero'
 
 export const metadata: Metadata = {
@@ -115,7 +114,7 @@ export default async function PlanesPage() {
   return (
     <>
       <MiniHero
-        image={IMG_RUNNING}
+        image={settings.page_banners.planes.bg_image}
         imageAlt="Corredor"
         titleWhite="ELEGÍ TU"
         titleAccent="PLAN"

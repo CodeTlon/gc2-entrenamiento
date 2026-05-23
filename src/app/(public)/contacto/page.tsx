@@ -6,7 +6,7 @@ import ContactForm from '@/components/sections/ContactForm'
 import WhatsAppIcon from '@/components/ui/WhatsAppIcon'
 import { createSupabaseClient } from '@/lib/supabase'
 import { getSiteSettings } from '@/lib/content'
-import { IMG_ABOUT } from '@/lib/constants'
+import { focalImageProps } from '@/lib/image-focal'
 
 export const metadata: Metadata = {
   title: 'Contacto',
@@ -19,7 +19,8 @@ export default async function ContactoPage({
   searchParams: Promise<{ coach?: string }>
 }) {
   const { coach: coachSlug } = await searchParams
-  const { contact } = await getSiteSettings()
+  const { contact, page_banners } = await getSiteSettings()
+  const contactoBanner = focalImageProps(page_banners.contacto.bg_image)
   const supabase = createSupabaseClient()
 
   const { data: coaches } = await supabase
@@ -38,13 +39,14 @@ export default async function ContactoPage({
       <section className="relative overflow-hidden min-h-screen flex items-center justify-center">
         <div className="absolute inset-0">
           <Image
-            src={IMG_ABOUT}
+            src={contactoBanner.src || page_banners.contacto.bg_image}
             alt="Contacto"
             fill
             priority
             sizes="100vw"
             quality={85}
             className="object-cover"
+            style={contactoBanner.style}
           />
           <div
             className="absolute inset-0"

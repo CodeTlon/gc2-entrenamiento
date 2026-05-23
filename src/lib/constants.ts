@@ -18,7 +18,7 @@ export const INSTAGRAM_LINK = 'https://www.instagram.com/gc2entrenamientoderesis
 // Imágenes Unsplash (remotePatterns configurado en next.config.ts)
 export const IMG_HERO = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1920&q=85'
 export const IMG_ABOUT = 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=700&q=80'
-export const IMG_RUNNING = 'https://images.unsplash.com/photo-1571008887538-b36bb32f4571?w=600&q=80'
+export const IMG_RUNNING = '/images/run.jpg'
 export const IMG_CYCLING = 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600&q=80'
 export const IMG_SWIMMING = 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=600&q=80'
 export const IMG_GROUP = 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1920&q=80'

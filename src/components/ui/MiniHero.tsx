@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { focalImageProps } from '@/lib/image-focal'
 
 interface MiniHeroProps {
   image: string
@@ -8,17 +9,20 @@ interface MiniHeroProps {
 }
 
 export default function MiniHero({ image, imageAlt, titleWhite, titleAccent }: MiniHeroProps) {
+  const { src, style } = focalImageProps(image)
+
   return (
     <section className="relative overflow-hidden flex items-end" style={{ minHeight: '55vh' }}>
       <div className="absolute inset-0">
         <Image
-          src={image}
+          src={src || image}
           alt={imageAlt}
           fill
           priority
           sizes="100vw"
           quality={85}
           className="object-cover"
+          style={style}
         />
         <div
           className="absolute inset-0"

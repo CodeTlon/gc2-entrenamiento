@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createSupabaseClient } from '@/lib/supabase'
-import { IMG_GROUP } from '@/lib/constants'
+import { getSiteSettings } from '@/lib/content'
 import MiniHero from '@/components/ui/MiniHero'
 import BlogList, { type PostSummary, type Category } from './BlogList'
 
@@ -33,12 +33,12 @@ async function getData(): Promise<{ posts: PostSummary[]; categories: Category[]
 }
 
 export default async function BlogPage() {
-  const { posts, categories } = await getData()
+  const [{ posts, categories }, settings] = await Promise.all([getData(), getSiteSettings()])
 
   return (
     <>
       <MiniHero
-        image={IMG_GROUP}
+        image={settings.page_banners.blog.bg_image}
         imageAlt="Equipo entrenando"
         titleWhite="CONOCIMIENTO"
         titleAccent="QUE MUEVE"

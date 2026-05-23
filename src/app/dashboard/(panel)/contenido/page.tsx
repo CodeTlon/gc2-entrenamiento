@@ -8,6 +8,7 @@ const ITEMS = [
   { href: '/dashboard/contenido/disciplinas', title: 'Disciplinas', desc: 'Las 3 tarjetas: running, duatlón y triatlón.' },
   { href: '/dashboard/contenido/clases-grupales', title: 'Clases grupales', desc: 'Horario, días y planes grupales destacados.' },
   { href: '/dashboard/contenido/galeria', title: 'Galería del equipo', desc: 'Grilla de fotos al final del home.' },
+  { href: '/dashboard/contenido/banners', title: 'Banners de páginas', desc: 'Imagen de fondo de Planes, Blog y Contacto. Con punto focal y zoom.' },
 ]
 
 export default function ContenidoHub() {

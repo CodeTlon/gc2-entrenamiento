@@ -133,6 +133,16 @@ export interface ContactSettings {
   city: string
 }
 
+export interface PageBannerItem {
+  bg_image: string
+}
+
+export interface PageBannersSettings {
+  planes: PageBannerItem
+  blog: PageBannerItem
+  contacto: PageBannerItem
+}
+
 export interface SiteSettings {
   hero: HeroSettings
   about: AboutSettings
@@ -140,6 +150,7 @@ export interface SiteSettings {
   group_classes: GroupClassesSettings
   team_gallery: TeamGallerySettings
   contact: ContactSettings
+  page_banners: PageBannersSettings
 }
 
 // =========================================================
@@ -230,6 +241,12 @@ const FALLBACK_CONTACT: ContactSettings = {
   city: SITE_CITY,
 }
 
+const FALLBACK_PAGE_BANNERS: PageBannersSettings = {
+  planes: { bg_image: IMG_RUNNING },
+  blog: { bg_image: IMG_GROUP },
+  contacto: { bg_image: IMG_ABOUT },
+}
+
 export const FALLBACK_SETTINGS: SiteSettings = {
   hero: FALLBACK_HERO,
   about: FALLBACK_ABOUT,
@@ -237,6 +254,7 @@ export const FALLBACK_SETTINGS: SiteSettings = {
   group_classes: FALLBACK_GROUP_CLASSES,
   team_gallery: FALLBACK_TEAM_GALLERY,
   contact: FALLBACK_CONTACT,
+  page_banners: FALLBACK_PAGE_BANNERS,
 }
 
 const FALLBACK_COACHES: Coach[] = COACHES_FALLBACK.map((c, i) => ({
@@ -313,6 +331,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   }
 
   const map = new Map(data.map((row) => [row.key, row.value]))
+  const storedBanners = (map.get('page_banners') as Partial<PageBannersSettings> | undefined) ?? {}
   return {
     hero: { ...FALLBACK_HERO, ...((map.get('hero') as HeroSettings | undefined) ?? {}) },
     about: { ...FALLBACK_ABOUT, ...((map.get('about') as AboutSettings | undefined) ?? {}) },
@@ -320,6 +339,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     group_classes: { ...FALLBACK_GROUP_CLASSES, ...((map.get('group_classes') as GroupClassesSettings | undefined) ?? {}) },
     team_gallery: { ...FALLBACK_TEAM_GALLERY, ...((map.get('team_gallery') as TeamGallerySettings | undefined) ?? {}) },
     contact: { ...FALLBACK_CONTACT, ...((map.get('contact') as ContactSettings | undefined) ?? {}) },
+    page_banners: {
+      planes: { ...FALLBACK_PAGE_BANNERS.planes, ...(storedBanners.planes ?? {}) },
+      blog: { ...FALLBACK_PAGE_BANNERS.blog, ...(storedBanners.blog ?? {}) },
+      contacto: { ...FALLBACK_PAGE_BANNERS.contacto, ...(storedBanners.contacto ?? {}) },
+    },
   }
 }
 
