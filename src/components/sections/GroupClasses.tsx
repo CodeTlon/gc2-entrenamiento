@@ -27,7 +27,7 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, #102E66 0%, rgba(16,46,102,0.92) 22%, rgba(16,46,102,0.70) 55%, rgba(16,46,102,0.55) 100%)',
+              'linear-gradient(180deg, #102E66 0%, rgba(16,46,102,0.96) 22%, rgba(16,46,102,0.88) 55%, rgba(16,46,102,0.82) 100%)',
           }}
         />
         {/* Vignette suave para borde inferior */}
@@ -35,7 +35,7 @@ export default function GroupClasses({ data }: { data: GroupClassesSettings }) {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              'radial-gradient(ellipse at center, transparent 35%, rgba(16,46,102,0.45) 100%)',
+              'radial-gradient(ellipse at center, transparent 35%, rgba(16,46,102,0.65) 100%)',
           }}
         />
       </div>
