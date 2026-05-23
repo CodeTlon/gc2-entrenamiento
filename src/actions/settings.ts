@@ -59,7 +59,7 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
       buf = await sharp(original)
         .rotate()
         .resize({ width: 2000, height: 2000, fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: 82, effort: 4 })
+        .webp({ quality: 82, effort: 2 })
         .toBuffer()
       ext = 'webp'
       contentType = 'image/webp'
