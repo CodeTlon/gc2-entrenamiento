@@ -79,11 +79,12 @@ export default function Hero({ data }: { data: HeroSettings }) {
       </div>
 
       {/* Overlay */}
+      <div className="absolute inset-0" style={{ background: 'rgba(10,22,40,0.55)' }} />
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(135deg, rgba(10,22,40,0.97) 0%, rgba(13,34,71,0.92) 40%, rgba(16,46,102,0.78) 70%, rgba(10,22,40,0.95) 100%)',
+            'linear-gradient(135deg, rgba(10,22,40,0.97) 0%, rgba(13,34,71,0.93) 40%, rgba(16,46,102,0.88) 70%, rgba(10,22,40,0.97) 100%)',
         }}
       />
 
@@ -132,7 +133,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       </div>
 
       {/* Content */}
-      <div className="container relative z-10 pt-32 lg:pt-36 pb-16">
+      <div className="container relative z-10 pt-28 sm:pt-32 lg:pt-36 pb-16">
         <h1
           className="font-heading font-black uppercase leading-[1.05] mb-5 reveal delay-1"
           style={{ fontSize: 'clamp(3rem, 11vw, 9rem)', letterSpacing: '-2px' }}
@@ -142,12 +143,12 @@ export default function Hero({ data }: { data: HeroSettings }) {
         </h1>
 
         <p
-          className="text-white/55 text-base md:text-lg max-w-[480px] mb-8 reveal delay-2 font-light"
+          className="hidden sm:block text-white/55 text-base md:text-lg max-w-[480px] mb-8 reveal delay-2 font-light"
           style={{ lineHeight: 1.7 }}
           dangerouslySetInnerHTML={{ __html: data.subtitle }}
         />
 
-        <div className="flex flex-wrap gap-3 md:gap-4 mb-10 md:mb-14 reveal delay-3">
+        <div className="flex flex-wrap gap-3 md:gap-4 mb-8 sm:mb-10 md:mb-14 reveal delay-3">
           <Link
             href={data.cta_primary_href}
             className="btn btn--primary uppercase tracking-widest text-sm font-extrabold"
@@ -163,8 +164,8 @@ export default function Hero({ data }: { data: HeroSettings }) {
           </Link>
         </div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap gap-6 md:gap-12 reveal delay-4">
+        {/* Stats — ocultas en mobile */}
+        <div className="hidden sm:flex flex-wrap gap-6 md:gap-12 reveal delay-4">
           {data.stats.map((stat, i) => (
             <div key={`${stat.label}-${i}`}>
               <div
