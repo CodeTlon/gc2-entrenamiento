@@ -63,7 +63,7 @@ export default function Disciplines({ data }: { data: DisciplinesSettings }) {
                     >
                       {d.title}
                     </h3>
-                    <p className="text-white/55 text-sm leading-relaxed font-light">
+                    <p className="text-white/55 text-sm leading-relaxed font-light min-h-[3.5rem]">
                       {d.desc}
                     </p>
                   </div>

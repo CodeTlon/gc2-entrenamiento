@@ -30,11 +30,13 @@ function PlanCard({ plan, whatsappLink }: { plan: Plan; whatsappLink: string }) 
         Plan
       </p>
       <div
-        className="font-heading font-black uppercase leading-none text-white mb-5"
+        className="font-heading font-black uppercase leading-none text-white mb-5 min-h-[4.5rem] flex items-start"
         style={{ fontSize: isLongName ? 'clamp(1.5rem, 3vw, 2rem)' : 'clamp(2.5rem, 5vw, 3.5rem)' }}
       >
-        {display}
-        <span className="text-accent">.</span>
+        <span>
+          {display}
+          <span className="text-accent">.</span>
+        </span>
       </div>
 
       <div className="flex-1 space-y-2.5 mb-7">
