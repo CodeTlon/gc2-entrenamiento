@@ -36,20 +36,15 @@ function ArticleCard({ post }: { post: PostSummary }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group flex flex-col rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 h-full"
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.07)',
-      }}
-      onMouseEnter={(e) => {
-        ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.2)'
-      }}
-      onMouseLeave={(e) => {
-        ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'
-      }}
+      // Mobile: apilado vertical. sm+: fila horizontal de altura fija
+      className="group flex flex-col sm:flex-row sm:h-52 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      style={{ background: '#0D2247', border: '1px solid rgba(255,255,255,0.07)' }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.2)' }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
     >
-      {/* Imagen — ratio 16/9 fijo */}
-      <div className="relative w-full flex-shrink-0 overflow-hidden" style={{ aspectRatio: '16/9' }}>
+      {/* Imagen */}
+      {/* Mobile: ancho completo 16/9. Desktop: ancho fijo, altura = altura de la card */}
+      <div className="relative w-full aspect-video sm:aspect-auto sm:w-72 sm:self-stretch flex-shrink-0 overflow-hidden">
         {thumb ? (() => {
           const fp = focalImageProps(thumb)
           return (
@@ -58,62 +53,65 @@ function ArticleCard({ post }: { post: PostSummary }) {
                 src={fp.src}
                 alt={post.title}
                 fill
-                sizes="(max-width: 640px) 100vw, 50vw"
+                sizes="(max-width: 640px) 100vw, 288px"
                 style={fp.style}
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
+              {/* Degradado base */}
+              <div className="absolute inset-0" style={{ background: 'rgba(10,22,40,0.35)' }} />
+              {/* Mobile: difumina hacia abajo (hacia el contenido) */}
+              <div className="sm:hidden absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 25%, #0D2247 100%)' }} />
+              {/* Desktop: difumina hacia la derecha (hacia el contenido) */}
+              <div className="hidden sm:block absolute inset-0" style={{ background: 'linear-gradient(to right, transparent 45%, #0D2247 100%)' }} />
               {ytId && !post.cover_image && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <PlayCircle size={36} className="text-white/80" />
                 </div>
               )}
             </>
           )
         })() : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: '#0D2247' }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ background: '#0A1628' }}>
             <span className="text-white/10 text-4xl font-heading font-black">GC²</span>
           </div>
         )}
       </div>
 
       {/* Contenido */}
-      <div className="flex flex-col flex-1 p-5">
-        {/* Meta: fecha + categorías */}
-        <div className="flex items-center gap-2 flex-wrap mb-3">
-          <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2px]">
-            {formatDate(post.created_at)}
-          </p>
-          {post.post_categories.map(({ categories: cat }) =>
-            cat ? (
-              <span
-                key={cat.slug}
-                className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
-                style={{ background: '#38BDF8' }}
-              >
-                {cat.name}
-              </span>
-            ) : null
+      <div className="flex flex-col flex-1 justify-between p-5 sm:py-6 min-w-0">
+        <div>
+          <div className="flex items-center gap-2 flex-wrap mb-2.5">
+            <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2px]">
+              {formatDate(post.created_at)}
+            </p>
+            {post.post_categories.map(({ categories: cat }) =>
+              cat ? (
+                <span
+                  key={cat.slug}
+                  className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
+                  style={{ background: '#38BDF8' }}
+                >
+                  {cat.name}
+                </span>
+              ) : null
+            )}
+          </div>
+
+          <h2
+            className="font-heading font-bold text-white uppercase leading-tight mb-2 line-clamp-2"
+            style={{ fontSize: 'clamp(1rem, 1.8vw, 1.25rem)', minHeight: '2.6em' }}
+          >
+            {post.title}
+          </h2>
+
+          {post.excerpt && (
+            <p className="text-white/55 text-sm leading-relaxed line-clamp-2 hidden sm:block">
+              {post.excerpt}
+            </p>
           )}
         </div>
 
-        {/* Título — siempre 2 líneas de alto */}
-        <h2
-          className="font-heading font-bold text-white uppercase leading-tight mb-3 line-clamp-2"
-          style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', minHeight: '2.8em' }}
-        >
-          {post.title}
-        </h2>
-
-        {/* Excerpt — ocupa el espacio disponible */}
-        <p className="text-white/55 text-sm leading-relaxed line-clamp-2 flex-1 mb-4">
-          {post.excerpt ?? ''}
-        </p>
-
-        {/* Pie: autor + leer */}
-        <div
-          className="flex items-center justify-between pt-3"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-        >
+        <div className="flex items-center justify-between mt-3">
           {(() => {
             const firstAuthor = post.post_authors[0]?.coaches ?? null
             return firstAuthor ? (
@@ -363,7 +361,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
               </p>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
+            <div className="space-y-4">
               {paginated.map((post) => (
                 <ArticleCard key={post.id} post={post} />
               ))}
