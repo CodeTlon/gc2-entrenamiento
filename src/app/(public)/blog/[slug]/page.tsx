@@ -104,7 +104,7 @@ export default async function BlogPostPage({
           />
           <div
             className="absolute inset-0"
-            style={{ background: 'linear-gradient(to bottom, rgba(10,22,40,0.4), rgba(10,22,40,0.95))' }}
+            style={{ background: 'linear-gradient(to bottom, rgba(10,22,40,0.72) 0%, rgba(10,22,40,0.82) 50%, rgba(10,22,40,0.97) 100%)' }}
           />
           <div className="absolute bottom-0 left-0 right-0 pb-12">
             <div className="container">

@@ -29,15 +29,14 @@ export interface PostSummary {
   post_authors: { coaches: { name: string; photo_url: string | null } | null }[]
 }
 
-function ArticleRow({ post }: { post: PostSummary }) {
+function ArticleCard({ post }: { post: PostSummary }) {
   const ytId = parseYoutubeId(post.youtube_url)
   const thumb = post.cover_image ?? (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null)
-  const hasMedia = !!thumb
 
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className="group flex gap-5 p-5 rounded-xl transition-all duration-300 hover:-translate-y-0.5"
+      className="group flex flex-col rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 h-full"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid rgba(255,255,255,0.07)',
@@ -49,63 +48,76 @@ function ArticleRow({ post }: { post: PostSummary }) {
         ;(e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)'
       }}
     >
-      {/* Media */}
-      {hasMedia && (() => {
-        const fp = focalImageProps(thumb!)
-        return (
-        <div className="relative flex-shrink-0 w-36 sm:w-52 rounded-lg overflow-hidden"
-          style={{ aspectRatio: '16/10' }}>
-          <Image
-            src={fp.src}
-            alt={post.title}
-            fill
-            sizes="(max-width: 640px) 144px, 208px"
-            style={fp.style}
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-          {ytId && !post.cover_image && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <PlayCircle size={36} className="text-white/80" />
-            </div>
-          )}
-        </div>
-        )
-      })()}
-
-      {/* Content */}
-      <div className={`flex flex-col justify-between min-w-0 flex-1 ${!hasMedia ? 'border-l-2 border-accent/30 pl-5' : ''}`}>
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2px]">
-              {formatDate(post.created_at)}
-            </p>
-            {post.post_categories.map(({ categories: cat }) =>
-              cat ? (
-                <span
-                  key={cat.slug}
-                  className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
-                  style={{ background: '#38BDF8' }}
-                >
-                  {cat.name}
-                </span>
-              ) : null
-            )}
+      {/* Imagen — ratio 16/9 fijo */}
+      <div className="relative w-full flex-shrink-0 overflow-hidden" style={{ aspectRatio: '16/9' }}>
+        {thumb ? (() => {
+          const fp = focalImageProps(thumb)
+          return (
+            <>
+              <Image
+                src={fp.src}
+                alt={post.title}
+                fill
+                sizes="(max-width: 640px) 100vw, 50vw"
+                style={fp.style}
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {ytId && !post.cover_image && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <PlayCircle size={36} className="text-white/80" />
+                </div>
+              )}
+            </>
+          )
+        })() : (
+          <div className="w-full h-full flex items-center justify-center" style={{ background: '#0D2247' }}>
+            <span className="text-white/10 text-4xl font-heading font-black">GC²</span>
           </div>
-          <h2 className="font-heading font-bold text-white uppercase leading-tight mb-2 line-clamp-2"
-            style={{ fontSize: 'clamp(1rem, 2vw, 1.25rem)' }}>
-            {post.title}
-          </h2>
-          {post.excerpt && (
-            <p className="text-white/55 text-sm leading-relaxed line-clamp-2 hidden sm:block">
-              {post.excerpt}
-            </p>
+        )}
+      </div>
+
+      {/* Contenido */}
+      <div className="flex flex-col flex-1 p-5">
+        {/* Meta: fecha + categorías */}
+        <div className="flex items-center gap-2 flex-wrap mb-3">
+          <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2px]">
+            {formatDate(post.created_at)}
+          </p>
+          {post.post_categories.map(({ categories: cat }) =>
+            cat ? (
+              <span
+                key={cat.slug}
+                className="px-2 py-0.5 rounded text-[10px] font-body font-semibold uppercase tracking-wider text-blue-900"
+                style={{ background: '#38BDF8' }}
+              >
+                {cat.name}
+              </span>
+            ) : null
           )}
         </div>
-        <div className="flex items-center justify-between mt-3">
+
+        {/* Título — siempre 2 líneas de alto */}
+        <h2
+          className="font-heading font-bold text-white uppercase leading-tight mb-3 line-clamp-2"
+          style={{ fontSize: 'clamp(1rem, 2vw, 1.2rem)', minHeight: '2.8em' }}
+        >
+          {post.title}
+        </h2>
+
+        {/* Excerpt — ocupa el espacio disponible */}
+        <p className="text-white/55 text-sm leading-relaxed line-clamp-2 flex-1 mb-4">
+          {post.excerpt ?? ''}
+        </p>
+
+        {/* Pie: autor + leer */}
+        <div
+          className="flex items-center justify-between pt-3"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+        >
           {(() => {
             const firstAuthor = post.post_authors[0]?.coaches ?? null
             return firstAuthor ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 {firstAuthor.photo_url && (() => {
                   const fp = focalImageProps(firstAuthor.photo_url!)
                   return (
@@ -122,7 +134,7 @@ function ArticleRow({ post }: { post: PostSummary }) {
             ) : <span />
           })()}
           <span className="text-accent text-xs font-body font-bold uppercase tracking-widest group-hover:tracking-[3px] transition-all duration-300 flex-shrink-0">
-            Leer artículo
+            Leer →
           </span>
         </div>
       </div>
@@ -351,9 +363,9 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
               </p>
             )}
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 items-start">
               {paginated.map((post) => (
-                <ArticleRow key={post.id} post={post} />
+                <ArticleCard key={post.id} post={post} />
               ))}
             </div>
 
