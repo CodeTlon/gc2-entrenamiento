@@ -136,7 +136,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       <div className="container relative z-10 pt-28 sm:pt-32 lg:pt-36 pb-16">
         <h1
           className="font-heading font-black uppercase leading-[1.05] mb-5 reveal delay-1"
-          style={{ fontSize: 'clamp(3rem, 11vw, 9rem)', letterSpacing: '-2px' }}
+          style={{ fontSize: 'clamp(4.5rem, 14vw, 9rem)', letterSpacing: '-2px' }}
         >
           <span className="block text-white">{data.title_line_1}</span>
           <span className="block gradient-text">{data.title_line_2}</span>
@@ -164,8 +164,8 @@ export default function Hero({ data }: { data: HeroSettings }) {
           </Link>
         </div>
 
-        {/* Stats — ocultas en mobile */}
-        <div className="hidden sm:flex flex-wrap gap-6 md:gap-12 reveal delay-4">
+        {/* Stats */}
+        <div className="flex flex-wrap gap-6 md:gap-12 reveal delay-4">
           {data.stats.map((stat, i) => (
             <div key={`${stat.label}-${i}`}>
               <div

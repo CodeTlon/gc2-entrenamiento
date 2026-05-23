@@ -78,10 +78,14 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-body font-semibold no-underline
            transition-all duration-300 cursor-pointer border-0;
-    padding: 14px 32px;
+    padding: 10px 20px;
     border-radius: 6px;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     letter-spacing: 0.03em;
+    @screen sm {
+      padding: 14px 32px;
+      font-size: 0.95rem;
+    }
   }
 
   .btn--primary {
