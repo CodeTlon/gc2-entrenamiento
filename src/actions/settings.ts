@@ -34,6 +34,12 @@ export async function saveSiteSettingAction(
   }
 }
 
+function extractStoragePath(url: string): string | null {
+  // URLs de Supabase Storage: .../storage/v1/object/public/media/<path>
+  const match = url.split('#')[0].match(/\/storage\/v1\/object\/public\/media\/(.+)/)
+  return match?.[1] ?? null
+}
+
 export async function uploadMediaAction(formData: FormData): Promise<{ url?: string; error?: string }> {
   try {
     const supabase = await requireUser()
@@ -42,6 +48,15 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     if (file.size > 12 * 1024 * 1024) return { error: 'Máximo 12MB.' }
 
     const folder = String(formData.get('folder') ?? 'uploads')
+
+    // Borrar imagen anterior si viene del mismo bucket
+    const oldUrl = String(formData.get('oldUrl') ?? '')
+    if (oldUrl) {
+      const oldPath = extractStoragePath(oldUrl)
+      if (oldPath) {
+        await supabase.storage.from('media').remove([oldPath])
+      }
+    }
     const id = crypto.randomUUID()
     const original = Buffer.from(await file.arrayBuffer())
     const mime = file.type || ''
