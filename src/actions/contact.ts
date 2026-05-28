@@ -63,6 +63,7 @@ export async function submitContact(
       servicio: data.servicio || null,
       objetivo: data.objetivo || null,
       mensaje: data.mensaje,
+      coach: coach || null,
     })
 
     if (dbError) {
