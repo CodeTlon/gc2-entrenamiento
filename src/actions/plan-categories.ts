@@ -88,7 +88,8 @@ export async function deletePlanCategoryAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const supabase = await requireUser()
-  await supabase.from('plan_categories').delete().eq('id', id)
+  const { error } = await supabase.from('plan_categories').delete().eq('id', id)
+  if (error) throw new Error(error.message)
   revalidatePath('/planes')
   revalidatePath('/dashboard/planes')
   redirect('/dashboard/planes/categorias')

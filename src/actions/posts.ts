@@ -16,13 +16,31 @@ async function requireUser() {
   return { supabase, user }
 }
 
+const YT_PATTERNS = [
+  /(?:youtube\.com\/watch\?(?:.*&)?v=)([\w-]{11})/i,
+  /(?:youtu\.be\/)([\w-]{11})/i,
+  /(?:youtube\.com\/embed\/)([\w-]{11})/i,
+  /(?:youtube\.com\/shorts\/)([\w-]{11})/i,
+  /(?:youtube\.com\/v\/)([\w-]{11})/i,
+]
+
+function validateYoutubeUrl(url: string | null): string | null {
+  if (!url) return null
+  for (const re of YT_PATTERNS) {
+    if (re.test(url)) return url
+  }
+  if (/^[\w-]{11}$/.test(url)) return url
+  return null
+}
+
 function parseForm(formData: FormData) {
+  const rawYt = String(formData.get('youtube_url') ?? '') || null
   return {
     title: String(formData.get('title') ?? '').trim(),
-    excerpt: String(formData.get('excerpt') ?? '') || null,
+    excerpt: String(formData.get('excerpt') ?? '').trim() || null,
     content: String(formData.get('content') ?? ''),
     cover_image: String(formData.get('cover_image') ?? '') || null,
-    youtube_url: String(formData.get('youtube_url') ?? '') || null,
+    youtube_url: validateYoutubeUrl(rawYt),
     published: formData.get('published') === 'on',
     category_ids: formData.getAll('category_ids').map(String).filter(Boolean),
     coach_ids: formData.getAll('coach_ids').map(String).filter(Boolean),
@@ -126,7 +144,8 @@ export async function deletePostAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const { supabase } = await requireUser()
-  await supabase.from('posts').delete().eq('id', id)
+  const { error } = await supabase.from('posts').delete().eq('id', id)
+  if (error) throw new Error(error.message)
   revalidatePath('/blog')
   redirect('/dashboard/blog')
 }

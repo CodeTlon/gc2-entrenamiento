@@ -69,13 +69,19 @@ async function resolveCategory(supabase: SupabaseClient, plan_category_id: strin
 }
 
 function parseFormData(formData: FormData) {
-  const features = JSON.parse(String(formData.get('features') ?? '[]'))
+  let features: unknown[]
+  try {
+    const parsed = JSON.parse(String(formData.get('features') ?? '[]'))
+    features = Array.isArray(parsed) ? parsed : []
+  } catch {
+    features = []
+  }
   return {
     plan_category_id: String(formData.get('plan_category_id') ?? '') || null,
     name: String(formData.get('name') ?? '').trim(),
     name_display: String(formData.get('name_display') ?? '') || null,
     badge: String(formData.get('badge') ?? '') || null,
-    features: Array.isArray(features) ? features : [],
+    features,
     featured: formData.get('featured') === 'on',
     display_order: Number(formData.get('display_order') ?? 0),
   }
@@ -130,7 +136,8 @@ export async function deletePlanAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const supabase = await requireUser()
-  await supabase.from('plans').delete().eq('id', id)
+  const { error } = await supabase.from('plans').delete().eq('id', id)
+  if (error) throw new Error(error.message)
   revalidatePath('/', 'layout')
   redirect('/dashboard/planes')
 }

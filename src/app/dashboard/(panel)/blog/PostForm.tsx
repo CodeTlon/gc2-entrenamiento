@@ -31,17 +31,18 @@ interface Coach {
   specialty: string
 }
 
-const PATTERNS = [
+const YT_PATTERNS = [
   /(?:youtube\.com\/watch\?(?:.*&)?v=)([\w-]{11})/i,
   /(?:youtu\.be\/)([\w-]{11})/i,
   /(?:youtube\.com\/embed\/)([\w-]{11})/i,
   /(?:youtube\.com\/shorts\/)([\w-]{11})/i,
+  /(?:youtube\.com\/v\/)([\w-]{11})/i,
 ]
 
-function ytId(url: string) {
+function ytId(url: string): string | null {
   const t = url.trim()
   if (!t) return null
-  for (const re of PATTERNS) {
+  for (const re of YT_PATTERNS) {
     const m = t.match(re)
     if (m?.[1]) return m[1]
   }
@@ -164,10 +165,7 @@ export default function PostForm({
           Pegá el link y se incrusta solo en el post. Soporta watch, youtu.be, embed y shorts.
         </p>
         {ytPreview && (
-          <div
-            className="mt-3 relative w-full max-w-sm rounded-md overflow-hidden"
-            style={{ paddingBottom: 'min(56.25%, 200px)', background: '#000' }}
-          >
+          <div className="mt-3 relative w-full max-w-sm aspect-video rounded-md overflow-hidden bg-black">
             <iframe
               src={`https://www.youtube.com/embed/${ytPreview}`}
               title="Vista previa"
@@ -251,8 +249,7 @@ function ContentEditor({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        rows={14}
-        className="field-input font-mono text-sm"
+        className="field-input font-mono text-sm min-h-[240px] resize-y"
         placeholder='<p>Escribí el contenido del post acá.</p>'
       />
 
@@ -315,19 +312,6 @@ function ContentEditor({
   )
 }
 
-const YT_PATTERNS = [
-  /(?:youtube\.com\/watch\?(?:.*&)?v=)([\w-]{11})/i,
-  /(?:youtu\.be\/)([\w-]{11})/i,
-  /(?:youtube\.com\/embed\/)([\w-]{11})/i,
-  /(?:youtube\.com\/shorts\/)([\w-]{11})/i,
-  /(?:youtube\.com\/v\/)([\w-]{11})/i,
-]
-
 function parseYtId(url: string): string | null {
-  for (const re of YT_PATTERNS) {
-    const m = url.match(re)
-    if (m?.[1]) return m[1]
-  }
-  if (/^[\w-]{11}$/.test(url)) return url
-  return null
+  return ytId(url)
 }

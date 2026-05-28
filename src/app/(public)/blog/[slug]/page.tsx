@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
 import type { Coach } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
+import { sanitizeHtml } from '@/lib/sanitize'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
@@ -154,7 +155,7 @@ export default async function BlogPostPage({
 
           <div
             className="prose-gc2 text-white/80 leading-relaxed space-y-4"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
             style={{
               ['--tw-prose-a' as string]: '#38BDF8',
             }}

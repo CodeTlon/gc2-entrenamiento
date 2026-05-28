@@ -83,7 +83,8 @@ export async function deleteCategoryAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const supabase = await requireUser()
-  await supabase.from('categories').delete().eq('id', id)
+  const { error } = await supabase.from('categories').delete().eq('id', id)
+  if (error) throw new Error(error.message)
   revalidatePath('/blog')
   redirect('/dashboard/categorias')
 }

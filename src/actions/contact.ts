@@ -48,6 +48,10 @@ export async function submitContact(
 
   const data = parsed.data
 
+  function esc(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+
   // Save to Supabase
   try {
     const supabase = createSupabaseServiceClient()
@@ -88,16 +92,16 @@ export async function submitContact(
             <p style="color: #93C5FD; margin: 4px 0 0;">Nueva consulta desde la web</p>
           </div>
           <div style="background: white; padding: 24px; border-radius: 12px;">
-            ${coach ? `<p style="background:#EFF6FF;padding:10px 14px;border-radius:8px;border-left:4px solid #38BDF8;margin-bottom:16px;"><strong>Consulta dirigida a:</strong> ${coach}</p>` : ''}
-            <p><strong>Nombre:</strong> ${data.nombre}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Teléfono:</strong> ${data.telefono}</p>
-            ${data.ciudad ? `<p><strong>Ciudad:</strong> ${data.ciudad}</p>` : ''}
-            ${data.servicio ? `<p><strong>Disciplina:</strong> ${data.servicio}</p>` : ''}
-            ${data.objetivo ? `<p><strong>Objetivo:</strong> ${data.objetivo}</p>` : ''}
+            ${coach ? `<p style="background:#EFF6FF;padding:10px 14px;border-radius:8px;border-left:4px solid #38BDF8;margin-bottom:16px;"><strong>Consulta dirigida a:</strong> ${esc(coach)}</p>` : ''}
+            <p><strong>Nombre:</strong> ${esc(data.nombre)}</p>
+            <p><strong>Email:</strong> ${esc(data.email)}</p>
+            <p><strong>Teléfono:</strong> ${esc(data.telefono)}</p>
+            ${data.ciudad ? `<p><strong>Ciudad:</strong> ${esc(data.ciudad)}</p>` : ''}
+            ${data.servicio ? `<p><strong>Disciplina:</strong> ${esc(data.servicio)}</p>` : ''}
+            ${data.objetivo ? `<p><strong>Objetivo:</strong> ${esc(data.objetivo)}</p>` : ''}
             <hr style="border: 1px solid #e2e8f0; margin: 16px 0;" />
             <p><strong>Mensaje:</strong></p>
-            <p style="white-space: pre-wrap; color: #475569;">${data.mensaje}</p>
+            <p style="white-space: pre-wrap; color: #475569;">${esc(data.mensaje)}</p>
           </div>
         </div>
       `,
