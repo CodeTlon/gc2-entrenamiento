@@ -23,12 +23,19 @@ export default async function ContactoPage({
   const contactoBanner = focalImageProps(page_banners.contacto.bg_image)
   const supabase = createSupabaseClient()
 
-  const { data: coaches } = await supabase
-    .from('coaches')
-    .select('id, name, specialty, slug')
-    .order('display_order', { ascending: true })
+  const [{ data: coaches }, { data: planCategories }] = await Promise.all([
+    supabase
+      .from('coaches')
+      .select('id, name, specialty, slug')
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('plan_categories')
+      .select('id, name')
+      .order('display_order', { ascending: true }),
+  ])
 
   const coachesList = coaches ?? []
+  const disciplinesList = planCategories ?? []
   const preselectedCoach = coachSlug
     ? coachesList.find((c) => c.slug === coachSlug)
     : undefined
@@ -136,6 +143,7 @@ export default async function ContactoPage({
             <ScrollReveal>
               <ContactForm
                 coaches={coachesList}
+                disciplines={disciplinesList}
                 preselectedCoachName={preselectedCoach?.name}
               />
             </ScrollReveal>

@@ -12,6 +12,11 @@ interface Coach {
   specialty: string
 }
 
+interface Discipline {
+  id: string
+  name: string
+}
+
 function SubmitButton() {
   const { pending } = useFormStatus()
   return (
@@ -27,9 +32,11 @@ function SubmitButton() {
 
 export default function ContactForm({
   coaches = [],
+  disciplines = [],
   preselectedCoachName,
 }: {
   coaches?: Coach[]
+  disciplines?: Discipline[]
   preselectedCoachName?: string
 }) {
   const [state, formAction] = useActionState(submitContact, initialState)
@@ -92,11 +99,10 @@ export default function ContactForm({
           <FormGroup label="Disciplina de interés">
             <select name="servicio" className="form-input">
               <option value="">Seleccionar...</option>
-              <option value="running">Running</option>
-              <option value="triatlon">Triatlón</option>
-              <option value="duatlon">Duatlón</option>
-              <option value="grupal">Clases Grupales</option>
-              <option value="otro">Otro / Consulta General</option>
+              {disciplines.map((d) => (
+                <option key={d.id} value={d.name}>{d.name}</option>
+              ))}
+              <option value="Otro / Consulta General">Otro / Consulta General</option>
             </select>
           </FormGroup>
 
