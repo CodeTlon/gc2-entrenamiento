@@ -105,6 +105,8 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <head>
+        <link rel="icon" href="/favicon-light-mode.ico" media="(prefers-color-scheme: light)" />
+        <link rel="icon" href="/favicon-dark-mode.ico" media="(prefers-color-scheme: dark)" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
