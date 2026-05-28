@@ -17,6 +17,7 @@ import {
   ExternalLink,
   ChevronRight,
   LayoutGrid,
+  Inbox,
 } from 'lucide-react'
 import { signOutAction } from '@/actions/auth'
 
@@ -27,6 +28,7 @@ const NAV = [
   { href: '/dashboard/planes', label: 'Planes', icon: ListChecks },
   { href: '/dashboard/blog', label: 'Blog', icon: FileText },
   { href: '/dashboard/categorias', label: 'Categorías', icon: Tag },
+  { href: '/dashboard/leads', label: 'Consultas', icon: Inbox },
   { href: '/dashboard/contacto', label: 'Contacto', icon: Settings },
 ]
 

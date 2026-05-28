@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Users, ListChecks, FileText, Tag, Settings, ArrowRight, LayoutGrid } from 'lucide-react'
+import { Users, ListChecks, FileText, Tag, Settings, ArrowRight, LayoutGrid, Inbox } from 'lucide-react'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 
 const SECTIONS = [
@@ -34,6 +34,12 @@ const SECTIONS = [
     icon: Tag,
   },
   {
+    href: '/dashboard/leads',
+    title: 'Consultas recibidas',
+    desc: 'Mensajes enviados desde el formulario de contacto del sitio.',
+    icon: Inbox,
+  },
+  {
     href: '/dashboard/contacto',
     title: 'Datos de contacto',
     desc: 'Actualizá teléfono, email, WhatsApp e Instagram.',
@@ -44,12 +50,19 @@ const SECTIONS = [
 export default async function DashboardHome() {
   const supabase = await createSupabaseServerClient()
 
-  const [{ count: coachesCount }, { count: plansCount }, { count: postsCount }] =
-    await Promise.all([
-      supabase.from('coaches').select('*', { count: 'exact', head: true }),
-      supabase.from('plans').select('*', { count: 'exact', head: true }),
-      supabase.from('posts').select('*', { count: 'exact', head: true }),
-    ])
+  const serviceSupabase = (await import('@/lib/supabase')).createSupabaseServiceClient()
+
+  const [
+    { count: coachesCount },
+    { count: plansCount },
+    { count: postsCount },
+    { count: leadsCount },
+  ] = await Promise.all([
+    supabase.from('coaches').select('*', { count: 'exact', head: true }),
+    supabase.from('plans').select('*', { count: 'exact', head: true }),
+    supabase.from('posts').select('*', { count: 'exact', head: true }),
+    serviceSupabase.from('contact_leads').select('*', { count: 'exact', head: true }),
+  ])
 
   return (
     <div className="space-y-8">
@@ -68,10 +81,11 @@ export default async function DashboardHome() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard label="Entrenadores" value={coachesCount ?? 0} href="/dashboard/entrenadores" />
         <StatCard label="Planes" value={plansCount ?? 0} href="/dashboard/planes" />
         <StatCard label="Artículos" value={postsCount ?? 0} href="/dashboard/blog" />
+        <StatCard label="Consultas" value={leadsCount ?? 0} href="/dashboard/leads" accent />
       </div>
 
       {/* Sections */}
@@ -104,17 +118,19 @@ export default async function DashboardHome() {
   )
 }
 
-function StatCard({ label, value, href }: { label: string; value: number; href: string }) {
+function StatCard({ label, value, href, accent }: { label: string; value: number; href: string; accent?: boolean }) {
   return (
     <Link
       href={href}
       className="rounded-xl p-4 flex flex-col gap-1 hover:-translate-y-0.5 transition-all"
-      style={{ background: '#0D2247', border: '1px solid #102E66' }}
+      style={{ background: '#0D2247', border: `1px solid ${accent ? 'rgba(56,189,248,0.3)' : '#102E66'}` }}
     >
       <p className="text-white/40 text-[10px] font-body font-bold uppercase tracking-wider leading-none">
         {label}
       </p>
-      <p className="font-heading font-black text-white text-3xl leading-none">{value}</p>
+      <p className={`font-heading font-black text-3xl leading-none ${accent ? 'text-accent' : 'text-white'}`}>
+        {value}
+      </p>
     </Link>
   )
 }
