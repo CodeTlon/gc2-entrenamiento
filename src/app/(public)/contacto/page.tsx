@@ -74,7 +74,7 @@ export default async function ContactoPage({
                   href={contact.whatsapp_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
+                  className="flex items-center justify-center sm:justify-start gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
@@ -83,9 +83,9 @@ export default async function ContactoPage({
                   >
                     <WhatsAppIcon size={18} />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 hidden sm:block">
                     <p className="font-body font-semibold text-white text-sm leading-none">WhatsApp</p>
-                    <p className="text-white/40 text-xs mt-1 hidden sm:block">Escribinos directo</p>
+                    <p className="text-white/40 text-xs mt-1">Escribinos directo</p>
                   </div>
                 </a>
 
@@ -93,7 +93,7 @@ export default async function ContactoPage({
                   href={contact.instagram_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
+                  className="flex items-center justify-center sm:justify-start gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
@@ -102,15 +102,15 @@ export default async function ContactoPage({
                   >
                     <Instagram size={18} />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 hidden sm:block">
                     <p className="font-body font-semibold text-white text-sm leading-none">Instagram</p>
-                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{contact.instagram_user}</p>
+                    <p className="text-white/40 text-xs mt-1 truncate">{contact.instagram_user}</p>
                   </div>
                 </a>
 
                 <a
                   href={`mailto:${contact.email}`}
-                  className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
+                  className="flex items-center justify-center sm:justify-start gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 hover:-translate-y-0.5 group"
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
@@ -119,9 +119,9 @@ export default async function ContactoPage({
                   >
                     <Mail size={18} />
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 hidden sm:block">
                     <p className="font-body font-semibold text-white text-sm leading-none">Email</p>
-                    <p className="text-white/40 text-xs mt-1 truncate hidden sm:block">{contact.email}</p>
+                    <p className="text-white/40 text-xs mt-1 truncate">{contact.email}</p>
                   </div>
                 </a>
               </div>

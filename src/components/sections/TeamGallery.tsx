@@ -60,11 +60,14 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
           {data.items.map((item, i) => {
             const wide = item.size === 'wide'
             const tall = item.size === 'tall'
+            const isLastAlone = i === data.items.length - 1 && data.items.length % 2 !== 0
             const spanClass = tall
               ? ' md:row-span-2 md:aspect-auto'
               : wide
                 ? ' md:col-span-2 md:aspect-[2/1]'
-                : ''
+                : isLastAlone
+                  ? ' col-span-2 md:col-span-1'
+                  : ''
             const sizes = wide
               ? '(max-width: 768px) 100vw, 66vw'
               : '(max-width: 768px) 50vw, 33vw'

@@ -22,7 +22,11 @@ export default function Locations({ data }: { data: LocationsSettings }) {
           className={
             isSingle
               ? 'max-w-2xl mx-auto'
-              : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch'
+              : data.items.length === 2
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch'
+                : data.items.length === 3
+                  ? 'grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch'
+                  : 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 items-stretch'
           }
         >
           {data.items.map((loc, i) => (

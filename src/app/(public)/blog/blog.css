@@ -1,4 +1,25 @@
-﻿.prose-gc2 h2 {
+﻿.prose-gc2 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+}
+.prose-gc2 pre {
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+}
+.prose-gc2 code {
+  word-break: break-all;
+}
+.prose-gc2 table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.prose-gc2 iframe {
+  max-width: 100%;
+}
+.prose-gc2 h2 {
   font-family: var(--font-barlow-condensed), sans-serif;
   font-weight: 800;
   font-size: 1.75rem;
