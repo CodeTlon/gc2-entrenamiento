@@ -7,6 +7,7 @@ const ITEMS = [
   { href: '/dashboard/contenido/nosotros', title: 'Nosotros', desc: 'Sección "Quiénes Somos" con párrafos y features.' },
   { href: '/dashboard/contenido/disciplinas', title: 'Disciplinas', desc: 'Las 3 tarjetas: running, duatlón y triatlón.' },
   { href: '/dashboard/contenido/clases-grupales', title: 'Clases grupales', desc: 'Horario, días y planes grupales destacados.' },
+  { href: '/dashboard/contenido/ubicaciones', title: 'Sedes / Ubicaciones', desc: 'Dónde entrena el equipo. Embeds de Google Maps.' },
   { href: '/dashboard/contenido/galeria', title: 'Galería del equipo', desc: 'Grilla de fotos al final del home.' },
   { href: '/dashboard/contenido/banners', title: 'Banners de páginas', desc: 'Imagen de fondo de Planes, Blog y Contacto. Con punto focal y zoom.' },
 ]

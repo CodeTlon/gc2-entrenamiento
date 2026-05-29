@@ -143,11 +143,27 @@ export interface PageBannersSettings {
   contacto: PageBannerItem
 }
 
+export type LocationItem = {
+  name: string
+  description: string
+  address: string
+  schedule: string
+  maps_embed_url: string
+}
+
+export interface LocationsSettings {
+  label: string
+  title_line_1: string
+  title_line_2: string
+  items: LocationItem[]
+}
+
 export interface SiteSettings {
   hero: HeroSettings
   about: AboutSettings
   disciplines: DisciplinesSettings
   group_classes: GroupClassesSettings
+  locations: LocationsSettings
   team_gallery: TeamGallerySettings
   contact: ContactSettings
   page_banners: PageBannersSettings
@@ -247,11 +263,27 @@ const FALLBACK_PAGE_BANNERS: PageBannersSettings = {
   contacto: { bg_image: IMG_ABOUT },
 }
 
+const FALLBACK_LOCATIONS: LocationsSettings = {
+  label: '● Dónde Entrenamos',
+  title_line_1: 'NUESTRAS',
+  title_line_2: 'SEDES',
+  items: [
+    {
+      name: 'El Mágico (UNC)',
+      description: 'Clases grupales en el parque',
+      address: 'Ciudad Universitaria, Córdoba',
+      schedule: 'Mar · Jue · Vie — 19:30 hs',
+      maps_embed_url: '',
+    },
+  ],
+}
+
 export const FALLBACK_SETTINGS: SiteSettings = {
   hero: FALLBACK_HERO,
   about: FALLBACK_ABOUT,
   disciplines: FALLBACK_DISCIPLINES,
   group_classes: FALLBACK_GROUP_CLASSES,
+  locations: FALLBACK_LOCATIONS,
   team_gallery: FALLBACK_TEAM_GALLERY,
   contact: FALLBACK_CONTACT,
   page_banners: FALLBACK_PAGE_BANNERS,
@@ -337,6 +369,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     about: { ...FALLBACK_ABOUT, ...((map.get('about') as AboutSettings | undefined) ?? {}) },
     disciplines: { ...FALLBACK_DISCIPLINES, ...((map.get('disciplines') as DisciplinesSettings | undefined) ?? {}) },
     group_classes: { ...FALLBACK_GROUP_CLASSES, ...((map.get('group_classes') as GroupClassesSettings | undefined) ?? {}) },
+    locations: { ...FALLBACK_LOCATIONS, ...((map.get('locations') as LocationsSettings | undefined) ?? {}) },
     team_gallery: { ...FALLBACK_TEAM_GALLERY, ...((map.get('team_gallery') as TeamGallerySettings | undefined) ?? {}) },
     contact: { ...FALLBACK_CONTACT, ...((map.get('contact') as ContactSettings | undefined) ?? {}) },
     page_banners: {
