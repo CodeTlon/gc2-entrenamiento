@@ -87,14 +87,12 @@ function PlansSection({
             {subtitle}
           </span>
         </div>
+        <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {plans.map((plan) => (
+            <PlanCard key={plan.id} plan={plan} whatsappLink={whatsappLink} />
+          ))}
+        </div>
       </ScrollReveal>
-      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan, i) => (
-          <ScrollReveal key={plan.id} delay={(Math.min(i + 1, 4)) as 1 | 2 | 3 | 4} className="h-full">
-            <PlanCard plan={plan} whatsappLink={whatsappLink} />
-          </ScrollReveal>
-        ))}
-      </div>
     </div>
   )
 }
