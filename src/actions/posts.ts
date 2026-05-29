@@ -92,7 +92,7 @@ export async function createPostAction(_prev: PostState, formData: FormData): Pr
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
-  redirect('/dashboard/blog')
+  redirect('/dashboard/blog?saved=1')
 }
 
 export async function updatePostAction(
@@ -134,10 +134,10 @@ export async function updatePostAction(
 
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
-    return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
+  redirect('/dashboard/blog?saved=1')
 }
 
 export async function deletePostAction(formData: FormData) {

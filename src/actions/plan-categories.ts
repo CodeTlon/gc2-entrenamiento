@@ -52,7 +52,7 @@ export async function createPlanCategoryAction(
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
-  redirect('/dashboard/planes/categorias')
+  redirect('/dashboard/planes/categorias?saved=1')
 }
 
 export async function updatePlanCategoryAction(
@@ -78,10 +78,10 @@ export async function updatePlanCategoryAction(
 
     revalidatePath('/planes')
     revalidatePath('/dashboard/planes')
-    return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
+  redirect('/dashboard/planes/categorias?saved=1')
 }
 
 export async function deletePlanCategoryAction(formData: FormData) {

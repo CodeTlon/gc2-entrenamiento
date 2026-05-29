@@ -103,7 +103,7 @@ export async function createPlanAction(_prev: PlanState, formData: FormData): Pr
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
-  redirect('/dashboard/planes')
+  redirect('/dashboard/planes?saved=1')
 }
 
 export async function updatePlanAction(
@@ -126,10 +126,10 @@ export async function updatePlanAction(
       .eq('id', id)
     if (error) return { error: error.message }
     revalidatePath('/', 'layout')
-    return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
+  redirect('/dashboard/planes?saved=1')
 }
 
 export async function deletePlanAction(formData: FormData) {

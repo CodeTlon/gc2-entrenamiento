@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import DashboardToast from '@/components/dashboard/DashboardToast'
 import {
   LayoutDashboard,
   Users,
@@ -138,6 +139,10 @@ export default function DashboardShell({
           {children}
         </main>
       </div>
+
+      <Suspense>
+        <DashboardToast />
+      </Suspense>
     </div>
   )
 }

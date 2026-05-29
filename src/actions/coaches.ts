@@ -71,7 +71,7 @@ export async function createCoachAction(_prev: CoachState, formData: FormData): 
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
-  redirect('/dashboard/entrenadores')
+  redirect('/dashboard/entrenadores?saved=1')
 }
 
 export async function updateCoachAction(
@@ -94,10 +94,10 @@ export async function updateCoachAction(
     if (error) return { error: error.message }
 
     revalidatePath('/', 'layout')
-    return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
+  redirect('/dashboard/entrenadores?saved=1')
 }
 
 export async function deleteCoachAction(formData: FormData) {

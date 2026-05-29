@@ -48,7 +48,7 @@ export async function createCategoryAction(
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
-  redirect('/dashboard/categorias')
+  redirect('/dashboard/categorias?saved=1')
 }
 
 export async function updateCategoryAction(
@@ -73,10 +73,10 @@ export async function updateCategoryAction(
     if (error) return { error: error.message }
 
     revalidatePath('/blog')
-    return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
+  redirect('/dashboard/categorias?saved=1')
 }
 
 export async function deleteCategoryAction(formData: FormData) {
