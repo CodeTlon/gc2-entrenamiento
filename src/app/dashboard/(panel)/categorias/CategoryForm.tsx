@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import {
   createCategoryAction,
   updateCategoryAction,
@@ -15,12 +15,20 @@ interface Category {
   display_order: number
 }
 
-export default function CategoryForm({ category }: { category?: Category }) {
+export default function CategoryForm({
+  category,
+  takenOrders = [],
+}: {
+  category?: Category
+  takenOrders?: number[]
+}) {
   const isEdit = !!category
   const action = isEdit
     ? updateCategoryAction.bind(null, category!.id)
     : createCategoryAction
   const [state, dispatch] = useActionState<CategoryState, FormData>(action, undefined)
+  const [order, setOrder] = useState(String(category?.display_order ?? 0))
+  const isDuplicate = takenOrders.includes(Number(order))
 
   return (
     <form action={dispatch} className="space-y-5 max-w-md">
@@ -31,13 +39,24 @@ export default function CategoryForm({ category }: { category?: Category }) {
         required
         hint="El slug (URL) se genera automáticamente desde el nombre."
       />
-      <TextField
-        label="Orden de visualización"
-        name="display_order"
-        type="number"
-        defaultValue={String(category?.display_order ?? 0)}
-        hint="Número menor = aparece primero en el listado."
-      />
+      <div>
+        <label className="field-label">Orden de visualización</label>
+        <input
+          type="number"
+          name="display_order"
+          value={order}
+          onChange={(e) => setOrder(e.target.value)}
+          className="field-input"
+          style={isDuplicate ? { borderColor: 'rgba(239,68,68,0.5)' } : undefined}
+        />
+        {isDuplicate ? (
+          <p className="text-red-400 text-xs mt-1.5">
+            Este número ya está en uso por otra categoría. Elegí uno diferente.
+          </p>
+        ) : (
+          <p className="text-white/35 text-xs mt-1.5">Número menor = aparece primero en el listado.</p>
+        )}
+      </div>
       <div className="flex items-center gap-4 pt-2">
         <SaveButton label={isEdit ? 'Guardar cambios' : 'Crear categoría'} />
         <SaveStatus state={state} />

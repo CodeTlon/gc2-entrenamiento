@@ -162,10 +162,15 @@ export default async function BlogPostPage({
           />
 
           {authors.length > 0 && (
-            <div className="mt-12 space-y-4">
-              {authors.map((author) => (
-                <AuthorCard key={author.id} coach={author} />
-              ))}
+            <div className="mt-12">
+              <p className="text-accent text-[10px] font-body font-bold uppercase tracking-[2px] mb-3">
+                {authors.length === 1 ? 'Escrito por' : 'Escrito por'}
+              </p>
+              <div className="space-y-3">
+                {authors.map((author) => (
+                  <AuthorCard key={author.id} coach={author} />
+                ))}
+              </div>
             </div>
           )}
 

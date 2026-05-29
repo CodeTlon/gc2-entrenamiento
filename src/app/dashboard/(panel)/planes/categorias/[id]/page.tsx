@@ -12,12 +12,12 @@ export default async function EditPlanCategoryPage({
 }) {
   const { id } = await params
   const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase
-    .from('plan_categories')
-    .select('id, name, slug, display_order')
-    .eq('id', id)
-    .single()
+  const [{ data, error }, { data: others }] = await Promise.all([
+    supabase.from('plan_categories').select('id, name, slug, display_order').eq('id', id).single(),
+    supabase.from('plan_categories').select('display_order').neq('id', id),
+  ])
   if (error || !data) notFound()
+  const takenOrders = others?.map((c) => c.display_order) ?? []
 
   return (
     <div>
@@ -33,7 +33,7 @@ export default async function EditPlanCategoryPage({
           />
         }
       />
-      <PlanCategoryForm category={data} />
+      <PlanCategoryForm category={data} takenOrders={takenOrders} />
     </div>
   )
 }

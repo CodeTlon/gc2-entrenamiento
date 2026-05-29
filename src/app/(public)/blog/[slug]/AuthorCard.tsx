@@ -34,9 +34,6 @@ export default function AuthorCard({ coach }: { coach: Coach }) {
           )
         })()}
         <div className="flex-1 min-w-0">
-          <p className="text-accent text-[10px] font-body font-bold uppercase tracking-[2px] mb-0.5">
-            Escrito por
-          </p>
           <p className="font-heading font-bold text-white uppercase leading-tight">
             {coach.name}
           </p>

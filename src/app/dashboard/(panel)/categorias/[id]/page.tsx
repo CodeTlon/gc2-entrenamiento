@@ -8,12 +8,12 @@ import { deleteCategoryAction } from '@/actions/categories'
 export default async function EditCategoryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase
-    .from('categories')
-    .select('id, name, slug, display_order')
-    .eq('id', id)
-    .single()
+  const [{ data, error }, { data: others }] = await Promise.all([
+    supabase.from('categories').select('id, name, slug, display_order').eq('id', id).single(),
+    supabase.from('categories').select('display_order').neq('id', id),
+  ])
   if (error || !data) notFound()
+  const takenOrders = others?.map((c) => c.display_order) ?? []
 
   return (
     <div>
@@ -29,7 +29,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
           />
         }
       />
-      <CategoryForm category={data} />
+      <CategoryForm category={data} takenOrders={takenOrders} />
     </div>
   )
 }

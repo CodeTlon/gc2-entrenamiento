@@ -6,6 +6,7 @@ import StarterKit from '@tiptap/starter-kit'
 import TipTapImage from '@tiptap/extension-image'
 import TipTapLink from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
+import Youtube from '@tiptap/extension-youtube'
 import { createPostAction, updatePostAction, type PostState } from '@/actions/posts'
 import { TextField, TextArea, ImageUpload, Checkbox } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
@@ -245,6 +246,7 @@ function ContentEditor({
       TipTapImage,
       TipTapLink.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: 'Escribí el contenido del post acá…' }),
+      Youtube.configure({ controls: true, nocookie: false }),
     ],
     content: value || '',
     immediatelyRender: false,
@@ -262,18 +264,18 @@ function ContentEditor({
     const res = await uploadMediaAction(fd)
     setBusy(false)
     if (res.error) { setErr(res.error); return }
-    if (res.url) editor?.chain().focus().setImage({ src: res.url, alt: '' }).run()
+    if (res.url) {
+      editor?.chain().focus().setImage({ src: res.url, alt: '' }).run()
+      // Mover el cursor después de la imagen para poder insertar más contenido
+      editor?.commands.createParagraphNear()
+    }
     e.target.value = ''
   }
 
   function insertYoutube() {
-    const id = ytId(ytInput.trim())
-    if (!id) { setErr('Link de YouTube no válido.'); return }
-    const isShort = ytInput.includes('/shorts/')
-    const embed = isShort
-      ? `<div style="position:relative;padding-bottom:177.78%;max-width:315px;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
-      : `<div style="position:relative;padding-bottom:56.25%;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
-    editor?.chain().focus().insertContent(embed).run()
+    const src = ytInput.trim()
+    if (!ytId(src)) { setErr('Link de YouTube no válido.'); return }
+    editor?.commands.setYoutubeVideo({ src })
     setYtInput('')
     setShowYt(false)
     setErr(null)
