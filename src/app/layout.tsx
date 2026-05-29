@@ -22,6 +22,12 @@ export const metadata: Metadata = {
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar',
   ),
+  icons: {
+    icon: [
+      { url: '/favicon-light-mode.ico', media: '(prefers-color-scheme: light)' },
+      { url: '/favicon-dark-mode.ico', media: '(prefers-color-scheme: dark)' },
+    ],
+  },
   title: {
     default: 'GC² Entrenamiento de la Resistencia | Córdoba',
     template: '%s | GC² Entrenamiento',
@@ -105,8 +111,6 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
     >
       <head>
-        <link rel="icon" href="/favicon-light-mode.ico" media="(prefers-color-scheme: light)" />
-        <link rel="icon" href="/favicon-dark-mode.ico" media="(prefers-color-scheme: dark)" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrg) }}
