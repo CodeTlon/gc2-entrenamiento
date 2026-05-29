@@ -37,7 +37,7 @@ function ArticleCard({ post }: { post: PostSummary }) {
     <Link
       href={`/blog/${post.slug}`}
       // Mobile: apilado vertical. sm+: fila horizontal de altura fija
-      className="group flex flex-col sm:flex-row sm:h-52 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      className="group flex flex-col sm:flex-row sm:min-h-[11rem] rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
       style={{ background: '#0D2247', border: '1px solid rgba(255,255,255,0.07)' }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.2)' }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
@@ -99,7 +99,7 @@ function ArticleCard({ post }: { post: PostSummary }) {
 
           <h2
             className="font-heading font-bold text-white uppercase leading-tight mb-2 line-clamp-2"
-            style={{ fontSize: 'clamp(1rem, 1.8vw, 1.25rem)', minHeight: '2.6em' }}
+            style={{ fontSize: 'clamp(1rem, 1.8vw, 1.25rem)' }}
           >
             {post.title}
           </h2>

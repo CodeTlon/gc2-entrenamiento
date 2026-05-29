@@ -159,20 +159,20 @@ export default function Navbar({ contact }: Props) {
           Planes
         </Link>
         <Link
-          href="/contacto"
-          onClick={closeMenu}
-          className={`font-heading font-bold text-4xl uppercase tracking-wider
-            ${isActive('/contacto') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
-        >
-          Contacto
-        </Link>
-        <Link
           href="/blog"
           onClick={closeMenu}
           className={`font-heading font-bold text-4xl uppercase tracking-wider
             ${isActive('/blog') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
         >
           Blog
+        </Link>
+        <Link
+          href="/contacto"
+          onClick={closeMenu}
+          className={`font-heading font-bold text-4xl uppercase tracking-wider
+            ${isActive('/contacto') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
+        >
+          Contacto
         </Link>
 
         {/* Mobile socials */}
