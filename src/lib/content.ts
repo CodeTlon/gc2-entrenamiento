@@ -361,19 +361,6 @@ function isPlaceholder() {
   )
 }
 
-function mergeLocations(stored: LocationsSettings | undefined): LocationsSettings {
-  const dbItems: LocationItem[] = stored?.items ?? []
-  // Siempre muestra los ítems del fallback; completa con datos del dashboard (nombre como clave).
-  // Los ítems que el usuario agregó manualmente (no están en el fallback) se agregan al final.
-  const merged: LocationItem[] = [
-    ...FALLBACK_LOCATIONS.items.map((fb) => {
-      const db = dbItems.find((d) => d.name === fb.name)
-      return db ? { ...fb, ...db } : fb
-    }),
-    ...dbItems.filter((d) => !FALLBACK_LOCATIONS.items.some((fb) => fb.name === d.name)),
-  ]
-  return { ...FALLBACK_LOCATIONS, ...(stored ?? {}), items: merged }
-}
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   if (isPlaceholder()) return FALLBACK_SETTINGS
@@ -393,7 +380,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     about: { ...FALLBACK_ABOUT, ...((map.get('about') as AboutSettings | undefined) ?? {}) },
     disciplines: { ...FALLBACK_DISCIPLINES, ...((map.get('disciplines') as DisciplinesSettings | undefined) ?? {}) },
     group_classes: { ...FALLBACK_GROUP_CLASSES, ...((map.get('group_classes') as GroupClassesSettings | undefined) ?? {}) },
-    locations: mergeLocations(map.get('locations') as LocationsSettings | undefined),
+    locations: { ...FALLBACK_LOCATIONS, ...((map.get('locations') as LocationsSettings | undefined) ?? {}) },
     team_gallery: { ...FALLBACK_TEAM_GALLERY, ...((map.get('team_gallery') as TeamGallerySettings | undefined) ?? {}) },
     contact: { ...FALLBACK_CONTACT, ...((map.get('contact') as ContactSettings | undefined) ?? {}) },
     page_banners: {
