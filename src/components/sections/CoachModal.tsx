@@ -104,9 +104,10 @@ export default function CoachModal({ coach, onClose }: Props) {
                   href={coach.ig_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-body font-semibold text-white transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-body font-semibold text-accent transition-all hover:-translate-y-0.5"
                   style={{
-                    background: 'linear-gradient(135deg, #833AB4, #E1306C, #F77737)',
+                    background: 'rgba(56,189,248,0.08)',
+                    border: '1px solid rgba(56,189,248,0.3)',
                   }}
                 >
                   <Instagram size={16} />

@@ -195,11 +195,11 @@ function SidebarContent({
               key={href}
               href={href}
               onClick={onNavigate}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all duration-150 group"
-              style={{
-                background: active ? 'rgba(56,189,248,0.1)' : 'transparent',
-                color: active ? '#38BDF8' : 'rgba(255,255,255,0.6)',
-              }}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all duration-150 group ${
+                active
+                  ? 'text-[#38BDF8] bg-[rgba(56,189,248,0.1)]'
+                  : 'text-white/60 hover:text-white/90 hover:bg-white/[0.05]'
+              }`}
             >
               <Icon size={15} className="flex-shrink-0" />
               <span className="flex-1">{label}</span>
