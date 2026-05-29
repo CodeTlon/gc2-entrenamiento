@@ -29,8 +29,9 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   const isDashboard = path.startsWith('/dashboard')
   const isLogin = path === '/dashboard/login'
+  const isSetPassword = path === '/dashboard/set-password'
 
-  if (isDashboard && !isLogin && !user) {
+  if (isDashboard && !isLogin && !isSetPassword && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard/login'
     url.searchParams.set('next', path)
