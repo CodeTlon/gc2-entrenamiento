@@ -88,10 +88,7 @@ function PlansSection({
           </span>
         </div>
       </ScrollReveal>
-      <div
-        className="grid gap-5"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))' }}
-      >
+      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan, i) => (
           <ScrollReveal key={plan.id} delay={(Math.min(i + 1, 4)) as 1 | 2 | 3 | 4} className="h-full">
             <PlanCard plan={plan} whatsappLink={whatsappLink} />
