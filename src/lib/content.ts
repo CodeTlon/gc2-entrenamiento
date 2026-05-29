@@ -147,7 +147,6 @@ export type LocationItem = {
   name: string
   description: string
   address: string
-  schedule: string
   maps_embed_url: string
 }
 
@@ -272,7 +271,18 @@ const FALLBACK_LOCATIONS: LocationsSettings = {
       name: 'El Mágico (UNC)',
       description: 'Clases grupales en el parque',
       address: 'Ciudad Universitaria, Córdoba',
-      schedule: 'Mar · Jue · Vie — 19:30 hs',
+      maps_embed_url: '',
+    },
+    {
+      name: 'Estadio Mario A. Kempes',
+      description: 'Entrenamiento en pista',
+      address: 'Av. Cárcano s/n, Córdoba',
+      maps_embed_url: '',
+    },
+    {
+      name: 'Reserva San Martín',
+      description: 'Entrenamiento en parque',
+      address: 'Parque San Martín, Córdoba',
       maps_embed_url: '',
     },
   ],

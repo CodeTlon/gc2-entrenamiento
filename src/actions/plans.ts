@@ -99,7 +99,7 @@ export async function createPlanAction(_prev: PlanState, formData: FormData): Pr
     const category = await resolveCategory(supabase, data.plan_category_id)
     const { error } = await supabase.from('plans').insert({ ...data, category })
     if (error) return { error: error.message }
-    revalidatePath('/', 'layout')
+    revalidatePath('/planes')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
@@ -125,7 +125,7 @@ export async function updatePlanAction(
       .update({ ...data, category, updated_at: new Date().toISOString() })
       .eq('id', id)
     if (error) return { error: error.message }
-    revalidatePath('/', 'layout')
+    revalidatePath('/planes')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }

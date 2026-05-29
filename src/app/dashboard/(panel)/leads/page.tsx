@@ -1,7 +1,10 @@
+import Link from 'next/link'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import PageHeader from '@/components/dashboard/PageHeader'
 import { formatDate } from '@/lib/utils'
-import { Mail, Phone, MapPin, MessageSquare, User, Tag } from 'lucide-react'
+import { Mail, Phone, MapPin, MessageSquare, User, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const PAGE_SIZE = 20
 
 interface Lead {
   id: string
@@ -16,21 +19,33 @@ interface Lead {
   created_at: string
 }
 
-export default async function LeadsPage() {
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>
+}) {
+  const { page: pageParam } = await searchParams
+  const page = Math.max(1, Number(pageParam ?? 1))
+  const from = (page - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
   const supabase = createSupabaseServiceClient()
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('contact_leads')
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('created_at', { ascending: false })
+    .range(from, to)
 
   const leads: Lead[] = data ?? []
+  const total = count ?? 0
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
     <div>
       <PageHeader
         eyebrow="Formulario de contacto"
         title="Consultas recibidas"
-        description="Todos los mensajes enviados desde el formulario del sitio."
+        description={total > 0 ? `${total} consulta${total !== 1 ? 's' : ''} en total.` : 'Todos los mensajes enviados desde el formulario del sitio.'}
       />
 
       {error && (
@@ -52,6 +67,34 @@ export default async function LeadsPage() {
           <LeadCard key={lead.id} lead={lead} />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-white/40 text-sm">
+            Página {page} de {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
+            {page > 1 && (
+              <Link
+                href={`/dashboard/leads?page=${page - 1}`}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-white/65 hover:text-white transition-colors"
+                style={{ border: '1px solid #102E66' }}
+              >
+                <ChevronLeft size={14} /> Anterior
+              </Link>
+            )}
+            {page < totalPages && (
+              <Link
+                href={`/dashboard/leads?page=${page + 1}`}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm text-white/65 hover:text-white transition-colors"
+                style={{ border: '1px solid #102E66' }}
+              >
+                Siguiente <ChevronRight size={14} />
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -62,7 +105,6 @@ function LeadCard({ lead }: { lead: Lead }) {
       className="rounded-xl p-5 space-y-4"
       style={{ background: '#0D2247', border: '1px solid #102E66' }}
     >
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="font-heading font-bold text-white text-lg uppercase leading-tight">
@@ -90,14 +132,12 @@ function LeadCard({ lead }: { lead: Lead }) {
         </div>
       </div>
 
-      {/* Contact info */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
         <InfoRow icon={Mail} text={lead.email} href={`mailto:${lead.email}`} />
         <InfoRow icon={Phone} text={lead.telefono} href={`tel:${lead.telefono}`} />
         {lead.ciudad && <InfoRow icon={MapPin} text={lead.ciudad} />}
       </div>
 
-      {/* Objetivo */}
       {lead.objetivo && (
         <p className="text-white/55 text-sm">
           <span className="text-white/35 font-semibold">Objetivo: </span>
@@ -105,7 +145,6 @@ function LeadCard({ lead }: { lead: Lead }) {
         </p>
       )}
 
-      {/* Mensaje */}
       <div
         className="rounded-lg p-4"
         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
@@ -117,27 +156,13 @@ function LeadCard({ lead }: { lead: Lead }) {
   )
 }
 
-function InfoRow({
-  icon: Icon,
-  text,
-  href,
-}: {
-  icon: React.ElementType
-  text: string
-  href?: string
-}) {
+function InfoRow({ icon: Icon, text, href }: { icon: React.ElementType; text: string; href?: string }) {
   const content = (
     <span className="inline-flex items-center gap-2 text-sm text-white/65">
       <Icon size={13} className="text-accent flex-shrink-0" />
       {text}
     </span>
   )
-  if (href) {
-    return (
-      <a href={href} className="hover:text-accent transition-colors">
-        {content}
-      </a>
-    )
-  }
+  if (href) return <a href={href} className="hover:text-accent transition-colors">{content}</a>
   return <div>{content}</div>
 }

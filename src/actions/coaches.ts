@@ -67,7 +67,7 @@ export async function createCoachAction(_prev: CoachState, formData: FormData): 
     const { error } = await supabase.from('coaches').insert({ ...data, slug })
     if (error) return { error: error.message }
 
-    revalidatePath('/', 'layout')
+    revalidatePath('/')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
@@ -93,7 +93,7 @@ export async function updateCoachAction(
       .eq('id', id)
     if (error) return { error: error.message }
 
-    revalidatePath('/', 'layout')
+    revalidatePath('/')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }

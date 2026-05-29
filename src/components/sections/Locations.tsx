@@ -1,4 +1,4 @@
-import { MapPin, Clock } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { LocationsSettings } from '@/lib/content'
 
@@ -55,7 +55,7 @@ export default function Locations({ data }: { data: LocationsSettings }) {
                 </div>
 
                 {/* Info */}
-                <div className="p-5 space-y-2">
+                <div className="p-5">
                   <div className="flex items-start gap-2">
                     <MapPin size={15} className="text-accent mt-0.5 flex-shrink-0" />
                     <div>
@@ -66,12 +66,6 @@ export default function Locations({ data }: { data: LocationsSettings }) {
                       <p className="text-white/40 text-xs mt-1">{loc.address}</p>
                     </div>
                   </div>
-                  {loc.schedule && (
-                    <div className="flex items-center gap-2 pt-1">
-                      <Clock size={13} className="text-accent/70 flex-shrink-0" />
-                      <p className="text-white/60 text-sm">{loc.schedule}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </ScrollReveal>

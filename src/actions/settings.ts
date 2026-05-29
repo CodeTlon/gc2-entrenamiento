@@ -15,6 +15,10 @@ async function requireUser() {
   return supabase
 }
 
+const SETTING_PATHS: Record<string, string[]> = {
+  page_banners: ['/', '/planes', '/blog'],
+}
+
 export async function saveSiteSettingAction(
   key: string,
   value: unknown,
@@ -27,7 +31,7 @@ export async function saveSiteSettingAction(
 
     if (error) return { error: error.message }
 
-    revalidatePath('/', 'layout')
+    for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }

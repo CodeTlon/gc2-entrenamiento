@@ -6,10 +6,17 @@ import type { LocationsSettings, LocationItem } from '@/lib/content'
 import { TextField, ObjectList } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 
+/** Extrae la URL del src si el usuario pegó el tag <iframe> completo. */
+function extractSrc(raw: string): string {
+  const trimmed = raw.trim()
+  const match = trimmed.match(/src=["']([^"']+)["']/)
+  return match ? match[1] : trimmed
+}
+
 async function action(_prev: SaveState, formData: FormData): Promise<SaveState> {
   const items = JSON.parse(String(formData.get('items') ?? '[]')) as LocationItem[]
   const value: LocationsSettings = {
-    label:       String(formData.get('label')       ?? ''),
+    label:        String(formData.get('label')        ?? ''),
     title_line_1: String(formData.get('title_line_1') ?? ''),
     title_line_2: String(formData.get('title_line_2') ?? ''),
     items,
@@ -29,10 +36,10 @@ export default function LocationsForm({ initial }: { initial: LocationsSettings 
       </div>
 
       <ObjectList<LocationItem>
-        label="Sedes / Ubicaciones"
+        label="Sedes"
         name="items"
         defaultValue={initial.items}
-        template={{ name: '', description: '', address: '', schedule: '', maps_embed_url: '' }}
+        template={{ name: '', description: '', address: '', maps_embed_url: '' }}
         addLabel="Agregar sede"
         renderItem={(item, update) => (
           <div className="space-y-2 pr-6">
@@ -40,7 +47,7 @@ export default function LocationsForm({ initial }: { initial: LocationsSettings 
               type="text"
               value={item.name}
               onChange={(e) => update({ name: e.target.value })}
-              placeholder="Nombre del lugar (ej: El Mágico - UNC)"
+              placeholder="Nombre (ej: El Mágico - UNC)"
               className="field-input"
             />
             <input
@@ -54,29 +61,29 @@ export default function LocationsForm({ initial }: { initial: LocationsSettings 
               type="text"
               value={item.address}
               onChange={(e) => update({ address: e.target.value })}
-              placeholder="Dirección (ej: Ciudad Universitaria, Córdoba)"
+              placeholder="Dirección"
               className="field-input"
             />
-            <input
-              type="text"
-              value={item.schedule}
-              onChange={(e) => update({ schedule: e.target.value })}
-              placeholder="Horario (ej: Mar · Jue · Vie — 19:30 hs)"
-              className="field-input"
-            />
-            <textarea
-              value={item.maps_embed_url}
-              onChange={(e) => update({ maps_embed_url: e.target.value })}
-              placeholder="URL del embed de Google Maps — Ir a Google Maps → Compartir → Insertar mapa → copiar el src del iframe"
-              className="field-input resize-none"
-              rows={3}
-            />
+            <div>
+              <textarea
+                value={item.maps_embed_url}
+                onChange={(e) => update({ maps_embed_url: extractSrc(e.target.value) })}
+                placeholder='Pegá la URL del embed o el tag <iframe> completo — Google Maps → Compartir → Insertar mapa'
+                className="field-input resize-none text-xs"
+                rows={2}
+              />
+              {item.maps_embed_url && !item.maps_embed_url.includes('google.com/maps/embed') && (
+                <p className="text-yellow-400/80 text-xs mt-1">
+                  ⚠ La URL no parece ser un embed de Google Maps. Copiá solo el <code>src</code> del iframe.
+                </p>
+              )}
+            </div>
           </div>
         )}
       />
 
       <p className="text-white/35 text-xs -mt-2">
-        Para obtener la URL: buscá el lugar en Google Maps → Compartir → Insertar un mapa → copiá solo el contenido del atributo <code className="text-accent/70">src</code> del iframe.
+        Para obtener el embed: buscá el lugar en Google Maps → Compartir → Insertar un mapa → copiá el atributo <code className="text-accent/70">src</code> del iframe (o pegá el tag completo, lo extraemos automáticamente).
       </p>
 
       <div className="flex items-center gap-4 pt-2">
