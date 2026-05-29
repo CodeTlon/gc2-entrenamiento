@@ -4,8 +4,7 @@ import { Instagram, Mail } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import ContactForm from '@/components/sections/ContactForm'
 import WhatsAppIcon from '@/components/ui/WhatsAppIcon'
-import { createSupabaseClient } from '@/lib/supabase'
-import { getSiteSettings } from '@/lib/content'
+import { getSiteSettings, getCoaches, getPlanCategories } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
 
 export const metadata: Metadata = {
@@ -19,23 +18,12 @@ export default async function ContactoPage({
   searchParams: Promise<{ coach?: string }>
 }) {
   const { coach: coachSlug } = await searchParams
-  const { contact, page_banners } = await getSiteSettings()
-  const contactoBanner = focalImageProps(page_banners.contacto.bg_image)
-  const supabase = createSupabaseClient()
-
-  const [{ data: coaches }, { data: planCategories }] = await Promise.all([
-    supabase
-      .from('coaches')
-      .select('id, name, specialty, slug')
-      .order('display_order', { ascending: true }),
-    supabase
-      .from('plan_categories')
-      .select('id, name')
-      .order('display_order', { ascending: true }),
+  const [{ contact, page_banners }, coachesList, disciplinesList] = await Promise.all([
+    getSiteSettings(),
+    getCoaches(),
+    getPlanCategories(),
   ])
-
-  const coachesList = coaches ?? []
-  const disciplinesList = planCategories ?? []
+  const contactoBanner = focalImageProps(page_banners.contacto.bg_image)
   const preselectedCoach = coachSlug
     ? coachesList.find((c) => c.slug === coachSlug)
     : undefined

@@ -396,3 +396,25 @@ export async function getAllPlans(): Promise<Plan[]> {
   }
   return data as Plan[]
 }
+
+const FALLBACK_PLAN_CATEGORIES: PlanCategoryItem[] = [
+  { id: 'fallback-1', name: 'Corredores',  slug: 'runner',    display_order: 1 },
+  { id: 'fallback-2', name: 'Triatletas',  slug: 'triathlon', display_order: 2 },
+  { id: 'fallback-3', name: 'Grupales',    slug: 'group',     display_order: 3 },
+]
+
+export async function getPlanCategories(): Promise<PlanCategoryItem[]> {
+  if (isPlaceholder()) return FALLBACK_PLAN_CATEGORIES
+
+  const supabase = createSupabaseClient()
+  const { data, error } = await supabase
+    .from('plan_categories')
+    .select('id, name, slug, display_order')
+    .order('display_order', { ascending: true })
+
+  if (error || !data || data.length === 0) {
+    if (error) console.error('plan_categories fetch error:', error.message)
+    return FALLBACK_PLAN_CATEGORIES
+  }
+  return data as PlanCategoryItem[]
+}
