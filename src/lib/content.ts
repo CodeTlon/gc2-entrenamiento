@@ -271,7 +271,7 @@ const FALLBACK_LOCATIONS: LocationsSettings = {
       name: 'El Mágico (UNC)',
       description: 'Clases grupales en el parque',
       address: 'Ciudad Universitaria, Córdoba',
-      maps_embed_url: '',
+      maps_embed_url: 'https://www.google.com/maps/embed?pb=!3m2!1ses-419!2sar!4v1780058116546!5m2!1ses-419!2sar!6m8!1m7!1srFPeRJVljjdrlPBDq16_Zg!2m2!1d-31.4412998702578!2d-64.18724155918402!3f93.49024385365615!4f-26.890717309723733!5f0.7820865974627469',
     },
     {
       name: 'Estadio Mario A. Kempes',
@@ -361,6 +361,20 @@ function isPlaceholder() {
   )
 }
 
+function mergeLocations(stored: LocationsSettings | undefined): LocationsSettings {
+  const dbItems: LocationItem[] = stored?.items ?? []
+  // Siempre muestra los ítems del fallback; completa con datos del dashboard (nombre como clave).
+  // Los ítems que el usuario agregó manualmente (no están en el fallback) se agregan al final.
+  const merged: LocationItem[] = [
+    ...FALLBACK_LOCATIONS.items.map((fb) => {
+      const db = dbItems.find((d) => d.name === fb.name)
+      return db ? { ...fb, ...db } : fb
+    }),
+    ...dbItems.filter((d) => !FALLBACK_LOCATIONS.items.some((fb) => fb.name === d.name)),
+  ]
+  return { ...FALLBACK_LOCATIONS, ...(stored ?? {}), items: merged }
+}
+
 export async function getSiteSettings(): Promise<SiteSettings> {
   if (isPlaceholder()) return FALLBACK_SETTINGS
 
@@ -379,7 +393,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     about: { ...FALLBACK_ABOUT, ...((map.get('about') as AboutSettings | undefined) ?? {}) },
     disciplines: { ...FALLBACK_DISCIPLINES, ...((map.get('disciplines') as DisciplinesSettings | undefined) ?? {}) },
     group_classes: { ...FALLBACK_GROUP_CLASSES, ...((map.get('group_classes') as GroupClassesSettings | undefined) ?? {}) },
-    locations: { ...FALLBACK_LOCATIONS, ...((map.get('locations') as LocationsSettings | undefined) ?? {}) },
+    locations: mergeLocations(map.get('locations') as LocationsSettings | undefined),
     team_gallery: { ...FALLBACK_TEAM_GALLERY, ...((map.get('team_gallery') as TeamGallerySettings | undefined) ?? {}) },
     contact: { ...FALLBACK_CONTACT, ...((map.get('contact') as ContactSettings | undefined) ?? {}) },
     page_banners: {
