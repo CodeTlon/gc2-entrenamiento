@@ -1,11 +1,16 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import TipTapImage from '@tiptap/extension-image'
+import TipTapLink from '@tiptap/extension-link'
+import Placeholder from '@tiptap/extension-placeholder'
 import { createPostAction, updatePostAction, type PostState } from '@/actions/posts'
 import { TextField, TextArea, ImageUpload, Checkbox } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 import { uploadMediaAction } from '@/actions/settings'
-import { Upload, Loader2, Youtube as YoutubeIcon, Link as LinkIcon, X } from 'lucide-react'
+import { Upload, Loader2, Youtube as YoutubeIcon, X, Bold, Italic, Heading2, List, ListOrdered, Link as LinkIcon, Quote } from 'lucide-react'
 
 interface Post {
   id: string
@@ -201,6 +206,27 @@ export default function PostForm({
   )
 }
 
+function ToolbarBtn({
+  onClick, active, title, children,
+}: {
+  onClick: () => void; active?: boolean; title: string; children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="p-1.5 rounded transition-colors"
+      style={{
+        background: active ? 'rgba(56,189,248,0.15)' : 'transparent',
+        color: active ? '#38BDF8' : 'rgba(255,255,255,0.55)',
+      }}
+    >
+      {children}
+    </button>
+  )
+}
+
 function ContentEditor({
   value,
   onChange,
@@ -213,6 +239,18 @@ function ContentEditor({
   const [showYt, setShowYt] = useState(false)
   const [ytInput, setYtInput] = useState('')
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TipTapImage,
+      TipTapLink.configure({ openOnClick: false }),
+      Placeholder.configure({ placeholder: 'Escribí el contenido del post acá…' }),
+    ],
+    content: value || '',
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  })
+
   async function pickImage(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -224,94 +262,125 @@ function ContentEditor({
     const res = await uploadMediaAction(fd)
     setBusy(false)
     if (res.error) { setErr(res.error); return }
-    if (res.url) {
-      const tag = `\n<img src="${res.url}" alt="" />\n`
-      onChange((value + tag).trim() + '\n')
-    }
+    if (res.url) editor?.chain().focus().setImage({ src: res.url, alt: '' }).run()
     e.target.value = ''
   }
 
   function insertYoutube() {
-    const id = parseYtId(ytInput.trim())
+    const id = ytId(ytInput.trim())
     if (!id) { setErr('Link de YouTube no válido.'); return }
     const isShort = ytInput.includes('/shorts/')
     const embed = isShort
-      ? `\n<div style="position:relative;padding-bottom:177.78%;max-width:315px;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>\n`
-      : `\n<div style="position:relative;padding-bottom:56.25%;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>\n`
-    onChange((value + embed).trim() + '\n')
+      ? `<div style="position:relative;padding-bottom:177.78%;max-width:315px;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+      : `<div style="position:relative;padding-bottom:56.25%;margin:16px 0"><iframe src="https://www.youtube.com/embed/${id}" style="position:absolute;inset:0;width:100%;height:100%" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`
+    editor?.chain().focus().insertContent(embed).run()
     setYtInput('')
     setShowYt(false)
     setErr(null)
   }
 
+  function addLink() {
+    const url = window.prompt('URL del link:')
+    if (!url) return
+    if (editor?.state.selection.empty) {
+      editor.chain().focus().insertContent(`<a href="${url}">${url}</a>`).run()
+    } else {
+      editor?.chain().focus().setLink({ href: url }).run()
+    }
+  }
+
   return (
     <div>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="field-input font-mono text-sm min-h-[240px] resize-y"
-        placeholder='<p>Escribí el contenido del post acá.</p>'
-      />
+      {/* Toolbar */}
+      <div
+        className="flex items-center gap-0.5 flex-wrap px-2 py-1.5 rounded-t-md"
+        style={{ background: '#091A35', border: '1px solid #102E66', borderBottom: 'none' }}
+      >
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleBold().run()} active={editor?.isActive('bold')} title="Negrita">
+          <Bold size={15} />
+        </ToolbarBtn>
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleItalic().run()} active={editor?.isActive('italic')} title="Cursiva">
+          <Italic size={15} />
+        </ToolbarBtn>
 
-      <div className="flex items-center gap-3 mt-2 flex-wrap">
-        {/* Insertar imagen */}
+        <div className="w-px h-4 bg-white/10 mx-1" />
+
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()} active={editor?.isActive('heading', { level: 2 })} title="Título H2">
+          <Heading2 size={15} />
+        </ToolbarBtn>
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleBlockquote().run()} active={editor?.isActive('blockquote')} title="Cita">
+          <Quote size={15} />
+        </ToolbarBtn>
+
+        <div className="w-px h-4 bg-white/10 mx-1" />
+
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleBulletList().run()} active={editor?.isActive('bulletList')} title="Lista con viñetas">
+          <List size={15} />
+        </ToolbarBtn>
+        <ToolbarBtn onClick={() => editor?.chain().focus().toggleOrderedList().run()} active={editor?.isActive('orderedList')} title="Lista numerada">
+          <ListOrdered size={15} />
+        </ToolbarBtn>
+
+        <div className="w-px h-4 bg-white/10 mx-1" />
+
+        <ToolbarBtn onClick={addLink} active={editor?.isActive('link')} title="Insertar link">
+          <LinkIcon size={15} />
+        </ToolbarBtn>
+
+        <div className="w-px h-4 bg-white/10 mx-1" />
+
+        {/* Imagen */}
         <label
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-body font-semibold cursor-pointer"
-          style={{ background: 'rgba(56,189,248,0.1)', color: '#38BDF8', border: '1px solid rgba(56,189,248,0.2)' }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-colors ml-1"
+          style={{ color: '#38BDF8', background: 'rgba(56,189,248,0.08)' }}
+          title="Subir e insertar imagen"
         >
-          {busy ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-          {busy ? 'Subiendo…' : 'Insertar imagen'}
+          {busy ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+          {busy ? 'Subiendo…' : 'Imagen'}
           <input type="file" accept="image/*" onChange={pickImage} disabled={busy} className="hidden" />
         </label>
 
-        {/* Insertar video */}
+        {/* YouTube */}
         <button
           type="button"
           onClick={() => { setShowYt(!showYt); setErr(null) }}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-body font-semibold transition-colors"
-          style={{ background: 'rgba(255,0,0,0.08)', color: '#f87171', border: '1px solid rgba(255,0,0,0.2)' }}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold transition-colors"
+          style={{ color: '#f87171', background: 'rgba(255,0,0,0.08)' }}
+          title="Insertar video de YouTube"
         >
-          <YoutubeIcon size={14} />
-          Insertar video
+          <YoutubeIcon size={13} />
+          Video
         </button>
 
-        {err && <span className="text-xs text-red-400">{err}</span>}
+        {err && <span className="text-xs text-red-400 ml-2">{err}</span>}
       </div>
 
-      {/* Input de YouTube */}
+      {/* YouTube input */}
       {showYt && (
-        <div className="flex gap-2 mt-2">
+        <div
+          className="flex gap-2 px-2 py-2"
+          style={{ background: '#091A35', border: '1px solid #102E66', borderBottom: 'none' }}
+        >
           <input
             type="text"
             value={ytInput}
             onChange={(e) => setYtInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), insertYoutube())}
             placeholder="Pegá el link de YouTube o Short…"
-            className="field-input text-sm flex-1"
+            className="field-input text-sm flex-1 py-1.5"
             autoFocus
           />
-          <button
-            type="button"
-            onClick={insertYoutube}
-            className="px-4 py-2 rounded-md text-xs font-semibold text-white flex-shrink-0"
-            style={{ background: '#38BDF8', color: '#0A1628' }}
-          >
+          <button type="button" onClick={insertYoutube} className="px-3 py-1.5 rounded text-xs font-semibold flex-shrink-0" style={{ background: '#38BDF8', color: '#0A1628' }}>
             Insertar
           </button>
-          <button
-            type="button"
-            onClick={() => { setShowYt(false); setYtInput(''); setErr(null) }}
-            className="px-2 py-2 rounded-md text-white/50 hover:text-white"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}
-          >
+          <button type="button" onClick={() => { setShowYt(false); setYtInput(''); setErr(null) }} className="px-2 py-1.5 rounded text-white/50 hover:text-white flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
             <X size={14} />
           </button>
         </div>
       )}
+
+      {/* Editor area */}
+      <EditorContent editor={editor} className="rich-editor" />
     </div>
   )
-}
-
-function parseYtId(url: string): string | null {
-  return ytId(url)
 }
