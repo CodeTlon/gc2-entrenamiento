@@ -17,8 +17,16 @@
   margin-bottom: 0.75rem;
 }
 .prose-gc2 a { color: #38BDF8; text-decoration: underline; }
-.prose-gc2 ul, .prose-gc2 ol { padding-left: 1.5rem; }
+.prose-gc2 ul { padding-left: 1.5rem; list-style-type: disc; }
+.prose-gc2 ol { padding-left: 1.5rem; list-style-type: decimal; }
 .prose-gc2 li { margin-bottom: 0.5rem; }
+.prose-gc2 blockquote {
+  border-left: 3px solid #38BDF8;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  color: rgba(255,255,255,0.6);
+  font-style: italic;
+}
 .prose-gc2 strong { color: white; }
 .prose-gc2 hr { border-color: rgba(255,255,255,0.15); margin: 2rem 0; }
 /* Embeds de YouTube insertados por TipTap */
