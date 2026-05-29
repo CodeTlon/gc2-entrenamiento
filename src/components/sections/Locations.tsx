@@ -8,7 +8,7 @@ export default function Locations({ data }: { data: LocationsSettings }) {
   const isSingle = data.items.length === 1
 
   return (
-    <section id="ubicaciones" className="py-section bg-blue-900">
+    <section id="ubicaciones" className="py-section bg-blue-800">
       <div className="container">
         <ScrollReveal className="text-center mb-12">
           <p className="section-label">{data.label}</p>
