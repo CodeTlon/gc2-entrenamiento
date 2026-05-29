@@ -181,6 +181,7 @@ export default function Navbar({ contact }: Props) {
             href={contact.instagram_link}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Instagram"
             className="text-white/70 hover:text-accent transition-colors"
           >
             <Instagram size={24} />
@@ -189,12 +190,14 @@ export default function Navbar({ contact }: Props) {
             href={contact.whatsapp_link}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="WhatsApp"
             className="text-white/70 hover:text-success transition-colors"
           >
             <WhatsAppIcon size={24} />
           </a>
           <a
             href={`mailto:${contact.email}`}
+            aria-label="Email"
             className="text-white/70 hover:text-accent transition-colors"
           >
             <Mail size={24} />

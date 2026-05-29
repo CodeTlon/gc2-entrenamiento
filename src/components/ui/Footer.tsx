@@ -60,14 +60,14 @@ export default function Footer({ contact }: Props) {
             </a>
           </div>
 
-          <p className="text-white/30 text-xs md:text-right md:justify-self-end">
+          <p className="text-white/55 text-xs md:text-right md:justify-self-end">
             © {SITE_YEAR} GC² — {contact.city}
           </p>
         </div>
 
         {/* Bottom bar */}
         <div
-          className="flex flex-col sm:flex-row items-center justify-between gap-3 py-4 text-[11px] text-white/25"
+          className="flex flex-col sm:flex-row items-center justify-between gap-3 py-4 text-[11px] text-white/50"
           style={{ borderTop: '1px solid #102E66' }}
         >
           <div className="flex items-center gap-4">
