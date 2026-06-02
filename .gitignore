@@ -28,7 +28,7 @@ test-results/
 # Editor / OS
 .vscode/
 .idea/
-.claude/
+.claude/settings.local.json
 .DS_Store
 Thumbs.db
 *.swp

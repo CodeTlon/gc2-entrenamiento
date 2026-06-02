@@ -1,0 +1,174 @@
+# GC² Entrenamiento — Project Context
+
+> **Contexto de sesión para Claude Code.**
+> Al iniciar: leer este archivo + `ARCHITECTURE.md` + `TASKS.md`. Ir directo al cambio (leé SOLO lo que indica ARCHITECTURE.md, no el repo entero).
+> Sesión de mantenimiento: `/cambio "<tema>"` abre la rama; cada prompt commitea ahí (sin coautor, sin tocar main); `/cerrar` mergea/pushea/tagea cuando lo pidas.
+> Al cerrar: fila(s) en el **Changelog del README.md (raíz)** + fila en Historial de Cambios acá. Si hubo cambios estructurales (rutas, tablas, deps, convenciones, env) → editar la sección correspondiente + ARCHITECTURE.md en el mismo commit.
+
+---
+
+## Qué es
+
+Sitio web oficial de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equipo de entrenamiento para corredores, duatletas y triatletas. Incluye un sitio público y un dashboard administrativo (CMS interno) para editar todo el contenido sin tocar código.
+
+Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
+
+## Stack
+
+- **Next.js 16** (App Router, RSC por defecto, Turbopack) — `next` ^16.2.1
+- **React 19** — `react` ^19.2.4
+- **TypeScript** estricto, alias `@/* → src/*`
+- **Tailwind CSS 3** — escala de colores y tokens definidos en `tailwind.config.ts`
+- **Supabase** (`@supabase/ssr` + `@supabase/supabase-js`) — Postgres + Auth + Storage (bucket `media`)
+- **Resend** — envío de emails del formulario de contacto
+- **Zod** — validación de inputs en server actions
+- **lucide-react** — iconos
+- **slugify** — generación de slugs de blog
+- **sharp** — optimización de imágenes (Next/Image)
+- **Playwright** — tests e2e (`tests/`, `playwright.config.ts`)
+
+Tipografías: **Barlow** (body) y **Barlow Condensed** (headings) vía `next/font`.
+
+## Estructura de carpetas
+
+```
+src/
+  app/
+    (public)/                # Rutas públicas (route group)
+      layout.tsx             # Layout público (Navbar/Footer/etc.)
+      page.tsx               # Home
+      planes/page.tsx
+      contacto/page.tsx
+      privacidad/page.tsx
+      terminos/page.tsx
+      blog/
+        page.tsx             # Listado con filtro por categoría
+        [slug]/              # Detalle (con AuthorCard)
+        BlogList.tsx         # Client component con paginación y filtros
+    dashboard/               # CMS protegido
+      (auth)/
+        login/               # Login
+      (panel)/               # Layout con sidebar (DashboardShell)
+        layout.tsx
+        page.tsx             # Home / stats
+        DashboardShell.tsx   # Sidebar + topbar (client)
+        contenido/           # Editor de site_settings
+          hero/  nosotros/  disciplinas/  clases-grupales/  galeria/
+        entrenadores/        # CRUD coaches  (page, [id], nuevo, CoachForm)
+        planes/              # CRUD plans    (page, [id], nuevo, PlanForm)
+          categorias/        # CRUD plan categories (page, [id], nuevo)
+        blog/                # CRUD posts    (page, [id], nuevo, PostForm)
+        categorias/          # CRUD blog categories (page, [id], nuevo)
+        contacto/            # Editor settings de contacto
+    layout.tsx               # Root layout (fuentes, metadata, JSON-LD, GA)
+    globals.css              # Tailwind + componentes utilitarios (.btn, .plan-card, .field-input, etc.)
+    robots.ts  sitemap.ts
+  proxy.ts                   # Antes "middleware.ts" — auth gate de /dashboard (renombrado por Next 16)
+  components/
+    ui/                      # Navbar, Footer, Modal, ScrollProgress, ScrollReveal, WhatsAppButton, GoogleAnalytics
+    sections/                # Hero, About, Disciplines, Coaches, CoachModal, GroupClasses, TeamGallery, ContactForm
+    dashboard/               # Field, PageHeader, SaveButton, DeleteButton (UI compartida del panel)
+  actions/                   # Server actions ('use server')
+    auth.ts  contact.ts  coaches.ts  plans.ts  posts.ts  settings.ts
+    categories.ts            # CRUD categorías de blog
+    plan-categories.ts       # CRUD categorías de planes
+  lib/
+    supabase.ts              # Clientes browser/anon y service-role (no SSR)
+    supabase-server.ts       # createSupabaseServerClient (cookies SSR) + admin client
+    content.ts               # Tipos + getters (getSiteSettings, getCoaches, getPlans*) con FALLBACKs
+    constants.ts             # Datos hardcodeados de fallback (coaches, planes, contacto, imágenes)
+    youtube.ts               # Helper para embeds de YouTube en posts
+    utils.ts
+supabase/
+  migrations/
+    001_contact_leads.sql
+    002_blog_posts.sql
+    003_editorial.sql        # site_settings, coaches, plans + RLS + bucket `media` + seed
+    004_categories.sql       # categorías de blog (tabla `categories`)
+    005_plan_categories.sql  # categorías de planes (tabla `plan_categories`, col `plan_category_id` en `plans`)
+    006_posts_coach.sql      # columna `coach_id` en `posts` → FK a `coaches`
+    007_post_categories.sql  # tabla N:N `post_categories` (post_id, category_id) — multi-categoría por post
+docs/                        # Documentación adicional (README, deployment, technical-docs, maintenance)
+public/images/               # Assets estáticos
+tests/                       # Playwright e2e
+```
+
+## Modelo de datos (Supabase)
+
+- **`contact_leads`** — leads del formulario de contacto del sitio público.
+- **`posts`** — artículos de blog (`title`, `slug`, `excerpt`, `content`, `cover_image`, `youtube_url`, `published`, `author_id`, `coach_id` FK→coaches, `category_id` FK→categories *(legacy, no se actualiza desde el form)*, `created_at`, `updated_at`).
+- **`categories`** — categorías de blog (`name`, `slug`, `display_order`).
+- **`post_categories`** — junction N:N entre `posts` y `categories` (`post_id`, `category_id`). Es la fuente de verdad: el form del dashboard borra y re-inserta filas acá; el listado público filtra por `post_categories.categories.slug`.
+- **`site_settings`** — clave/valor JSON con todos los textos editables del home (`hero`, `about`, `disciplines`, `group_classes`, `team_gallery`, `contact`).
+- **`coaches`** — equipo de entrenadores (slug, nombre, especialidad, bio, foto, IG, certificaciones, logros, servicios, `display_order`).
+- **`plans`** — planes (`category` ∈ `runner | triathlon | group`, `plan_category_id` FK→plan_categories, `name`, `name_display`, `badge`, `features[]`, `featured`, `display_order`).
+- **`plan_categories`** — categorías de planes (`name`, `slug`, `display_order`).
+- **Storage:** bucket `media` para imágenes subidas desde el dashboard.
+
+**RLS:** lectura pública en todas las tablas de contenido; escritura solo para usuarios `authenticated`. El dashboard depende de Supabase Auth.
+
+## Patrones y convenciones
+
+- **Server-first:** páginas y secciones son **Server Components** salvo que necesiten estado/efectos (Navbar, Hero parallax, ScrollProgress, ScrollReveal, ContactForm, CoachModal, DashboardShell, formularios del panel).
+- **Server Actions** (`src/actions/*.ts`) para todas las mutaciones. Firma estándar: `(prevState, formData) => Promise<State>`. Usan `useFormState` + `useFormStatus` desde `react-dom`.
+- **Fallbacks de contenido:** `src/lib/content.ts` siempre devuelve datos. Si Supabase no responde o las env vars son placeholder, usa `FALLBACK_*` desde `src/lib/constants.ts`. **No romper esta cadena**: el sitio tiene que renderizar aunque no haya DB.
+- **Auth gate:** `src/proxy.ts` (antes `middleware.ts`) protege `/dashboard/**`. Se renombró a `proxy.ts` por Next 16.
+- **Estilos:** Tailwind + componentes utilitarios en `globals.css` (`.btn`, `.btn--primary`, `.plan-card`, `.field-input`, `.section-title`, `.gradient-text`, `.reveal`, etc.). Paleta `blue-900..blue-100` + `accent` (`#38BDF8`). Spacing custom: `section`, `gap-sm/md/lg/xl`.
+- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y `*.supabase.co`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual.
+- **SEO:** metadata + JSON-LD `SportsOrganization` en `src/app/layout.tsx`. `sitemap.ts` y `robots.ts` en App Router. Redirects 301 desde URLs `.php` legacy en `next.config.mjs`.
+- **i18n:** todo en español (es_AR). Mantenelo así.
+- **Comentarios en código:** los archivos del proyecto usan comentarios en español cuando son necesarios. No agregar comentarios obvios.
+
+## Variables de entorno
+
+Definidas en `.env.local` (ver `.env.example`):
+
+| Var | Uso |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Cliente Supabase (browser + server) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente Supabase anónimo |
+| `SUPABASE_SERVICE_ROLE_KEY` | Cliente admin (solo server) |
+| `RESEND_API_KEY` | Envío de emails |
+| `RESEND_FROM_NAME` / `RESEND_FROM_EMAIL` | Remitente |
+| `COMPANY_EMAIL` | Destino de leads |
+| `NEXT_PUBLIC_GA_ID` | Google Analytics (opcional) |
+| `NEXT_PUBLIC_SITE_URL` | Base URL para metadata (opcional) |
+
+Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcionando (sin persistir leads ni mandar emails).
+
+## Scripts
+
+- `npm run dev` — Next dev (Turbopack)
+- `npm run build` — build prod
+- `npm run start` — server prod
+- `npm run lint` — ESLint
+- `npm run test:e2e` / `test:e2e:ui` — Playwright
+
+## Notas históricas / contexto
+
+- Migración fiel desde un sitio **PHP+SCSS** anterior. La paleta y la tipografía vienen 1:1 de los SCSS originales. Hay redirects 301 de las viejas URLs `.php`.
+- **Next 16 + React 19**: ya se hizo el rename `middleware.ts → proxy.ts` y se silenciaron warnings de dev (commits `176d91b`, `853be79`).
+- El dashboard (commits `d7c36ad`, `5546bf5`, `1871c3c`) es relativamente nuevo: shell + editores de site content + CRUD de coaches/planes/blog con upload de imágenes y embed de YouTube.
+
+---
+
+## Historial de Cambios
+| Fecha | Rama | Cambio |
+|-------|------|--------|
+| — | main | v1.0.0 — entrega inicial (migración legacy PHP+SCSS + dashboard CMS) |
+| 2026 | main | Migración a Next 16 + React 19 (`middleware.ts` → `proxy.ts`) |
+| 2026 | main | Migraciones 008 (post_authors / seed locations) + 009 (contact_leads_coach); sedes con merge inteligente, cards uniformes + mapa colapsable |
+<!-- Agregar fila al finalizar cada sesión de mantenimiento -->
+
+---
+
+## Cómo actualizar este archivo
+
+Cuando hagas un cambio de código, antes de cerrar la respuesta:
+
+- ¿Agregaste/borraste rutas? → actualizá la sección **Estructura de carpetas**.
+- ¿Tocaste el schema (migration nueva, columna nueva, tabla nueva)? → actualizá **Modelo de datos**.
+- ¿Agregaste deps o cambiaste versiones mayores? → actualizá **Stack**.
+- ¿Cambiaste una convención (renombre de carpeta, nuevo patrón de server action, nuevo helper compartido)? → actualizá **Patrones y convenciones**.
+- ¿Agregaste env vars? → actualizá **Variables de entorno**.
+- Si es un cambio chico que no altera nada de lo de arriba, **no hace falta tocar el archivo**.
