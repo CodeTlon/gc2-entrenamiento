@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createSupabaseClient } from '@/lib/supabase'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function SetPasswordPage() {
   const router = useRouter()
@@ -14,7 +14,10 @@ export default function SetPasswordPage() {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    const supabase = createSupabaseClient()
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) setReady(true)
     })
@@ -38,7 +41,10 @@ export default function SetPasswordPage() {
     }
 
     setSubmitting(true)
-    const supabase = createSupabaseClient()
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
     const { error: updateError } = await supabase.auth.updateUser({ password })
 
     if (updateError) {
@@ -74,7 +80,7 @@ export default function SetPasswordPage() {
     return (
       <div style={wrapStyle}>
         <div style={cardStyle} className="text-center">
-          <p className="text-white/60 text-sm">Verificando invitación…</p>
+          <p className="text-white/60 text-sm">Verificando link…</p>
         </div>
       </div>
     )

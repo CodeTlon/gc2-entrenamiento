@@ -47,7 +47,7 @@ export async function forgotPasswordAction(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar'
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/dashboard/set-password`,
+    redirectTo: `${siteUrl}/auth/callback?next=/dashboard/set-password`,
   })
 
   // Siempre devolvemos success para no revelar si el email existe o no
