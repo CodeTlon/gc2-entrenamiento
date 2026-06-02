@@ -105,7 +105,7 @@ export default function SetPasswordPage() {
             GC<span className="gradient-text">²</span> Dashboard
           </h1>
           <p className="text-white/45 text-sm mt-3">
-            Elegí una contraseña para acceder al panel.
+            Ingresá tu nueva contraseña para acceder al panel.
           </p>
         </div>
 
@@ -157,7 +157,7 @@ export default function SetPasswordPage() {
             className="btn btn--primary w-full justify-center"
             style={submitting ? { opacity: 0.7, cursor: 'wait' } : undefined}
           >
-            {submitting ? 'Guardando…' : 'Crear contraseña'}
+            {submitting ? 'Guardando…' : 'Guardar contraseña'}
           </button>
         </form>
       </div>
