@@ -158,6 +158,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 | — | main | v1.0.0 — entrega inicial (migración legacy PHP+SCSS + dashboard CMS) |
 | 2026 | main | Migración a Next 16 + React 19 (`middleware.ts` → `proxy.ts`) |
 | 2026 | main | Migraciones 008 (post_authors / seed locations) + 009 (contact_leads_coach); sedes con merge inteligente, cards uniformes + mapa colapsable |
+| 2026-06-02 | feat/reset-password-flow | v1.1.0 — flujo de recuperación de contraseña (`/dashboard/forgot-password`, `forgotPasswordAction`); manual del dashboard (`docs/manual-dashboard.html`) |
 <!-- Agregar fila al finalizar cada sesión de mantenimiento -->
 
 ---
