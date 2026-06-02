@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual del Dashboard — GC² Entrenamiento</title>
+  <style>
+    /* ── Tipografía y reset ─────────────────────────────────────── */
+    @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&family=Barlow+Condensed:wght@700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-dark: #0A1628;
+      --blue-mid:  #0D2247;
+      --blue-line: #102E66;
+      --accent:    #38BDF8;
+      --text:      #1e293b;
+      --muted:     #64748b;
+      --border:    #e2e8f0;
+      --bg-section:#f8fafc;
+      --red:       #ef4444;
+      --green:     #22c55e;
+    }
+
+    body {
+      font-family: 'Barlow', sans-serif;
+      font-size: 10.5pt;
+      color: var(--text);
+      background: #fff;
+      line-height: 1.55;
+    }
+
+    /* ── Portada ────────────────────────────────────────────────── */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--blue-dark);
+      color: #fff;
+      text-align: center;
+      padding: 60px 40px;
+      page-break-after: always;
+    }
+    .cover-logo {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 56pt;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .cover-sub {
+      font-size: 13pt;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 48px;
+    }
+    .cover-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 32pt;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .cover-desc {
+      font-size: 11pt;
+      color: rgba(255,255,255,0.5);
+      max-width: 440px;
+      line-height: 1.6;
+    }
+    .cover-badge {
+      margin-top: 48px;
+      display: inline-block;
+      background: rgba(56,189,248,0.15);
+      border: 1px solid rgba(56,189,248,0.35);
+      color: var(--accent);
+      font-size: 9pt;
+      padding: 6px 20px;
+      border-radius: 999px;
+      letter-spacing: 1px;
+    }
+
+    /* ── Layout general ─────────────────────────────────────────── */
+    .page {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 48px;
+    }
+
+    /* ── Índice ─────────────────────────────────────────────────── */
+    .toc { page-break-after: always; }
+    .toc h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 22pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      margin-bottom: 24px;
+      border-bottom: 3px solid var(--accent);
+      padding-bottom: 8px;
+    }
+    .toc-group { margin-bottom: 20px; }
+    .toc-group-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px dotted var(--border);
+    }
+    .toc-num {
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 22px;
+      font-size: 9pt;
+    }
+    .toc-label { font-size: 10.5pt; color: var(--text); }
+
+    /* ── Secciones ──────────────────────────────────────────────── */
+    .section { page-break-before: always; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .section-num {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 28pt;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      min-width: 48px;
+    }
+    .section-titles { flex: 1; }
+    .section-eyebrow {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+    }
+    .section-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      line-height: 1.1;
+    }
+
+    /* ── Cuerpo de contenido ────────────────────────────────────── */
+    p { margin-bottom: 8px; }
+
+    h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 13pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      margin: 20px 0 8px;
+      letter-spacing: 0.5px;
+    }
+
+    h4 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: var(--blue-dark);
+      margin: 14px 0 4px;
+    }
+
+    ul, ol {
+      padding-left: 18px;
+      margin-bottom: 10px;
+    }
+    li { margin-bottom: 4px; }
+
+    /* ── Cajas ──────────────────────────────────────────────────── */
+    .tip {
+      background: #eff6ff;
+      border-left: 4px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+    .tip strong { color: #1d4ed8; }
+
+    .warn {
+      background: #fff7ed;
+      border-left: 4px solid #f97316;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+    .warn strong { color: #c2410c; }
+
+    /* ── Tabla de campos ────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 18px;
+      font-size: 10pt;
+    }
+    thead { background: var(--blue-dark); color: #fff; }
+    th {
+      padding: 8px 10px;
+      text-align: left;
+      font-size: 9pt;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: var(--bg-section); }
+
+    .req {
+      display: inline-block;
+      background: #fef2f2;
+      color: var(--red);
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .opt {
+      display: inline-block;
+      background: #f0fdf4;
+      color: #15803d;
+      font-size: 8pt;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    /* ── Steps ──────────────────────────────────────────────────── */
+    .steps { list-style: none; padding: 0; margin: 12px 0; counter-reset: step; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      background: var(--blue-dark);
+      color: var(--accent);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 11pt;
+      min-width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ── Divisor ────────────────────────────────────────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 20px 0;
+    }
+
+    /* ── Badges ─────────────────────────────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-size: 8.5pt;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .badge-green { background: #dcfce7; color: #15803d; }
+    .badge-gray { background: #f1f5f9; color: #475569; }
+
+    /* ── URL / ruta ─────────────────────────────────────────────── */
+    .url {
+      font-family: monospace;
+      font-size: 9.5pt;
+      background: var(--bg-section);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: var(--blue-dark);
+    }
+
+    /* ── Subsección con línea ────────────────────────────────────── */
+    .subsection {
+      background: var(--bg-section);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin: 14px 0;
+    }
+    .subsection h4 { margin-top: 0; }
+
+    /* ── Print ──────────────────────────────────────────────────── */
+    @media print {
+      body { font-size: 10pt; }
+      .cover { min-height: 100vh; }
+      .section { page-break-before: always; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PORTADA                                                       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-logo">GC²</div>
+  <div class="cover-sub">Entrenamiento de la Resistencia</div>
+  <div class="cover-title">Manual del<br>Panel de Administración</div>
+  <p class="cover-desc">Guía paso a paso para gestionar el contenido del sitio web: publicar posts, editar entrenadores, actualizar planes y más.</p>
+  <span class="cover-badge">gc2entrenamientoderesistencia.com.ar</span>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  ÍNDICE                                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page toc">
+  <h2>Índice</h2>
+
+  <div class="toc-group">
+    <div class="toc-group-title">Primeros pasos</div>
+    <div class="toc-item"><span class="toc-num">01</span><span class="toc-label">Cómo ingresar al panel</span></div>
+    <div class="toc-item"><span class="toc-num">02</span><span class="toc-label">Cómo guardar cambios</span></div>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-title">Contenido del sitio</div>
+    <div class="toc-item"><span class="toc-num">03</span><span class="toc-label">Portada (Hero)</span></div>
+    <div class="toc-item"><span class="toc-num">04</span><span class="toc-label">Nosotros</span></div>
+    <div class="toc-item"><span class="toc-num">05</span><span class="toc-label">Disciplinas</span></div>
+    <div class="toc-item"><span class="toc-num">06</span><span class="toc-label">Clases Grupales</span></div>
+    <div class="toc-item"><span class="toc-num">07</span><span class="toc-label">Galería de fotos</span></div>
+    <div class="toc-item"><span class="toc-num">08</span><span class="toc-label">Sedes / Ubicaciones</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-label">Banners de páginas internas</span></div>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-title">Gestión de entrenadores, planes y blog</div>
+    <div class="toc-item"><span class="toc-num">10</span><span class="toc-label">Entrenadores</span></div>
+    <div class="toc-item"><span class="toc-num">11</span><span class="toc-label">Planes de entrenamiento</span></div>
+    <div class="toc-item"><span class="toc-num">12</span><span class="toc-label">Blog: artículos</span></div>
+    <div class="toc-item"><span class="toc-num">13</span><span class="toc-label">Categorías del blog</span></div>
+  </div>
+
+  <div class="toc-group">
+    <div class="toc-group-title">Otros</div>
+    <div class="toc-item"><span class="toc-num">14</span><span class="toc-label">Datos de contacto</span></div>
+    <div class="toc-item"><span class="toc-num">15</span><span class="toc-label">Consultas recibidas (Leads)</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  01 · INGRESAR AL PANEL                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">01</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Primeros pasos</div>
+      <div class="section-title">Cómo ingresar al panel</div>
+    </div>
+  </div>
+
+  <p>El panel de administración es privado. Solo pueden entrar las personas con usuario y contraseña. <strong>Ustedes son los administradores</strong> — pueden ingresar, cambiar contenido y recuperar su propia contraseña sin necesidad de llamar a nadie.</p>
+
+  <h3>Pasos para entrar</h3>
+  <ol class="steps">
+    <li>Abrí tu navegador y entrá a <span class="url">gc2entrenamientoderesistencia.com.ar/dashboard</span></li>
+    <li>Ingresá tu <strong>email</strong> y <strong>contraseña</strong>.</li>
+    <li>Hacé clic en <strong>Ingresar</strong>.</li>
+    <li>Vas a ver el panel principal con el menú lateral a la izquierda.</li>
+  </ol>
+
+  <h3>¿Olvidaste la contraseña?</h3>
+  <p>Lo podés resolver vos mismo en segundos, sin llamar a nadie:</p>
+  <ol class="steps">
+    <li>En la pantalla de login, hacé clic en el link <strong>"¿Olvidaste tu contraseña?"</strong> debajo del botón Ingresar.</li>
+    <li>Ingresá tu <strong>email</strong> y hacé clic en <strong>"Enviar link de recuperación"</strong>.</li>
+    <li>Revisá tu casilla de correo (también la carpeta de spam). Vas a recibir un email con un link.</li>
+    <li>Hacé clic en el link del email — te lleva directamente al panel para que elijas tu nueva contraseña.</li>
+    <li>Ingresá la nueva contraseña dos veces y hacé clic en <strong>"Guardar contraseña"</strong>.</li>
+    <li>Listo, entrás automáticamente al panel.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>El link del email expira en 1 hora.</strong> Si no lo usaste a tiempo, repetí el proceso desde el paso 1.
+  </div>
+
+  <h3>Cerrar sesión</h3>
+  <p>Para cerrar sesión, usá el botón <strong>Cerrar sesión</strong> que aparece en la parte inferior del menú lateral.</p>
+
+  <h3>Menú lateral</h3>
+  <p>En el costado izquierdo encontrás todas las secciones. Hacé clic en cualquiera para navegar.</p>
+
+  <table>
+    <thead><tr><th>Sección</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Contenido</strong></td><td>Editar los textos e imágenes del home y páginas del sitio</td></tr>
+      <tr><td><strong>Entrenadores</strong></td><td>Agregar, editar o eliminar perfiles del equipo</td></tr>
+      <tr><td><strong>Planes</strong></td><td>Gestionar los planes de entrenamiento</td></tr>
+      <tr><td><strong>Blog</strong></td><td>Crear y editar artículos</td></tr>
+      <tr><td><strong>Consultas</strong></td><td>Ver los mensajes del formulario de contacto del sitio</td></tr>
+      <tr><td><strong>Contacto</strong></td><td>Actualizar teléfono, WhatsApp, Instagram, etc.</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  02 · GUARDAR CAMBIOS                                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">02</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Primeros pasos</div>
+      <div class="section-title">Cómo guardar cambios</div>
+    </div>
+  </div>
+
+  <p>Todos los formularios del panel funcionan de la misma manera: modificás lo que necesitás y después hacés clic en el botón para guardar.</p>
+
+  <h3>Botón de guardar</h3>
+  <p>Al final de cada formulario hay un botón azul que dice <strong>Guardar cambios</strong>. <br>Después de hacer clic:</p>
+  <ul>
+    <li>Si todo salió bien → aparece un mensaje verde: <em>"Guardado correctamente"</em>.</li>
+    <li>Si hubo un error → aparece un mensaje rojo con la descripción del problema.</li>
+  </ul>
+
+  <div class="warn">
+    <strong>Importante:</strong> Los cambios no se aplican al sitio hasta que no hagas clic en "Guardar cambios". Si cerrás la pestaña sin guardar, se pierden.
+  </div>
+
+  <h3>Subir imágenes</h3>
+  <p>Cuando un campo tiene una imagen, vas a ver un botón que dice <strong>"Subir imagen"</strong> o un área para arrastrar. Hacé clic ahí y elegí el archivo desde tu computadora. La imagen se sube sola y se guarda cuando confirmás el formulario.</p>
+
+  <div class="tip">
+    <strong>Formatos aceptados:</strong> JPG, PNG, WebP, GIF, SVG. Recomendamos JPG o WebP para fotos. El sistema optimiza las imágenes automáticamente.
+  </div>
+
+  <h3>Listas de ítems (características, párrafos, etc.)</h3>
+  <p>En algunos formularios vas a ver listas donde podés agregar o quitar elementos:</p>
+  <ul>
+    <li>Botón <strong>+ Agregar</strong> → agrega un ítem nuevo al final.</li>
+    <li>Ícono de <strong>papelera</strong> (🗑) al lado de cada ítem → lo elimina.</li>
+    <li>Arrastrá por el ícono de puntos (⠿) para reordenar los ítems.</li>
+  </ul>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  03 · HERO (PORTADA)                                           -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">03</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Portada</div>
+      <div class="section-title">Portada del sitio (Hero)</div>
+    </div>
+  </div>
+
+  <p>Es la primera sección que ven los visitantes cuando entran al sitio: el fondo grande con el título principal, el subtítulo, los botones y los números destacados.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Portada</strong></p>
+
+  <h3>Campos disponibles</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Título — línea 1</strong></td>
+        <td>Primera línea del título grande (aparece en blanco)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Título — línea 2 (degradé)</strong></td>
+        <td>Segunda línea del título (aparece en azul degradé)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Subtítulo</strong></td>
+        <td>Texto descriptivo debajo del título. Acepta HTML simple (<code>&lt;strong&gt;</code>)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Botón primario — texto</strong></td>
+        <td>El texto del botón azul principal (ej: "Conocé los planes")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Botón primario — link</strong></td>
+        <td>La página a la que lleva el botón (ej: <code>/planes</code>)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Botón secundario — texto</strong></td>
+        <td>El texto del botón secundario (ej: "Contactanos")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Botón secundario — link</strong></td>
+        <td>La página a la que lleva el botón secundario</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Imagen de fondo</strong></td>
+        <td>Foto de fondo de la portada</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Métricas</strong></td>
+        <td>Los números destacados (ej: "6+ Planes", "200+ Atletas"). Máximo 4 recomendado.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Cómo editar una métrica</h3>
+  <p>Las métricas tienen dos campos por ítem: el <strong>número</strong> (ej: "200+") y la <strong>etiqueta</strong> (ej: "Atletas"). Usá el botón <strong>+ Agregar métrica</strong> para sumar una nueva o la papelera para eliminarla.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  04 · NOSOTROS                                                 -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">04</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Nosotros</div>
+      <div class="section-title">Sección Nosotros</div>
+    </div>
+  </div>
+
+  <p>Es la sección del home que habla del equipo y la propuesta del club. Aparece debajo de la portada.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Nosotros</strong></p>
+
+  <h3>Campos disponibles</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Etiqueta de sección</strong></td>
+        <td>Pequeño texto sobre el título (ej: "Quiénes somos")</td>
+      </tr>
+      <tr>
+        <td><strong>Título — línea 1</strong></td>
+        <td>Primera línea del título de la sección</td>
+      </tr>
+      <tr>
+        <td><strong>Título — línea 2 (degradé)</strong></td>
+        <td>Segunda línea del título en azul</td>
+      </tr>
+      <tr>
+        <td><strong>Párrafos</strong></td>
+        <td>Texto de la sección. Podés tener varios párrafos separados. Acepta <code>&lt;strong&gt;</code></td>
+      </tr>
+      <tr>
+        <td><strong>Features (lista de checks)</strong></td>
+        <td>Lista de puntos destacados que aparecen con ✓ (ej: "Planificación individualizada")</td>
+      </tr>
+      <tr>
+        <td><strong>Imagen lateral</strong></td>
+        <td>Foto que aparece al costado del texto</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  05 · DISCIPLINAS                                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">05</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Disciplinas</div>
+      <div class="section-title">Sección Disciplinas</div>
+    </div>
+  </div>
+
+  <p>Muestra las disciplinas que ofrece el club (running, triatlón, duatlón, etc.) con íconos, título y descripción.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Disciplinas</strong></p>
+
+  <h3>Estructura</h3>
+  <p>Podés editar el título de la sección y la lista de disciplinas. Cada disciplina tiene:</p>
+  <ul>
+    <li><strong>Nombre</strong> — el título de la disciplina</li>
+    <li><strong>Descripción</strong> — texto corto explicativo</li>
+    <li><strong>Ícono</strong> — imagen representativa</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Mantené las descripciones cortas (1-2 oraciones) para que las tarjetas queden prolijas en el sitio.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  06 · CLASES GRUPALES                                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">06</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Clases Grupales</div>
+      <div class="section-title">Sección Clases Grupales</div>
+    </div>
+  </div>
+
+  <p>Sección del home que muestra la propuesta de entrenamientos grupales.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Clases Grupales</strong></p>
+
+  <h3>Campos disponibles</h3>
+  <p>Podés editar el título de la sección, descripción general, y la lista de clases. Cada clase incluye nombre, descripción y opcionalmente un horario o imagen.</p>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Si cambiás horarios, acordate de actualizar esta sección para que el sitio esté siempre al día.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  07 · GALERÍA                                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">07</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Galería</div>
+      <div class="section-title">Galería de fotos del equipo</div>
+    </div>
+  </div>
+
+  <p>Es la grilla de fotos que aparece en el home. Podés agregar, quitar y reordenar fotos.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Galería</strong></p>
+
+  <h3>Campos de cabecera</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Etiqueta de sección</strong></td><td>Texto pequeño sobre el título</td></tr>
+      <tr><td><strong>Título — línea 1</strong></td><td>Primera línea del título</td></tr>
+      <tr><td><strong>Título — línea 2</strong></td><td>Segunda línea del título (en degradé)</td></tr>
+      <tr><td><strong>Descripción</strong></td><td>Texto corto debajo del título</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cómo agregar o editar una foto</h3>
+  <ol class="steps">
+    <li>Hacé clic en <strong>+ Agregar foto</strong> al final de la lista.</li>
+    <li>Ingresá una <strong>etiqueta</strong> (ej: "Carrera", "Triatlón").</li>
+    <li>Hacé clic en <strong>Subir</strong> y elegí la imagen desde tu computadora.</li>
+    <li>Opcionalmente activá <strong>Ancho × 2</strong> para que esa foto ocupe el doble de espacio en la grilla.</li>
+    <li>Hacé clic en <strong>Guardar cambios</strong>.</li>
+  </ol>
+
+  <h3>Opciones de tamaño por foto</h3>
+  <table>
+    <thead><tr><th>Botón</th><th>Efecto</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Ancho × 2</strong></td><td>La foto ocupa el doble de ancho en la grilla (foto panorámica)</td></tr>
+      <tr><td><strong>Largo × 2</strong></td><td>La foto ocupa el doble de alto (foto vertical destacada)</td></tr>
+      <tr><td><em>(ninguno)</em></td><td>Tamaño normal (cuadrado)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    <strong>Punto focal:</strong> Después de subir una imagen, aparece un selector de "punto focal". Arrastrá el punto hacia la parte más importante de la foto. Esto asegura que, cuando la imagen se recorta en pantallas pequeñas, no se pierda lo importante.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  08 · UBICACIONES                                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">08</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Ubicaciones</div>
+      <div class="section-title">Sedes / Ubicaciones</div>
+    </div>
+  </div>
+
+  <p>Muestra las sedes donde entrenan, con nombre, descripción, dirección y mapa de Google Maps incrustado.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Ubicaciones</strong></p>
+
+  <h3>Campos de cabecera</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Etiqueta de sección</strong></td><td>Texto pequeño sobre el título (ej: "Dónde entrenamos")</td></tr>
+      <tr><td><strong>Título — línea 1</strong></td><td>Primera línea del título</td></tr>
+      <tr><td><strong>Título — línea 2</strong></td><td>Segunda línea del título (en degradé)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Campos por sede</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nombre</strong></td><td>Nombre de la sede (ej: "El Mágico - UNC")</td></tr>
+      <tr><td><strong>Descripción</strong></td><td>Texto corto sobre la sede</td></tr>
+      <tr><td><strong>Dirección</strong></td><td>Dirección completa</td></tr>
+      <tr><td><strong>Mapa de Google Maps</strong></td><td>URL del embed de Google Maps (ver instrucciones abajo)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cómo obtener el link del mapa (Google Maps)</h3>
+  <ol class="steps">
+    <li>Buscá el lugar en <strong>Google Maps</strong> en el navegador.</li>
+    <li>Hacé clic en <strong>Compartir</strong> (el ícono de compartir).</li>
+    <li>Elegí <strong>"Insertar un mapa"</strong>.</li>
+    <li>Copiá todo el código que aparece (el tag <code>&lt;iframe&gt;</code> completo).</li>
+    <li>Pegalo en el campo del mapa — el sistema extrae la URL automáticamente.</li>
+  </ol>
+
+  <div class="warn">
+    <strong>Atención:</strong> Si el campo queda en amarillo con una advertencia, revisá que hayas copiado el código correcto de Google Maps (el de "Insertar un mapa", no el link para compartir).
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  09 · BANNERS DE PÁGINAS INTERNAS                              -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">09</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Contenido → Banners</div>
+      <div class="section-title">Banners de páginas internas</div>
+    </div>
+  </div>
+
+  <p>Son las imágenes de fondo que aparecen en el encabezado de las páginas internas (Planes, Blog y Contacto).</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contenido</strong> → <strong>Banners</strong></p>
+
+  <h3>Páginas disponibles</h3>
+  <table>
+    <thead><tr><th>Página</th><th>Para qué sirve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Página Planes</strong></td><td>Fondo del banner en la página de planes</td></tr>
+      <tr><td><strong>Página Blog</strong></td><td>Fondo del banner en el listado del blog</td></tr>
+      <tr><td><strong>Página Contacto</strong></td><td>Fondo del banner en la página de contacto</td></tr>
+    </tbody>
+  </table>
+
+  <p>Para cada página, hacé clic en el botón de subir imagen, elegí el archivo y guardá.</p>
+
+  <div class="tip">
+    <strong>Tamaño recomendado:</strong> Imágenes horizontales (apaisadas). Mínimo 1400px de ancho. Formato JPG o WebP.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  10 · ENTRENADORES                                             -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">10</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Gestión</div>
+      <div class="section-title">Entrenadores</div>
+    </div>
+  </div>
+
+  <p>Acá podés agregar, editar y eliminar los perfiles del equipo de entrenadores. Estos aparecen en la sección "Equipo" del home y como autores en los posts del blog.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Entrenadores</strong></p>
+
+  <h3>Crear un entrenador nuevo</h3>
+  <ol class="steps">
+    <li>Hacé clic en el botón <strong>+ Nuevo entrenador</strong> (arriba a la derecha).</li>
+    <li>Completá los campos del formulario.</li>
+    <li>Hacé clic en <strong>Crear entrenador</strong>.</li>
+  </ol>
+
+  <h3>Campos del formulario</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Nombre completo</strong></td>
+        <td>Nombre que aparece en la tarjeta y en el perfil</td>
+        <td><span class="req">Requerido</span></td>
+      </tr>
+      <tr>
+        <td><strong>Especialidad</strong></td>
+        <td>Rol o disciplina (ej: "Head Coach Triatlón")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Descripción corta</strong></td>
+        <td>Texto que aparece en la tarjeta del home (1-2 oraciones)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Bio larga</strong></td>
+        <td>Texto completo que aparece al hacer clic en el perfil (modal)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Foto</strong></td>
+        <td>Foto del entrenador (proporción vertical 3:4 recomendada)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Handle de Instagram</strong></td>
+        <td>Usuario de Instagram con @ (ej: @usuario)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>URL de Instagram</strong></td>
+        <td>Link completo al perfil de Instagram</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Formación / Certificaciones</strong></td>
+        <td>Lista de títulos y certificaciones (una por ítem)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Logros</strong></td>
+        <td>Lista de logros deportivos (ej: "Ironman finisher")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Servicios</strong></td>
+        <td>Lista de servicios que ofrece este entrenador</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Orden de visualización</strong></td>
+        <td>Número que define el orden en el home. 0 = primero, 1 = segundo, etc.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Editar un entrenador existente</h3>
+  <p>En el listado de entrenadores hacé clic en el nombre o en el botón <strong>Editar</strong>. Modificá lo que necesitás y hacé clic en <strong>Guardar cambios</strong>.</p>
+
+  <h3>Eliminar un entrenador</h3>
+  <p>Dentro del formulario de edición, buscá el botón <strong>Eliminar</strong> (en rojo, al final). El sistema te pedirá confirmación antes de borrar.</p>
+
+  <div class="warn">
+    <strong>Atención:</strong> Eliminar un entrenador no se puede deshacer. Si el entrenador es autor de posts en el blog, esos posts van a perder la referencia al autor (pero no se van a borrar).
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  11 · PLANES                                                   -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">11</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Gestión</div>
+      <div class="section-title">Planes de entrenamiento</div>
+    </div>
+  </div>
+
+  <p>Acá gestionás los planes que aparecen en la página <strong>/planes</strong> del sitio. Los planes se organizan por categorías (ej: Running, Triatlón, Grupos).</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Planes</strong></p>
+
+  <h3>Crear un plan nuevo</h3>
+  <ol class="steps">
+    <li>Hacé clic en <strong>+ Nuevo plan</strong> (arriba a la derecha).</li>
+    <li>Completá el formulario.</li>
+    <li>Hacé clic en <strong>Crear plan</strong>.</li>
+  </ol>
+
+  <h3>Campos del formulario</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Categoría</strong></td>
+        <td>A qué categoría pertenece este plan (ej: Running, Triatlón)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Nombre interno</strong></td>
+        <td>Identificador corto (ej: A, B, Plan 1). Solo para uso interno.</td>
+        <td><span class="req">Requerido</span></td>
+      </tr>
+      <tr>
+        <td><strong>Nombre visible</strong></td>
+        <td>El nombre que ve el visitante en la tarjeta del plan</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Badge / etiqueta</strong></td>
+        <td>Texto que aparece en la esquina de la tarjeta (ej: "Popular", "Recomendado")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Características incluidas</strong></td>
+        <td>Lista de lo que incluye el plan (ej: "Entrenamiento individualizado")</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Destacado</strong></td>
+        <td>Si está activado, la tarjeta aparece con un borde de color llamativo</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Orden de visualización</strong></td>
+        <td>Número de orden dentro de la categoría. 0 = primero.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Gestionar categorías de planes</h3>
+  <p>Podés crear, editar o eliminar las categorías de planes desde: <strong>Planes → Categorías</strong>.</p>
+  <p>Cada categoría tiene: <strong>Nombre</strong> (el que se muestra), <strong>Slug</strong> (la versión URL, ej: <code>running</code>) y <strong>Orden de visualización</strong>.</p>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Creá primero las categorías antes de crear los planes, para poder asignarlos correctamente.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  12 · BLOG                                                     -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">12</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Gestión</div>
+      <div class="section-title">Blog — Artículos</div>
+    </div>
+  </div>
+
+  <p>Acá podés crear, editar y publicar los artículos del blog del sitio.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Blog</strong></p>
+
+  <h3>Crear un artículo nuevo</h3>
+  <ol class="steps">
+    <li>Hacé clic en <strong>+ Nuevo artículo</strong> (arriba a la derecha).</li>
+    <li>Completá el formulario.</li>
+    <li>Para que se vea en el sitio, activá el tilde <strong>"Publicado"</strong>.</li>
+    <li>Hacé clic en <strong>Crear post</strong>.</li>
+  </ol>
+
+  <h3>Campos del formulario</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Título</strong></td>
+        <td>Título del artículo. La URL se genera automáticamente desde acá.</td>
+        <td><span class="req">Requerido</span></td>
+      </tr>
+      <tr>
+        <td><strong>Categorías</strong></td>
+        <td>Categorías del artículo. Podés asignar más de una.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Autores / Entrenadores</strong></td>
+        <td>Entrenadores que aparecen como autores. Podés asignar más de uno.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Resumen / Extracto</strong></td>
+        <td>Texto corto que aparece en el listado del blog y en redes sociales al compartir.</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Imagen de portada</strong></td>
+        <td>Foto principal del artículo (proporción 16:9 recomendada)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Video de YouTube</strong></td>
+        <td>Link de YouTube para incrustar un video al inicio del post</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Contenido</strong></td>
+        <td>El texto completo del artículo (editor visual)</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+      <tr>
+        <td><strong>Publicado</strong></td>
+        <td>Activa o desactiva la visibilidad del artículo en el sitio público</td>
+        <td><span class="opt">Opcional</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>El editor de contenido</h3>
+  <p>El campo "Contenido" tiene una barra de herramientas con los siguientes botones:</p>
+  <table>
+    <thead><tr><th>Botón</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td><strong>B (Negrita)</strong></td><td>Pone el texto seleccionado en negrita</td></tr>
+      <tr><td><strong>I (Cursiva)</strong></td><td>Pone el texto seleccionado en cursiva</td></tr>
+      <tr><td><strong>H2 (Título)</strong></td><td>Convierte el párrafo en un subtítulo</td></tr>
+      <tr><td><strong>❝ (Cita)</strong></td><td>Da formato de cita al texto seleccionado</td></tr>
+      <tr><td><strong>Lista con viñetas</strong></td><td>Crea una lista con puntos</td></tr>
+      <tr><td><strong>Lista numerada</strong></td><td>Crea una lista con números</td></tr>
+      <tr><td><strong>🔗 Link</strong></td><td>Inserta un enlace en el texto seleccionado</td></tr>
+      <tr><td><strong>Imagen</strong></td><td>Sube una imagen y la inserta en el contenido</td></tr>
+      <tr><td><strong>Video</strong></td><td>Pega un link de YouTube para insertar un video dentro del artículo</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    <strong>Borradores:</strong> Podés guardar un artículo sin tildarlo como "Publicado". Va a quedar guardado pero no va a aparecer en el sitio hasta que lo actives.
+  </div>
+
+  <h3>Video de YouTube en el post</h3>
+  <p>Hay <strong>dos lugares</strong> donde podés poner un video de YouTube en un artículo:</p>
+  <ul>
+    <li><strong>Campo "Video de YouTube"</strong> (arriba del editor): lo incrusta en la parte superior del post, antes del contenido de texto.</li>
+    <li><strong>Botón "Video" dentro del editor</strong>: lo inserta en cualquier posición dentro del texto.</li>
+  </ul>
+  <p>Formatos aceptados: links de YouTube normales, youtu.be, Shorts y embeds.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  13 · CATEGORÍAS DEL BLOG                                      -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">13</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Gestión</div>
+      <div class="section-title">Categorías del blog</div>
+    </div>
+  </div>
+
+  <p>Las categorías sirven para organizar y filtrar los artículos del blog. Los visitantes del sitio pueden filtrar posts por categoría.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Blog</strong> → <strong>Categorías</strong></p>
+
+  <h3>Crear una categoría nueva</h3>
+  <ol class="steps">
+    <li>Hacé clic en <strong>+ Nueva categoría</strong>.</li>
+    <li>Ingresá el <strong>nombre</strong> (ej: "Running", "Nutrición").</li>
+    <li>El <strong>slug</strong> se genera automáticamente (podés editarlo si querés).</li>
+    <li>Ingresá el <strong>orden de visualización</strong> (0, 1, 2…).</li>
+    <li>Hacé clic en <strong>Crear categoría</strong>.</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Consejo:</strong> Creá las categorías antes de empezar a escribir posts para poder asignarlas desde el formulario de artículos.
+  </div>
+
+  <h3>Eliminar una categoría</h3>
+  <p>Solo podés eliminar una categoría si no tiene posts asignados. Si tiene posts, primero reasignalos a otra categoría.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  14 · DATOS DE CONTACTO                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">14</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Configuración</div>
+      <div class="section-title">Datos de contacto</div>
+    </div>
+  </div>
+
+  <p>Acá actualizás los datos de contacto que aparecen en el footer del sitio, en la página de contacto y en el botón flotante de WhatsApp.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Contacto</strong></p>
+
+  <h3>Campos disponibles</h3>
+  <table>
+    <thead><tr><th>Campo</th><th>Para qué sirve</th><th>Ejemplo</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Teléfono (con prefijo)</strong></td>
+        <td>Número en formato internacional (para links tel:)</td>
+        <td><code>+5493516XXXXXX</code></td>
+      </tr>
+      <tr>
+        <td><strong>Teléfono — formato visible</strong></td>
+        <td>El número como aparece escrito en el sitio</td>
+        <td>351 6XX XXXX</td>
+      </tr>
+      <tr>
+        <td><strong>Email</strong></td>
+        <td>Email de contacto del club</td>
+        <td>info@gc2...</td>
+      </tr>
+      <tr>
+        <td><strong>Link de WhatsApp</strong></td>
+        <td>URL para abrir WhatsApp directo (botón flotante)</td>
+        <td><code>https://wa.me/549351...</code></td>
+      </tr>
+      <tr>
+        <td><strong>Usuario de Instagram</strong></td>
+        <td>Nombre de usuario con @</td>
+        <td>@gc2entrenamiento</td>
+      </tr>
+      <tr>
+        <td><strong>Link de Instagram</strong></td>
+        <td>URL completa al perfil</td>
+        <td>https://instagram.com/...</td>
+      </tr>
+      <tr>
+        <td><strong>Ciudad</strong></td>
+        <td>Ciudad que aparece en el footer</td>
+        <td>Córdoba, Argentina</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="tip">
+    <strong>Link de WhatsApp:</strong> El formato es <code>https://wa.me/549351XXXXXXX</code> donde el número incluye el prefijo de Argentina (549) sin el 0 inicial. Ej: para el número 351 6XX XXXX → <code>https://wa.me/5493516XXXXX</code>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  15 · CONSULTAS / LEADS                                        -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num">15</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Consultas</div>
+      <div class="section-title">Consultas recibidas (Leads)</div>
+    </div>
+  </div>
+
+  <p>Cada vez que alguien completa el formulario de contacto del sitio, el mensaje queda guardado acá. Podés ver todos los datos que dejó la persona.</p>
+
+  <p><strong>Cómo acceder:</strong> Menú lateral → <strong>Consultas</strong></p>
+
+  <h3>Información que muestra cada consulta</h3>
+  <table>
+    <thead><tr><th>Dato</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Nombre</strong></td><td>Nombre completo de quien consultó</td></tr>
+      <tr><td><strong>Email</strong></td><td>Email (hacé clic para abrir el cliente de correo)</td></tr>
+      <tr><td><strong>Teléfono</strong></td><td>Número de teléfono (hacé clic para llamar desde el celular)</td></tr>
+      <tr><td><strong>Ciudad</strong></td><td>Ciudad desde donde escribe</td></tr>
+      <tr><td><strong>Servicio</strong></td><td>El tipo de servicio que le interesa</td></tr>
+      <tr><td><strong>Entrenador</strong></td><td>Si eligió un entrenador de preferencia</td></tr>
+      <tr><td><strong>Objetivo</strong></td><td>Su objetivo deportivo</td></tr>
+      <tr><td><strong>Mensaje</strong></td><td>El texto libre que escribió en el formulario</td></tr>
+      <tr><td><strong>Fecha</strong></td><td>Cuándo envió la consulta</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Paginación</h3>
+  <p>Las consultas se muestran de a 20 por página, ordenadas de más nueva a más antigua. Usá los botones <strong>Anterior / Siguiente</strong> al pie de la página para navegar.</p>
+
+  <div class="tip">
+    <strong>Tip:</strong> Desde el panel solo podés <em>ver</em> las consultas. Para responderle a alguien, hacé clic en su email para abrir tu correo, o en su teléfono para llamar.
+  </div>
+
+  <div class="warn">
+    <strong>Nota:</strong> Las consultas no se pueden eliminar desde el panel. Para borrarlas hay que hacerlo desde la base de datos (consultá al administrador).
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!--  PREGUNTAS FRECUENTES                                          -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="page section">
+  <div class="section-header">
+    <div class="section-num" style="font-size:22pt;">FAQ</div>
+    <div class="section-titles">
+      <div class="section-eyebrow">Ayuda</div>
+      <div class="section-title">Preguntas frecuentes</div>
+    </div>
+  </div>
+
+  <h4>¿Qué pasa si no hago clic en "Guardar"?</h4>
+  <p>Los cambios no se aplican. Podés navegar entre secciones sin guardar y nada cambia en el sitio.</p>
+
+  <hr>
+
+  <h4>¿Los cambios aparecen en el sitio inmediatamente?</h4>
+  <p>Sí, después de guardar los cambios aparecen en el sitio en pocos segundos.</p>
+
+  <hr>
+
+  <h4>¿Puedo escribir un artículo de blog y no publicarlo todavía?</h4>
+  <p>Sí. Al crear o editar un post, dejá el tilde de <strong>"Publicado"</strong> desactivado. El artículo queda guardado como borrador y no aparece en el sitio hasta que lo actives.</p>
+
+  <hr>
+
+  <h4>¿Puedo subir cualquier tipo de imagen?</h4>
+  <p>Sí: JPG, PNG, WebP, GIF y SVG. Para fotos, recomendamos JPG o WebP. El sistema las optimiza automáticamente.</p>
+
+  <hr>
+
+  <h4>¿Qué pasa si sube una imagen muy grande?</h4>
+  <p>El sistema la redimensiona automáticamente y la convierte a WebP para que cargue rápido. No necesitás hacer nada extra.</p>
+
+  <hr>
+
+  <h4>¿Cómo sé el orden en que van a aparecer los planes/entrenadores?</h4>
+  <p>El campo <strong>"Orden de visualización"</strong> define la posición. El número más bajo aparece primero: 0 es el primero, 1 el segundo, y así.</p>
+
+  <hr>
+
+  <h4>¿Puedo tener un entrenador como autor en varios posts?</h4>
+  <p>Sí. Al editar un post, en el campo <strong>"Autores / Entrenadores"</strong> podés marcar más de uno. El perfil del entrenador aparecerá al pie del artículo.</p>
+
+  <hr>
+
+  <h4>¿Qué es el "slug" de una categoría o post?</h4>
+  <p>Es la versión del nombre que aparece en la URL del sitio. Por ejemplo, la categoría "Nutrición Deportiva" tiene el slug <code>nutricion-deportiva</code>, y la URL del filtro sería <code>/blog?categoria=nutricion-deportiva</code>. Se genera automáticamente.</p>
+
+  <hr>
+
+  <h4>¿Puedo cambiar la contraseña o recuperarla si me la olvido?</h4>
+  <p>Sí, lo podés hacer vos mismo. En la pantalla de login hay un link <strong>"¿Olvidaste tu contraseña?"</strong>. Ingresás tu email, recibís un link por correo y elegís una contraseña nueva. Ver instrucciones completas en la sección 01.</p>
+
+  <hr>
+
+  <h4>¿Tengo que llamar a alguien si no puedo entrar?</h4>
+  <p>Solo si el problema no se resuelve con la recuperación de contraseña (por ejemplo, si tu email no está registrado en el sistema). En ese caso sí podés contactar al equipo técnico para que te creen el acceso.</p>
+</div>
+
+</body>
+</html>

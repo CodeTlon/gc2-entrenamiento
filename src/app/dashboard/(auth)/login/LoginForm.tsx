@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { signInAction, type SignInState } from '@/actions/auth'
+import Link from 'next/link'
 
 function SubmitButton() {
   const { pending } = useFormStatus()
@@ -65,6 +66,13 @@ export default function LoginForm({ next }: { next: string }) {
       )}
 
       <SubmitButton />
+
+      <Link
+        href="/dashboard/forgot-password"
+        className="block text-center text-sm text-white/40 hover:text-white transition-colors pt-1"
+      >
+        ¿Olvidaste tu contraseña?
+      </Link>
     </form>
   )
 }
