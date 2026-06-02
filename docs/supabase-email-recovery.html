@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<!--
+  Template para: Supabase Dashboard → Authentication → Email Templates → Reset Password
+  Copiá el contenido del <body> (o todo el HTML) en el editor de Supabase.
+  La variable {{ .ConfirmationURL }} es la que Supabase reemplaza con el link real.
+-->
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar contraseña — GC²</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:40px 16px;">
+    <tr>
+      <td align="center">
+
+        <!-- Card -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- Header azul -->
+          <tr>
+            <td style="background:#0A1628;padding:32px 40px;text-align:center;">
+              <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#38BDF8;">
+                Panel de administración
+              </p>
+              <h1 style="margin:0;font-size:32px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;text-transform:uppercase;">
+                GC<span style="color:#38BDF8;">²</span> Entrenamiento
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Cuerpo -->
+          <tr>
+            <td style="padding:36px 40px;">
+              <h2 style="margin:0 0 12px;font-size:20px;font-weight:700;color:#0f172a;">
+                Recuperar contraseña
+              </h2>
+              <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+                Recibimos una solicitud para restablecer la contraseña de tu cuenta en el panel de GC².
+              </p>
+              <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.6;">
+                Hacé clic en el botón de abajo para elegir una contraseña nueva. El link es válido por <strong>1 hora</strong>.
+              </p>
+
+              <!-- Botón -->
+              <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px;">
+                <tr>
+                  <td style="background:#0A1628;border-radius:8px;">
+                    <a href="{{ .ConfirmationURL }}"
+                       style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.3px;">
+                      Crear nueva contraseña →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0 0 8px;font-size:13px;color:#94a3b8;line-height:1.5;">
+                Si no solicitaste este cambio, podés ignorar este email. Tu contraseña actual sigue siendo la misma.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;">
+                GC² Entrenamiento de la Resistencia · Córdoba, Argentina
+              </p>
+              <p style="margin:4px 0 0;font-size:12px;color:#94a3b8;">
+                <a href="https://gc2entrenamientoderesistencia.com.ar" style="color:#38BDF8;text-decoration:none;">
+                  gc2entrenamientoderesistencia.com.ar
+                </a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!-- /Card -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
