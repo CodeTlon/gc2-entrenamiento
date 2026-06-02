@@ -60,3 +60,4 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 | — | 2026 | Next 16 + React 19 (`middleware.ts` → `proxy.ts`); migraciones 008/009; sedes con merge inteligente, cards uniformes + mapa colapsable |
 | v1.1.0 | 2026-06-02 | Flujo de recuperación de contraseña autónomo (`/dashboard/forgot-password`); manual del dashboard para administradores (`docs/manual-dashboard.html`) |
 | v1.1.1 | 2026-06-02 | Fix: proxy no bloqueaba `/dashboard/forgot-password` para usuarios sin sesión |
+| v1.1.2 | 2026-06-02 | Fix: flujo PKCE de recovery — nueva ruta `/auth/callback`, `set-password` usa `createBrowserClient`; template email recovery en `docs/` |

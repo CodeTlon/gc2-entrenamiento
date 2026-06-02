@@ -7,7 +7,10 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 
 ## Route Groups
 - `src/app/(public)/` — público (home, planes, blog + `[slug]`, contacto, privacidad, terminos)
+- `src/app/auth/callback/` — intercambia código PKCE de Supabase por sesión en cookies (recovery + invite)
 - `src/app/dashboard/(auth)/login/` — login
+- `src/app/dashboard/(auth)/forgot-password/` — solicitud de reset de contraseña
+- `src/app/dashboard/(auth)/set-password/` — formulario para elegir contraseña nueva (post-recovery y post-invite)
 - `src/app/dashboard/(panel)/` — CMS protegido (contenido, entrenadores, planes, blog, categorías, contacto)
 
 ## Para cambios comunes, leé solo esto
@@ -19,6 +22,7 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Una mutación (coach, plan, post, categoría, settings) | `src/actions/*.ts` (firma `(prevState, formData)`) |
 | Formulario de contacto | `src/components/sections/ContactForm.tsx` + `src/actions/contact.ts` |
 | Auth gate del dashboard | `src/proxy.ts` (antes `middleware.ts` — renombrado por Next 16) + `src/lib/supabase-server.ts` |
+| Flujo de recovery de contraseña | `src/app/auth/callback/route.ts` (exchange PKCE) → `src/app/dashboard/(auth)/set-password/` · `forgotPasswordAction` en `src/actions/auth.ts` |
 | Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media` |
 | Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `009`) + tipos en `content.ts` |
 | Estilos / utilitarios (.btn, .plan-card, .field-input…) | `src/app/globals.css` + `tailwind.config.ts` |
