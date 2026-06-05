@@ -45,6 +45,9 @@ src/
         page.tsx             # Listado con filtro por categoría
         [slug]/              # Detalle (con AuthorCard)
         BlogList.tsx         # Client component con paginación y filtros
+    auth/
+      callback/              # Exchange PKCE (?code) → sesión en cookies (recovery desde el navegador)
+      confirm/               # verifyOtp (token_hash) → invites del panel y links sin code_verifier
     dashboard/               # CMS protegido
       (auth)/
         login/               # Login
