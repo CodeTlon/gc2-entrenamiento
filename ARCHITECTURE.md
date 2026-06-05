@@ -7,7 +7,8 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 
 ## Route Groups
 - `src/app/(public)/` — público (home, planes, blog + `[slug]`, contacto, privacidad, terminos)
-- `src/app/auth/callback/` — intercambia código PKCE de Supabase por sesión en cookies (recovery + invite)
+- `src/app/auth/callback/` — intercambia código PKCE de Supabase (`?code`) por sesión en cookies (recovery iniciado desde el navegador)
+- `src/app/auth/confirm/` — verifica `token_hash` vía `verifyOtp` (invites del panel y cualquier link sin code_verifier en el browser)
 - `src/app/dashboard/(auth)/login/` — login
 - `src/app/dashboard/(auth)/forgot-password/` — solicitud de reset de contraseña
 - `src/app/dashboard/(auth)/set-password/` — formulario para elegir contraseña nueva (post-recovery y post-invite)
@@ -23,6 +24,7 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Formulario de contacto | `src/components/sections/ContactForm.tsx` + `src/actions/contact.ts` |
 | Auth gate del dashboard | `src/proxy.ts` (antes `middleware.ts` — renombrado por Next 16) + `src/lib/supabase-server.ts` |
 | Flujo de recovery de contraseña | `src/app/auth/callback/route.ts` (exchange PKCE) → `src/app/dashboard/(auth)/set-password/` · `forgotPasswordAction` en `src/actions/auth.ts` |
+| Flujo de invite de usuario | Email template (`docs/supabase-email-invite.html`) → `{{ .SiteURL }}/auth/confirm?token_hash=…&type=invite` → `src/app/auth/confirm/route.ts` (`verifyOtp`) → `set-password`. **No usar `{{ .ConfirmationURL }}`** (PKCE sin code_verifier = "Verificando link…" infinito) |
 | Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media` |
 | Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `009`) + tipos en `content.ts` |
 | Estilos / utilitarios (.btn, .plan-card, .field-input…) | `src/app/globals.css` + `tailwind.config.ts` |

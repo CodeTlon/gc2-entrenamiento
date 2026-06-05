@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function SetPasswordPage() {
   const router = useRouter()
   const [ready, setReady] = useState(false)
+  const [linkExpired, setLinkExpired] = useState(false)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -24,7 +26,17 @@ export default function SetPasswordPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) setReady(true)
     })
-    return () => subscription.unsubscribe()
+    // Si en unos segundos no hubo sesión, el link era inválido/expiró:
+    // evitamos quedar colgados eternamente en "Verificando link…".
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data }) => {
+        if (!data.session) setLinkExpired(true)
+      })
+    }, 6000)
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,7 +92,19 @@ export default function SetPasswordPage() {
     return (
       <div style={wrapStyle}>
         <div style={cardStyle} className="text-center">
-          <p className="text-white/60 text-sm">Verificando link…</p>
+          {linkExpired ? (
+            <>
+              <p className="text-white font-bold text-base">El link no es válido o expiró</p>
+              <p className="text-white/55 text-sm mt-2 mb-5">
+                Pedí un link nuevo o reenviá la invitación desde el panel.
+              </p>
+              <Link href="/dashboard/forgot-password" className="btn btn--primary w-full justify-center">
+                Pedir un link nuevo
+              </Link>
+            </>
+          ) : (
+            <p className="text-white/60 text-sm">Verificando link…</p>
+          )}
         </div>
       </div>
     )
