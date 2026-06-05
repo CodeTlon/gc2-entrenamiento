@@ -61,3 +61,4 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 | v1.1.0 | 2026-06-02 | Flujo de recuperación de contraseña autónomo (`/dashboard/forgot-password`); manual del dashboard para administradores (`docs/manual-dashboard.html`) |
 | v1.1.1 | 2026-06-02 | Fix: proxy no bloqueaba `/dashboard/forgot-password` para usuarios sin sesión |
 | v1.1.2 | 2026-06-02 | Fix: flujo PKCE de recovery — nueva ruta `/auth/callback`, `set-password` usa `createBrowserClient`; template email recovery en `docs/` |
+| v1.1.3 | 2026-06-05 | Fix: invite de usuario quedaba en "Verificando link…" infinito (PKCE sin code_verifier). Nueva ruta `/auth/confirm` con `verifyOtp`; `set-password` con timeout/mensaje de link inválido; template email invite en `docs/supabase-email-invite.html` |
