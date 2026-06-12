@@ -21,7 +21,7 @@
     "@tiptap/react": "^3.23.6",
     "@tiptap/starter-kit": "^3.23.6",
     "lucide-react": "^0.503.0",
-    "next": "^16.2.1",
+    "next": "^16.2.9",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "resend": "^4.5.1",
@@ -40,5 +40,8 @@
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "glob": "10.5.0"
   }
 }
