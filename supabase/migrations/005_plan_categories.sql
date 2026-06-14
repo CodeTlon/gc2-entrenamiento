@@ -18,7 +18,7 @@ alter table plans
 
 -- Migrar datos existentes
 update plans p
-set plan_category_id = (select id from plan_categories pc where pc.slug = p.category)
+set plan_category_id = (select id from plan_categories pc where pc.slug = p.category::text)
 where plan_category_id is null;
 
 alter table plan_categories enable row level security;
