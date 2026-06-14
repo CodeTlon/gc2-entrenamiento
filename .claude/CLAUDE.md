@@ -158,6 +158,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-06-14 | chore/e2e-rehab | v1.1.5 — E2E rehecho: `tests/e2e/landing.spec.ts` pasó de 87 tests CMS-dependientes (stale, 83/87 rojos con Supabase dev vacío) a smoke resiliente (15×3 viewports: render sin 500 vía footer, navbar, auth-gate, redirects .php, SEO/robots/sitemap, 404). `playwright.config.ts`: mobile/tablet en Chromium (sin WebKit), reporter `list`. 45/45 verde |
 | 2026-06-14 | chore/next16-vuln-patch | v1.1.4 — seguridad: `overrides: { glob: "10.5.0" }` (3 vulns HIGH cadena `eslint-config-next`, dev/lint-only) + piso `next ^16.2.9`. audit 5(3 high)→2 moderate (postcss-en-Next). Pendiente eventual: eslint 8→9 + eslint-config-next 16 |
 | — | main | v1.0.0 — entrega inicial (migración legacy PHP+SCSS + dashboard CMS) |
 | 2026 | main | Migración a Next 16 + React 19 (`middleware.ts` → `proxy.ts`) |

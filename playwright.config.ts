@@ -6,7 +6,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
@@ -15,11 +15,12 @@ export default defineConfig({
   projects: [
     {
       name: 'mobile',
-      use: { ...devices['iPhone SE'], viewport: { width: 375, height: 667 } },
+      // Chromium con viewport mobile (mismo motor que tablet/desktop, sin dependencia de WebKit).
+      use: { ...devices['Desktop Chrome'], viewport: { width: 375, height: 667 } },
     },
     {
       name: 'tablet',
-      use: { viewport: { width: 768, height: 1024 } },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 768, height: 1024 } },
     },
     {
       name: 'desktop',
