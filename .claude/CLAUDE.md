@@ -158,6 +158,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-06-14 | chore/next16-vuln-patch | v1.1.4 — seguridad: `overrides: { glob: "10.5.0" }` (3 vulns HIGH cadena `eslint-config-next`, dev/lint-only) + piso `next ^16.2.9`. audit 5(3 high)→2 moderate (postcss-en-Next). Pendiente eventual: eslint 8→9 + eslint-config-next 16 |
 | — | main | v1.0.0 — entrega inicial (migración legacy PHP+SCSS + dashboard CMS) |
 | 2026 | main | Migración a Next 16 + React 19 (`middleware.ts` → `proxy.ts`) |
 | 2026 | main | Migraciones 008 (post_authors / seed locations) + 009 (contact_leads_coach); sedes con merge inteligente, cards uniformes + mapa colapsable |
