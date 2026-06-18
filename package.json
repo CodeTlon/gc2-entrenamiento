@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "GC² Entrenamiento de la Resistencia — Sitio web oficial",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
