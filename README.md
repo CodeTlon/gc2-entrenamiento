@@ -56,6 +56,7 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| v1.1.6 | 2026-06-18 | Perf: `GroupClasses` (4ta sección del home) tenía `priority` en su imagen de fondo full-bleed — la forzaba a cargar eager aunque está fuera del viewport inicial. Se sacó para que cargue lazy como el resto de las secciones bajo el fold (Lighthouse: "defer offscreen images"/"properly size images"). Nota aparte (no de código): el dominio apex sin `www` hace 2 saltos de redirect (http→https→www) antes de servir — requiere ajustar el dominio primario en Vercel, no es fixeable desde Next.config. 45/45 E2E verdes. |
 | v1.0.0 | — | Entrega inicial — migración legacy PHP+SCSS + dashboard CMS |
 | — | 2026 | Next 16 + React 19 (`middleware.ts` → `proxy.ts`); migraciones 008/009; sedes con merge inteligente, cards uniformes + mapa colapsable |
 | v1.1.0 | 2026-06-02 | Flujo de recuperación de contraseña autónomo (`/dashboard/forgot-password`); manual del dashboard para administradores (`docs/manual-dashboard.html`) |
