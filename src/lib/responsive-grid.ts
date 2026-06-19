@@ -29,3 +29,19 @@ export function adaptiveFlexItemClass(count: number): string {
   if (count === 4) return 'w-full sm:w-[calc(50%-0.75rem)] max-w-[460px]'
   return 'w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] max-w-[460px]'
 }
+
+/**
+ * `sizes` para un `<Image fill>` dentro de una card de `adaptiveFlexItemClass`.
+ * DEBE seguir la misma lógica de columnas/cap que la función de arriba, o el
+ * navegador elige un candidato del srcset que no matchea el ancho real y la
+ * foto se ve borrosa/"rota". Era el síntoma con 4 coaches: el grid pasó a 2x2
+ * capado en 460px pero el `sizes` seguía diciendo 33vw → resolución equivocada.
+ */
+export function adaptiveImageSizes(count: number): string {
+  if (count <= 0) return '100vw'
+  if (count === 1) return '(max-width: 768px) 100vw, 448px'   // max-w-md
+  if (count === 2) return '(max-width: 640px) 100vw, 520px'   // 2 cols, cap 520
+  if (count === 3) return '(max-width: 768px) 100vw, 33vw'    // 3 cols md+
+  if (count === 4) return '(max-width: 640px) 100vw, 460px'   // 2x2, cap 460
+  return '(max-width: 640px) 100vw, 460px'                    // 2/3 cols, cap 460
+}

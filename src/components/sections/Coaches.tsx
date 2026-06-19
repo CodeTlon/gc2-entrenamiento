@@ -7,11 +7,12 @@ import ScrollReveal from '@/components/ui/ScrollReveal'
 import CoachModal from '@/components/sections/CoachModal'
 import type { Coach } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
-import { adaptiveFlexItemClass } from '@/lib/responsive-grid'
+import { adaptiveFlexItemClass, adaptiveImageSizes } from '@/lib/responsive-grid'
 
 export default function Coaches({ coaches }: { coaches: Coach[] }) {
   const [selected, setSelected] = useState<Coach | null>(null)
   const itemClass = adaptiveFlexItemClass(coaches.length)
+  const imageSizes = adaptiveImageSizes(coaches.length)
 
   return (
     <section className="py-section bg-blue-900" id="profes">
@@ -49,7 +50,7 @@ export default function Coaches({ coaches }: { coaches: Coach[] }) {
                         src={fp.src}
                         alt={`Coach ${coach.name}`}
                         fill
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        sizes={imageSizes}
                         style={fp.style}
                         className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                       />
