@@ -181,3 +181,18 @@ Cuando hagas un cambio de código, antes de cerrar la respuesta:
 - ¿Cambiaste una convención (renombre de carpeta, nuevo patrón de server action, nuevo helper compartido)? → actualizá **Patrones y convenciones**.
 - ¿Agregaste env vars? → actualizá **Variables de entorno**.
 - Si es un cambio chico que no altera nada de lo de arriba, **no hace falta tocar el archivo**.
+---
+
+## Módulos de la fábrica — consultar en `/cambio` según lo que toques
+
+Estos módulos viven en `codetlon-cloud/.claude/modules/` (desde este repo: `../../codetlon-cloud/.claude/modules/`). NO están copiados acá: leé el que aplique al iniciar una sesión de mantenimiento que toque cada tema.
+
+| Si el `/cambio` toca… | Módulo a leer |
+|---|---|
+| deps / vulnerabilidades (`npm audit`, actualizar libs, upgrade de major) | `security-maintenance.md` |
+| auth / DB / RLS / route handler / form / env / secrets (seguridad de **código**) | `security-owasp.md` |
+| UI / componentes / forms / páginas (accesibilidad WCAG, Lighthouse a11y > 90) | `accessibility.md` |
+| pipeline / `.github/workflows` / Dockerfile / env vars (CI = gate de calidad) | `ci-cd.md` |
+| dejar el proyecto live / incidente en producción (monitoreo) | `observability.md` |
+
+Regla: leer SOLO el módulo que la tarea pide (disciplina de tokens), no todos por las dudas.
