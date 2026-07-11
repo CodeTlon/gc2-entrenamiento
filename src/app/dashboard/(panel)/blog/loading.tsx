@@ -1,10 +1,12 @@
+import { Skeleton } from '@/components/dashboard/Skeleton'
+
 export default function Loading() {
   return (
-    <div className="animate-pulse space-y-4">
-      <div className="h-8 w-40 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }} />
-      <div className="h-3 w-64 rounded" style={{ background: 'rgba(255,255,255,0.04)' }} />
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-40" />
+      <Skeleton className="h-3 w-64 bg-white/[0.04]" />
       {[1, 2, 3, 4].map((i) => (
-        <div key={i} className="h-20 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }} />
+        <Skeleton key={i} className="h-20 rounded-xl border border-white/[0.06] bg-white/[0.04]" />
       ))}
     </div>
   )

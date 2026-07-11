@@ -1,12 +1,10 @@
+import { Skeleton } from '@/components/dashboard/Skeleton'
+
 export default function LeadsLoading() {
   return (
-    <div className="space-y-3 animate-pulse">
+    <div className="space-y-3">
       {[...Array(4)].map((_, i) => (
-        <div
-          key={i}
-          className="rounded-xl p-5 h-36"
-          style={{ background: '#0D2247', border: '1px solid #102E66' }}
-        />
+        <Skeleton key={i} className="rounded-xl p-5 h-36 border border-blue-700 bg-blue-800" />
       ))}
     </div>
   )
