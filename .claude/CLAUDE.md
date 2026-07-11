@@ -54,6 +54,7 @@ src/
       (panel)/               # Layout con sidebar (DashboardShell)
         layout.tsx
         page.tsx             # Home / stats
+        error.tsx            # Error boundary de sección — mantiene el sidebar montado
         DashboardShell.tsx   # Sidebar + topbar (client)
         contenido/           # Editor de site_settings
           hero/  nosotros/  disciplinas/  clases-grupales/  galeria/
@@ -64,13 +65,15 @@ src/
         categorias/          # CRUD blog categories (page, [id], nuevo)
         contacto/            # Editor settings de contacto
     layout.tsx               # Root layout (fuentes, metadata, JSON-LD, GA)
+    error.tsx                # Error boundary del árbol bajo el layout raíz (sitio público, auth)
+    global-error.tsx         # Boundary si el root layout mismo crashea (define su propio <html>/<body>)
     globals.css              # Tailwind + componentes utilitarios (.btn, .plan-card, .field-input, etc.)
     robots.ts  sitemap.ts
   proxy.ts                   # Antes "middleware.ts" — auth gate de /dashboard (renombrado por Next 16)
   components/
     ui/                      # Navbar, Footer, Modal, ScrollProgress, ScrollReveal, WhatsAppButton, GoogleAnalytics
     sections/                # Hero, About, Disciplines, Coaches, CoachModal, GroupClasses, TeamGallery, ContactForm
-    dashboard/               # Field, PageHeader, SaveButton, DeleteButton (UI compartida del panel)
+    dashboard/               # Field, PageHeader, SaveButton, DeleteButton, Skeleton (UI compartida del panel)
   actions/                   # Server actions ('use server')
     auth.ts  contact.ts  coaches.ts  plans.ts  posts.ts  settings.ts
     categories.ts            # CRUD categorías de blog
@@ -91,6 +94,10 @@ supabase/
     005_plan_categories.sql  # categorías de planes (tabla `plan_categories`, col `plan_category_id` en `plans`)
     006_posts_coach.sql      # columna `coach_id` en `posts` → FK a `coaches`
     007_post_categories.sql  # tabla N:N `post_categories` (post_id, category_id) — multi-categoría por post
+    008_post_authors.sql     # tabla N:N `post_authors` (post_id, coach_id) — multi-coach por post
+    008_seed_locations.sql   # seed de `site_settings.locations` (sedes)
+    009_contact_leads_coach.sql  # columna `coach` en `contact_leads`
+    010_post_authors_auth_write.sql  # fix RLS: post_authors solo tenía policy de escritura para service_role
 docs/                        # Documentación adicional (README, deployment, technical-docs, maintenance)
 public/images/               # Assets estáticos
 tests/                       # Playwright e2e
@@ -108,7 +115,7 @@ tests/                       # Playwright e2e
 - **`plan_categories`** — categorías de planes (`name`, `slug`, `display_order`).
 - **Storage:** bucket `media` para imágenes subidas desde el dashboard.
 
-**RLS:** lectura pública en todas las tablas de contenido; escritura solo para usuarios `authenticated`. El dashboard depende de Supabase Auth.
+**RLS:** lectura pública en todas las tablas de contenido; escritura solo para usuarios `authenticated`. El dashboard depende de Supabase Auth. Todas las tablas escriben vía `createSupabaseServerClient()` (rol `authenticated`, RLS real) salvo `contact_leads` (lee/escribe con el cliente `service_role`, ver `src/actions/contact.ts` y `dashboard/leads/page.tsx`) — cuando agregues una tabla nueva escrita desde el dashboard, la policy de escritura tiene que ser para `authenticated`, no solo `service_role` (bug real: `010_post_authors_auth_write.sql` arregló justo esto en `post_authors`).
 
 ## Patrones y convenciones
 
@@ -158,6 +165,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-07-11 | chore/security-headers-loading-states | v1.2.1 — Baseline de seguridad + perf percibida. **Headers** en `next.config.mjs` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`). **Fix RLS**: `post_authors` solo tenía policy de escritura para `service_role` — el dashboard escribe coautores de posts con el cliente de sesión (`authenticated`), así que los `insert`/`delete` fallaban silenciosamente bajo RLS (el código no revisaba el error de esa llamada puntual); migración `010_post_authors_auth_write.sql` agrega la policy que faltaba, mismo patrón que `post_categories`. **Fix open redirect**: `/auth/callback` y `/auth/confirm` redirigían a `${origin}${next}` sin validar `next` — un valor tipo `next=@evil.com/x` se parsea como userinfo y termina afuera del dominio justo después de un exchange de sesión válido; ahora `next` solo se acepta si empieza con `/dashboard` (mismo allowlist que ya usaba `signInAction`). **CORS**: revisado — no hay `app/api/**/route.ts`; las rutas `auth/callback` y `auth/confirm` no setean headers CORS (same-origin por default), sin cambios. **Progressive loading**: nuevo primitivo `Skeleton` (`src/components/dashboard/Skeleton.tsx`, mismo API que el `Skeleton` de shadcn/ui — el proyecto no tiene shadcn instalado) aplicado a los `loading.tsx` de nivel sección (`(panel)/`, `blog/`, `entrenadores/`, `planes/`, `categorias/`, `contacto/`, `contenido/`, `leads/`); ya existían `loading.tsx` para todas las subrutas de una sesión previa, no se tocaron los anidados (`nuevo/`, `[id]/`). Nuevos `error.tsx` (raíz y `dashboard/(panel)/`, este último mantiene el sidebar montado) + `global-error.tsx` (root layout). Build verde. Pendiente (fuera de este alcance, no tocado): el form de contacto sigue sin rate-limit/honeypot. |
 | 2026-06-21 | feat/cookie-consent | v1.2.0 — Cookies: `GoogleAnalytics.tsx` con `consent default 'denied'` (Consent Mode v2, respeta `localStorage` `gc2_cookie_consent`) + nuevo `src/components/ui/CookieConsent.tsx` (banner sin deps, opt-in, link a `/privacidad`) montado en el root layout. GA arranca denegado y solo trackea tras "Aceptar"; el banner solo aparece si hay `GA_ID` real. Privacidad/términos ya existían. Build verde. |
 | 2026-06-19 | fix/coaches-image-sizes | v1.1.7 — fix "fotos de coaches se rompen con 4 entrenadores". El grid ya pasaba a 2x2 capado en 460px (commits `6573643`/`8a019c1`) pero el `sizes` del `<Image>` en `Coaches.tsx` seguía hardcodeado en `33vw` (lg) → Next/Image elegía un candidato del srcset que no matcheaba el ancho real (460px) y la foto se veía borrosa/"rota". Nuevo helper `adaptiveImageSizes(count)` en `responsive-grid.ts` (espeja la lógica de columnas/cap de `adaptiveFlexItemClass`); `Coaches.tsx` lo consume. Build verde + 45/45 E2E |
 | 2026-06-14 | chore/e2e-rehab | v1.1.5 — E2E rehecho: `tests/e2e/landing.spec.ts` pasó de 87 tests CMS-dependientes (stale, 83/87 rojos con Supabase dev vacío) a smoke resiliente (15×3 viewports: render sin 500 vía footer, navbar, auth-gate, redirects .php, SEO/robots/sitemap, 404). `playwright.config.ts`: mobile/tablet en Chromium (sin WebKit), reporter `list`. 45/45 verde |
