@@ -26,13 +26,15 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Flujo de recovery de contraseña | `src/app/auth/callback/route.ts` (exchange PKCE) → `src/app/dashboard/(auth)/set-password/` · `forgotPasswordAction` en `src/actions/auth.ts` |
 | Flujo de invite de usuario | Email template (`docs/supabase-email-invite.html`) → `{{ .SiteURL }}/auth/confirm?token_hash=…&type=invite` → `src/app/auth/confirm/route.ts` (`verifyOtp`) → `set-password`. **No usar `{{ .ConfirmationURL }}`** (PKCE sin code_verifier = "Verificando link…" infinito) |
 | Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media` |
-| Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `009`) + tipos en `content.ts` |
+| Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `010`) + tipos en `content.ts` |
 | Estilos / utilitarios (.btn, .plan-card, .field-input…) | `src/app/globals.css` + `tailwind.config.ts` |
 | SEO / JSON-LD / redirects legacy `.php` | `src/app/layout.tsx`, `sitemap.ts`, `robots.ts`, `next.config.mjs` |
+| Headers de seguridad / CORS | `next.config.mjs` (`headers()`) — checklist en `../../codetlon-cloud/.claude/modules/security-owasp.md` §5 |
+| Loading/error states del dashboard | `loading.tsx`/`error.tsx` por sección en `dashboard/(panel)/**`; primitivo compartido `src/components/dashboard/Skeleton.tsx` |
 
 ## Dónde NO meterse sin pensar
 - **`src/lib/content.ts` + `src/lib/constants.ts`** — la cadena de fallbacks mantiene el sitio vivo sin DB. Si cambiás la forma de un JSONB de `site_settings`, actualizá el getter/tipo acá Y el editor del dashboard, o el front rompe.
-- **`supabase/migrations/`** — nunca editar una migración aplicada. Crear una nueva (última: `009_contact_leads_coach.sql`).
+- **`supabase/migrations/`** — nunca editar una migración aplicada. Crear una nueva (última: `010_post_authors_auth_write.sql`). Al agregar una tabla nueva escrita desde el dashboard, la policy de escritura tiene que cubrir `authenticated` (el cliente de sesión), no solo `service_role` — `010` arregló justo ese gap en `post_authors`.
 - **`src/proxy.ts`** — es el middleware de Next 16 (renombrado). No volver a `middleware.ts`.
 - `next.config.mjs` — remote patterns (`*.supabase.co`, `images.unsplash.com`) + redirects 301 desde URLs `.php`. `tailwind.config.ts` — tokens compartidos.
 - TS strict + lint: `npm run build` falla con cualquier `any` implícito o warning.

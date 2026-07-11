@@ -7,11 +7,18 @@ import { NextResponse, type NextRequest } from 'next/server'
 // para invites generados desde el panel de Supabase: ese link no tiene un
 // code_verifier en el navegador del usuario, por lo que exchangeCodeForSession
 // nunca podría completarse y la pantalla quedaba en "Verificando link…".
+// Allowlist: solo redirects internos a /dashboard (ver misma protección en
+// auth/callback/route.ts — mismo riesgo de open redirect vía `next`).
+function safeNext(next: string | null, fallback: string): string {
+  if (next && next.startsWith('/dashboard') && !next.startsWith('//')) return next
+  return fallback
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/dashboard/set-password'
+  const next = safeNext(searchParams.get('next'), '/dashboard/set-password')
 
   if (tokenHash && type) {
     const supabase = await createSupabaseServerClient()
