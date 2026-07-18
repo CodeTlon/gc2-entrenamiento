@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { Instagram } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import DeleteButton from '@/components/dashboard/DeleteButton'
 import PostForm from '../PostForm'
@@ -27,11 +28,22 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
         title={data.title}
         back={{ href: '/dashboard/blog', label: 'Volver al blog' }}
         actions={
-          <DeleteButton
-            action={deletePostAction}
-            id={data.id}
-            confirmText={`¿Eliminar "${data.title}"? No se puede deshacer.`}
-          />
+          <>
+            <a
+              href={`/dashboard/blog/${data.id}/story`}
+              download={`story-${data.slug}.png`}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm text-accent hover:text-white transition-colors"
+              style={{ border: '1px solid rgba(56,189,248,0.3)' }}
+            >
+              <Instagram size={14} />
+              Exportar a Instagram
+            </a>
+            <DeleteButton
+              action={deletePostAction}
+              id={data.id}
+              confirmText={`¿Eliminar "${data.title}"? No se puede deshacer.`}
+            />
+          </>
         }
       />
       <PostForm
