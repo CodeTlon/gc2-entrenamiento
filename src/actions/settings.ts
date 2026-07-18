@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { maxBytesForMime } from '@/lib/upload-limits'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
 
@@ -49,7 +50,8 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const supabase = await requireUser()
     const file = formData.get('file')
     if (!(file instanceof File)) return { error: 'Archivo inválido.' }
-    if (file.size > 12 * 1024 * 1024) return { error: 'Máximo 12MB.' }
+    const maxBytes = maxBytesForMime(file.type || '')
+    if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
     const folder = String(formData.get('folder') ?? 'uploads')
 

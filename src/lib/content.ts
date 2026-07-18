@@ -58,6 +58,7 @@ export interface Plan {
   features: string[]
   featured: boolean
   display_order: number
+  description_long: string
 }
 
 export interface HeroSettings {
@@ -326,6 +327,7 @@ const FALLBACK_PLANS: Plan[] = [
     features: p.features,
     featured: p.featured,
     display_order: i,
+    description_long: '',
   })),
   ...TRIATHLON_PLANS.map((p, i) => ({
     id: `fallback-tri-${i}`,
@@ -337,6 +339,7 @@ const FALLBACK_PLANS: Plan[] = [
     features: p.features,
     featured: p.featured,
     display_order: i,
+    description_long: '',
   })),
   ...GROUP_PLANS.map((p, i) => ({
     id: `fallback-group-${i}`,
@@ -348,6 +351,7 @@ const FALLBACK_PLANS: Plan[] = [
     features: p.features,
     featured: p.featured,
     display_order: i,
+    description_long: '',
   })),
 ]
 

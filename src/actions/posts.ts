@@ -41,6 +41,8 @@ function parseForm(formData: FormData) {
     content: String(formData.get('content') ?? ''),
     cover_image: String(formData.get('cover_image') ?? '') || null,
     youtube_url: validateYoutubeUrl(rawYt),
+    attachment_url: String(formData.get('attachment_url') ?? '') || null,
+    video_url: String(formData.get('video_url') ?? '') || null,
     published: formData.get('published') === 'on',
     category_ids: formData.getAll('category_ids').map(String).filter(Boolean),
     coach_ids: formData.getAll('coach_ids').map(String).filter(Boolean),

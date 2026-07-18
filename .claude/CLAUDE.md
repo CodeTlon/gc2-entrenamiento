@@ -25,6 +25,7 @@ Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 - **lucide-react** — iconos
 - **slugify** — generación de slugs de blog
 - **sharp** — optimización de imágenes (Next/Image)
+- **@vercel/og** (Satori) — genera la imagen de export a Instagram Story de un post (1080x1920)
 - **Playwright** — tests e2e (`tests/`, `playwright.config.ts`)
 
 Tipografías: **Barlow** (body) y **Barlow Condensed** (headings) vía `next/font`.
@@ -37,13 +38,15 @@ src/
     (public)/                # Rutas públicas (route group)
       layout.tsx             # Layout público (Navbar/Footer/etc.)
       page.tsx               # Home
-      planes/page.tsx
+      planes/
+        page.tsx             # Server: fetch de plans/categorías
+        PlanesContent.tsx    # Client: grid + estado del modal "más información"
       contacto/page.tsx
       privacidad/page.tsx
       terminos/page.tsx
       blog/
         page.tsx             # Listado con filtro por categoría
-        [slug]/              # Detalle (con AuthorCard)
+        [slug]/              # Detalle (con AuthorCard, PDF adjunto, video propio o YouTube)
         BlogList.tsx         # Client component con paginación y filtros
     auth/
       callback/              # Exchange PKCE (?code) → sesión en cookies (recovery desde el navegador)
@@ -61,7 +64,7 @@ src/
         entrenadores/        # CRUD coaches  (page, [id], nuevo, CoachForm)
         planes/              # CRUD plans    (page, [id], nuevo, PlanForm)
           categorias/        # CRUD plan categories (page, [id], nuevo)
-        blog/                # CRUD posts    (page, [id], nuevo, PostForm)
+        blog/                # CRUD posts    (page, [id] con export a Instagram Story, nuevo, PostForm)
         categorias/          # CRUD blog categories (page, [id], nuevo)
         contacto/            # Editor settings de contacto
     layout.tsx               # Root layout (fuentes, metadata, JSON-LD, GA)
@@ -72,8 +75,8 @@ src/
   proxy.ts                   # Antes "middleware.ts" — auth gate de /dashboard (renombrado por Next 16)
   components/
     ui/                      # Navbar, Footer, Modal, ScrollProgress, ScrollReveal, WhatsAppButton, GoogleAnalytics
-    sections/                # Hero, About, Disciplines, Coaches, CoachModal, GroupClasses, TeamGallery, ContactForm
-    dashboard/               # Field, PageHeader, SaveButton, DeleteButton, Skeleton (UI compartida del panel)
+    sections/                # Hero, About, Disciplines, Coaches, CoachModal, PlanModal, GroupClasses, TeamGallery, ContactForm
+    dashboard/               # Field (incl. FileUpload), PageHeader, SaveButton, DeleteButton, Skeleton (UI compartida del panel)
   actions/                   # Server actions ('use server')
     auth.ts  contact.ts  coaches.ts  plans.ts  posts.ts  settings.ts
     categories.ts            # CRUD categorías de blog
@@ -84,6 +87,8 @@ src/
     content.ts               # Tipos + getters (getSiteSettings, getCoaches, getPlans*) con FALLBACKs
     constants.ts             # Datos hardcodeados de fallback (coaches, planes, contacto, imágenes)
     youtube.ts               # Helper para embeds de YouTube en posts
+    upload-limits.ts         # Límites de tamaño por mime (imagen/PDF/video) — uploadMediaAction y FileUpload
+    client-upload.ts         # uploadDirectToStorage: sube al bucket `media` desde el browser, bypass del Server Action
     utils.ts
 supabase/
   migrations/
@@ -98,6 +103,8 @@ supabase/
     008_seed_locations.sql   # seed de `site_settings.locations` (sedes)
     009_contact_leads_coach.sql  # columna `coach` en `contact_leads`
     010_post_authors_auth_write.sql  # fix RLS: post_authors solo tenía policy de escritura para service_role
+    011_plans_description.sql        # columna `description_long` en `plans` (modal "más información")
+    012_posts_attachments.sql        # columnas `attachment_url` (PDF) y `video_url` (video propio) en `posts`
 docs/                        # Documentación adicional (README, deployment, technical-docs, maintenance)
 public/images/               # Assets estáticos
 tests/                       # Playwright e2e
@@ -106,12 +113,12 @@ tests/                       # Playwright e2e
 ## Modelo de datos (Supabase)
 
 - **`contact_leads`** — leads del formulario de contacto del sitio público.
-- **`posts`** — artículos de blog (`title`, `slug`, `excerpt`, `content`, `cover_image`, `youtube_url`, `published`, `author_id`, `coach_id` FK→coaches, `category_id` FK→categories *(legacy, no se actualiza desde el form)*, `created_at`, `updated_at`).
+- **`posts`** — artículos de blog (`title`, `slug`, `excerpt`, `content`, `cover_image`, `youtube_url`, `video_url` *(video propio, alternativa a youtube_url)*, `attachment_url` *(PDF adjunto)*, `published`, `author_id`, `coach_id` FK→coaches, `category_id` FK→categories *(legacy, no se actualiza desde el form)*, `created_at`, `updated_at`).
 - **`categories`** — categorías de blog (`name`, `slug`, `display_order`).
 - **`post_categories`** — junction N:N entre `posts` y `categories` (`post_id`, `category_id`). Es la fuente de verdad: el form del dashboard borra y re-inserta filas acá; el listado público filtra por `post_categories.categories.slug`.
 - **`site_settings`** — clave/valor JSON con todos los textos editables del home (`hero`, `about`, `disciplines`, `group_classes`, `team_gallery`, `contact`).
 - **`coaches`** — equipo de entrenadores (slug, nombre, especialidad, bio, foto, IG, certificaciones, logros, servicios, `display_order`).
-- **`plans`** — planes (`category` ∈ `runner | triathlon | group`, `plan_category_id` FK→plan_categories, `name`, `name_display`, `badge`, `features[]`, `featured`, `display_order`).
+- **`plans`** — planes (`category` ∈ `runner | triathlon | group`, `plan_category_id` FK→plan_categories, `name`, `name_display`, `badge`, `features[]`, `featured`, `display_order`, `description_long` *(texto del modal "más información")*).
 - **`plan_categories`** — categorías de planes (`name`, `slug`, `display_order`).
 - **Storage:** bucket `media` para imágenes subidas desde el dashboard.
 
@@ -124,7 +131,9 @@ tests/                       # Playwright e2e
 - **Fallbacks de contenido:** `src/lib/content.ts` siempre devuelve datos. Si Supabase no responde o las env vars son placeholder, usa `FALLBACK_*` desde `src/lib/constants.ts`. **No romper esta cadena**: el sitio tiene que renderizar aunque no haya DB.
 - **Auth gate:** `src/proxy.ts` (antes `middleware.ts`) protege `/dashboard/**`. Se renombró a `proxy.ts` por Next 16.
 - **Estilos:** Tailwind + componentes utilitarios en `globals.css` (`.btn`, `.btn--primary`, `.plan-card`, `.field-input`, `.section-title`, `.gradient-text`, `.reveal`, etc.). Paleta `blue-900..blue-100` + `accent` (`#38BDF8`). Spacing custom: `section`, `gap-sm/md/lg/xl`.
-- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y `*.supabase.co`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual.
+- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y `*.supabase.co`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB).
+- **PDF / video propio (posts):** `uploadMediaAction` pasa por un Server Action, y Vercel corta el body real en ~4.5MB antes de llegar al chequeo de tamaño — muy por debajo de los límites de PDF/video. Por eso `FileUpload` (`src/components/dashboard/Field.tsx`) usa `uploadDirectToStorage` (`src/lib/client-upload.ts`, `createBrowserClient` de `@supabase/ssr`) para subir directo al bucket `media` desde el navegador, bypasseando el Server Action. La policy RLS de `storage.objects` ya acepta `insert` de `authenticated` (`003_editorial.sql`), no requiere cambios de storage.
+- **Export a Instagram Story:** `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` genera un PNG 1080x1920 con `@vercel/og` (`ImageResponse`) a partir del post — corre 100% server-side para evitar CORS al leer la portada desde `*.supabase.co`.
 - **SEO:** metadata + JSON-LD `SportsOrganization` en `src/app/layout.tsx`. `sitemap.ts` y `robots.ts` en App Router. Redirects 301 desde URLs `.php` legacy en `next.config.mjs`.
 - **i18n:** todo en español (es_AR). Mantenelo así.
 - **Comentarios en código:** los archivos del proyecto usan comentarios en español cuando son necesarios. No agregar comentarios obvios.
@@ -165,6 +174,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-07-18 | feat/planes-modal-ig-story-blog-media | v1.3.0 — **Modal de planes**: `plans.description_long` (`011_plans_description.sql`) + `PlanModal.tsx` (patrón `CoachModal`/`Modal.tsx` genérico) + botón "Más información" en `PlanesContent.tsx` (extraído de `planes/page.tsx`, que ahora solo hace fetch). **Export a Instagram Story**: nueva dep `@vercel/og`; `dashboard/blog/[id]/story/route.tsx` genera un PNG 1080x1920 (título + portada + branding) server-side (evita CORS con `*.supabase.co`); botón "Exportar a Instagram" en el `PageHeader` de la edición de post. **PDF y video propio en posts**: `posts.attachment_url`/`video_url` (`012_posts_attachments.sql`); `FileUpload` (`Field.tsx`) sube directo al bucket `media` desde el browser vía `uploadDirectToStorage` (`client-upload.ts`, `createBrowserClient`) — bypassea el Server Action porque Vercel corta el body real en ~4.5MB, muy por debajo de los límites de PDF/video; la RLS de `storage.objects` ya permitía ese insert `authenticated`, sin migración de storage. **Límites de upload más generosos y por tipo** (antes 12MB fijo para todo): `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) consumido por `uploadMediaAction` y `FileUpload`; `next.config.mjs` `bodySizeLimit` 15mb→20mb. Build verde + 45/45 E2E. |
 | 2026-07-11 | chore/security-headers-loading-states | v1.2.1 — Baseline de seguridad + perf percibida. **Headers** en `next.config.mjs` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`). **Fix RLS**: `post_authors` solo tenía policy de escritura para `service_role` — el dashboard escribe coautores de posts con el cliente de sesión (`authenticated`), así que los `insert`/`delete` fallaban silenciosamente bajo RLS (el código no revisaba el error de esa llamada puntual); migración `010_post_authors_auth_write.sql` agrega la policy que faltaba, mismo patrón que `post_categories`. **Fix open redirect**: `/auth/callback` y `/auth/confirm` redirigían a `${origin}${next}` sin validar `next` — un valor tipo `next=@evil.com/x` se parsea como userinfo y termina afuera del dominio justo después de un exchange de sesión válido; ahora `next` solo se acepta si empieza con `/dashboard` (mismo allowlist que ya usaba `signInAction`). **CORS**: revisado — no hay `app/api/**/route.ts`; las rutas `auth/callback` y `auth/confirm` no setean headers CORS (same-origin por default), sin cambios. **Progressive loading**: nuevo primitivo `Skeleton` (`src/components/dashboard/Skeleton.tsx`, mismo API que el `Skeleton` de shadcn/ui — el proyecto no tiene shadcn instalado) aplicado a los `loading.tsx` de nivel sección (`(panel)/`, `blog/`, `entrenadores/`, `planes/`, `categorias/`, `contacto/`, `contenido/`, `leads/`); ya existían `loading.tsx` para todas las subrutas de una sesión previa, no se tocaron los anidados (`nuevo/`, `[id]/`). Nuevos `error.tsx` (raíz y `dashboard/(panel)/`, este último mantiene el sidebar montado) + `global-error.tsx` (root layout). Build verde. Pendiente (fuera de este alcance, no tocado): el form de contacto sigue sin rate-limit/honeypot. |
 | 2026-06-21 | feat/cookie-consent | v1.2.0 — Cookies: `GoogleAnalytics.tsx` con `consent default 'denied'` (Consent Mode v2, respeta `localStorage` `gc2_cookie_consent`) + nuevo `src/components/ui/CookieConsent.tsx` (banner sin deps, opt-in, link a `/privacidad`) montado en el root layout. GA arranca denegado y solo trackea tras "Aceptar"; el banner solo aparece si hay `GA_ID` real. Privacidad/términos ya existían. Build verde. |
 | 2026-06-19 | fix/coaches-image-sizes | v1.1.7 — fix "fotos de coaches se rompen con 4 entrenadores". El grid ya pasaba a 2x2 capado en 460px (commits `6573643`/`8a019c1`) pero el `sizes` del `<Image>` en `Coaches.tsx` seguía hardcodeado en `33vw` (lg) → Next/Image elegía un candidato del srcset que no matcheaba el ancho real (460px) y la foto se veía borrosa/"rota". Nuevo helper `adaptiveImageSizes(count)` en `responsive-grid.ts` (espeja la lógica de columnas/cap de `adaptiveFlexItemClass`); `Coaches.tsx` lo consume. Build verde + 45/45 E2E |
