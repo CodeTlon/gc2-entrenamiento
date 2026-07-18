@@ -84,6 +84,7 @@ function parseFormData(formData: FormData) {
     features,
     featured: formData.get('featured') === 'on',
     display_order: Number(formData.get('display_order') ?? 0),
+    description_long: String(formData.get('description_long') ?? ''),
   }
 }
 

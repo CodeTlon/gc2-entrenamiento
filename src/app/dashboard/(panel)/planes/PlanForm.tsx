@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import { createPlanAction, updatePlanAction, type PlanState } from '@/actions/plans'
 import type { Plan } from '@/lib/content'
-import { TextField, StringList, Checkbox } from '@/components/dashboard/Field'
+import { TextField, TextArea, StringList, Checkbox } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 
 interface PlanCategory {
@@ -74,6 +74,14 @@ export default function PlanForm({
         defaultValue={plan?.badge ?? ''}
         placeholder="Popular, Recomendado…"
         hint="Opcional. Aparece en la esquina de la tarjeta."
+      />
+
+      <TextArea
+        label="Descripción"
+        name="description_long"
+        defaultValue={plan?.description_long ?? ''}
+        rows={4}
+        hint="Se muestra al hacer click en 'Más información' en la tarjeta del plan."
       />
 
       <StringList
