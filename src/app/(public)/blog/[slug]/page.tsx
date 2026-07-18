@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
@@ -20,6 +20,8 @@ interface Post {
   content: string
   cover_image: string | null
   youtube_url: string | null
+  attachment_url: string | null
+  video_url: string | null
   created_at: string
   post_authors: { coaches: Coach | null }[]
 }
@@ -28,7 +30,7 @@ async function getPost(slug: string): Promise<Post | null> {
   const supabase = createSupabaseClient()
   const { data, error } = await supabase
     .from('posts')
-    .select('id, title, slug, excerpt, content, cover_image, youtube_url, created_at, post_authors(coaches(*))')
+    .select('id, title, slug, excerpt, content, cover_image, youtube_url, attachment_url, video_url, created_at, post_authors(coaches(*))')
     .eq('slug', slug)
     .eq('published', true)
     .single()
@@ -137,7 +139,7 @@ export default async function BlogPostPage({
             </p>
           )}
 
-          {ytEmbed && (
+          {ytEmbed ? (
             <div
               className="relative w-full mb-10 rounded-xl overflow-hidden"
               style={{ paddingBottom: '56.25%', background: '#000' }}
@@ -151,7 +153,14 @@ export default async function BlogPostPage({
                 className="absolute inset-0 w-full h-full"
               />
             </div>
-          )}
+          ) : post.video_url ? (
+            <video
+              src={post.video_url}
+              controls
+              className="w-full mb-10 rounded-xl"
+              style={{ background: '#000' }}
+            />
+          ) : null}
 
           <div
             className="prose-gc2 text-white/80 leading-relaxed space-y-4"
@@ -160,6 +169,19 @@ export default async function BlogPostPage({
               ['--tw-prose-a' as string]: '#38BDF8',
             }}
           />
+
+          {post.attachment_url && (
+            <a
+              href={post.attachment_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2.5 mt-8 px-4 py-3 rounded-md text-sm font-semibold text-accent transition-all hover:-translate-y-0.5"
+              style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.3)' }}
+            >
+              <FileText size={18} />
+              Descargar PDF
+            </a>
+          )}
 
           {authors.length > 0 && (
             <div className="mt-12">

@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Trash2, Plus, Upload, Loader2, Image as ImageIcon } from 'lucide-react'
+import { Trash2, Plus, Upload, Loader2, Image as ImageIcon, FileText, Video } from 'lucide-react'
 import { uploadMediaAction } from '@/actions/settings'
+import { uploadDirectToStorage } from '@/lib/client-upload'
 import FocalPicker from '@/components/dashboard/FocalPicker'
 
 export function TextField({
@@ -190,6 +191,105 @@ export function ImageUpload({
         </div>
       )}
       {hint && <p className="text-white/35 text-xs mt-1.5">{hint}</p>}
+    </div>
+  )
+}
+
+export function FileUpload({
+  label,
+  name,
+  defaultValue,
+  folder = 'uploads',
+  accept,
+  maxBytes,
+  hint,
+}: {
+  label: string
+  name: string
+  defaultValue?: string | null
+  folder?: string
+  accept: string
+  maxBytes: number
+  hint?: string
+}) {
+  const [url, setUrl] = useState<string>(defaultValue ?? '')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const isVideo = accept.startsWith('video/')
+
+  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > maxBytes) {
+      setErr(`Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.`)
+      e.target.value = ''
+      return
+    }
+    setBusy(true)
+    setErr(null)
+    const res = await uploadDirectToStorage(file, folder)
+    setBusy(false)
+    if (res.error) {
+      setErr(res.error)
+      return
+    }
+    if (res.url) setUrl(res.url)
+    e.target.value = ''
+  }
+
+  const fileName = url ? decodeURIComponent(url.split('/').pop() ?? '') : ''
+
+  return (
+    <div>
+      <label className="field-label">{label}</label>
+      <input type="hidden" name={name} value={url} />
+      <div className="flex items-center gap-3">
+        <label
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-body font-semibold cursor-pointer transition-colors"
+          style={{
+            background: 'rgba(56,189,248,0.12)',
+            color: '#38BDF8',
+            border: '1px solid rgba(56,189,248,0.25)',
+          }}
+        >
+          {busy ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : isVideo ? (
+            <Video size={14} />
+          ) : (
+            <FileText size={14} />
+          )}
+          {busy ? 'Subiendo…' : url ? 'Reemplazar' : 'Subir archivo'}
+          <input
+            type="file"
+            accept={accept}
+            onChange={onPick}
+            disabled={busy}
+            className="hidden"
+          />
+        </label>
+        {url && (
+          <>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-accent hover:underline truncate max-w-[200px]"
+            >
+              {fileName}
+            </a>
+            <button
+              type="button"
+              onClick={() => setUrl('')}
+              className="text-xs text-white/45 hover:text-white"
+            >
+              Quitar
+            </button>
+          </>
+        )}
+      </div>
+      {hint && <p className="text-white/35 text-xs mt-1.5">{hint}</p>}
+      {err && <p className="text-xs text-red-400 mt-1.5">{err}</p>}
     </div>
   )
 }

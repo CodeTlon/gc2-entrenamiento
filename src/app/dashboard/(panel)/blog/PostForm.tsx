@@ -8,9 +8,10 @@ import TipTapLink from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import Youtube from '@tiptap/extension-youtube'
 import { createPostAction, updatePostAction, type PostState } from '@/actions/posts'
-import { TextField, TextArea, ImageUpload, Checkbox } from '@/components/dashboard/Field'
+import { TextField, TextArea, ImageUpload, FileUpload, Checkbox } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 import { uploadMediaAction } from '@/actions/settings'
+import { MAX_DOC_BYTES, MAX_VIDEO_BYTES } from '@/lib/upload-limits'
 import { Upload, Loader2, Youtube as YoutubeIcon, X, Bold, Italic, Heading2, List, ListOrdered, Link as LinkIcon, Quote } from 'lucide-react'
 
 interface Post {
@@ -21,6 +22,8 @@ interface Post {
   content: string
   cover_image: string | null
   youtube_url: string | null
+  attachment_url: string | null
+  video_url: string | null
   category_id: string | null
   coach_id: string | null
   published: boolean
@@ -183,6 +186,26 @@ export default function PostForm({
           </div>
         )}
       </div>
+
+      <FileUpload
+        label="Video propio (opcional)"
+        name="video_url"
+        defaultValue={post?.video_url}
+        folder="blog/video"
+        accept="video/mp4"
+        maxBytes={MAX_VIDEO_BYTES}
+        hint="Alternativa a pegar un link de YouTube arriba, para subir un video propio."
+      />
+
+      <FileUpload
+        label="PDF adjunto (opcional)"
+        name="attachment_url"
+        defaultValue={post?.attachment_url}
+        folder="blog/adjuntos"
+        accept="application/pdf"
+        maxBytes={MAX_DOC_BYTES}
+        hint="Se muestra como link de descarga en el artículo publicado."
+      />
 
       <div>
         <label htmlFor="content" className="field-label">Contenido</label>
