@@ -3,7 +3,7 @@
 Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio acá y abrí solo esos archivos. El detalle fino (estructura completa, modelo de datos, convenciones) vive en `.claude/CLAUDE.md`.
 
 ## Stack
-**Next.js 16** (App Router, RSC, Turbopack) · React 19 · TS strict · Tailwind 3 (Barlow + Barlow Condensed) · Supabase (Postgres + RLS + Auth + Storage bucket `media`) · Resend · Vercel. Alias `@/*` → `src/*`. Dominio: `gc2entrenamientoderesistencia.com.ar`.
+**Next.js 16** (App Router, RSC, Turbopack) · React 19 · TS strict · Tailwind 3 (Barlow + Barlow Condensed) · Supabase (Postgres + RLS + Auth + Storage bucket `media`) · Resend · `@vercel/og` (Satori, export de posts a Instagram Story) · Vercel. Alias `@/*` → `src/*`. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 
 ## Route Groups
 - `src/app/(public)/` — público (home, planes, blog + `[slug]`, contacto, privacidad, terminos)
@@ -25,8 +25,11 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Auth gate del dashboard | `src/proxy.ts` (antes `middleware.ts` — renombrado por Next 16) + `src/lib/supabase-server.ts` |
 | Flujo de recovery de contraseña | `src/app/auth/callback/route.ts` (exchange PKCE) → `src/app/dashboard/(auth)/set-password/` · `forgotPasswordAction` en `src/actions/auth.ts` |
 | Flujo de invite de usuario | Email template (`docs/supabase-email-invite.html`) → `{{ .SiteURL }}/auth/confirm?token_hash=…&type=invite` → `src/app/auth/confirm/route.ts` (`verifyOtp`) → `set-password`. **No usar `{{ .ConfirmationURL }}`** (PKCE sin code_verifier = "Verificando link…" infinito) |
-| Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media` |
-| Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `010`) + tipos en `content.ts` |
+| Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media`. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) |
+| Adjuntar PDF o video propio a un post | `FileUpload` en `src/components/dashboard/Field.tsx` → `uploadDirectToStorage` (`src/lib/client-upload.ts`, bypassea el Server Action por el límite ~4.5MB de Vercel, sube directo al bucket `media` con `createBrowserClient`) |
+| Export de post a Instagram Story | `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` (`ImageResponse` de `@vercel/og`, 1080x1920) — botón en `PageHeader` de `[id]/page.tsx` |
+| Modal "más información" (coaches/planes) | Patrón: `short_desc`/`description_long` en el modelo + `Modal.tsx` genérico (`src/components/ui/`) + `CoachModal.tsx`/`PlanModal.tsx` (`src/components/sections/`) |
+| Schema / nueva columna / tabla | **nueva** migración numerada en `supabase/migrations/` (la última es `012`) + tipos en `content.ts` |
 | Estilos / utilitarios (.btn, .plan-card, .field-input…) | `src/app/globals.css` + `tailwind.config.ts` |
 | SEO / JSON-LD / redirects legacy `.php` | `src/app/layout.tsx`, `sitemap.ts`, `robots.ts`, `next.config.mjs` |
 | Headers de seguridad / CORS | `next.config.mjs` (`headers()`) — checklist en `../../codetlon-cloud/.claude/modules/security-owasp.md` §5 |
@@ -34,7 +37,7 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 
 ## Dónde NO meterse sin pensar
 - **`src/lib/content.ts` + `src/lib/constants.ts`** — la cadena de fallbacks mantiene el sitio vivo sin DB. Si cambiás la forma de un JSONB de `site_settings`, actualizá el getter/tipo acá Y el editor del dashboard, o el front rompe.
-- **`supabase/migrations/`** — nunca editar una migración aplicada. Crear una nueva (última: `010_post_authors_auth_write.sql`). Al agregar una tabla nueva escrita desde el dashboard, la policy de escritura tiene que cubrir `authenticated` (el cliente de sesión), no solo `service_role` — `010` arregló justo ese gap en `post_authors`.
+- **`supabase/migrations/`** — nunca editar una migración aplicada. Crear una nueva (última: `012_posts_attachments.sql`). Al agregar una tabla nueva escrita desde el dashboard, la policy de escritura tiene que cubrir `authenticated` (el cliente de sesión), no solo `service_role` — `010` arregló justo ese gap en `post_authors`.
 - **`src/proxy.ts`** — es el middleware de Next 16 (renombrado). No volver a `middleware.ts`.
 - `next.config.mjs` — remote patterns (`*.supabase.co`, `images.unsplash.com`) + redirects 301 desde URLs `.php`. `tailwind.config.ts` — tokens compartidos.
 - TS strict + lint: `npm run build` falla con cualquier `any` implícito o warning.
