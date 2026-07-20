@@ -12,6 +12,8 @@ import { sanitizeHtml } from '@/lib/sanitize'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
+export const revalidate = 3600
+
 interface Post {
   id: string
   title: string

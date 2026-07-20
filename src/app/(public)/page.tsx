@@ -8,6 +8,8 @@ import Coaches from '@/components/sections/Coaches'
 import TeamGallery from '@/components/sections/TeamGallery'
 import { getCoaches, getSiteSettings } from '@/lib/content'
 
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: 'GC² Entrenamiento de la Resistencia | Corredores, Duatletas & Triatletas',
   description:

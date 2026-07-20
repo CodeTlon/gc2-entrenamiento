@@ -4,6 +4,8 @@ import { getSiteSettings } from '@/lib/content'
 import MiniHero from '@/components/ui/MiniHero'
 import BlogList, { type PostSummary, type Category } from './BlogList'
 
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: 'Blog',
   description: 'Artículos sobre running, triatlón y entrenamiento de resistencia. Tips, guías y más.',

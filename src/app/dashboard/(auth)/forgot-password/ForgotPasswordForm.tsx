@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { useFormStatus } from 'react-dom'
+import { ArrowLeft } from 'lucide-react'
 import { forgotPasswordAction, type ForgotPasswordState } from '@/actions/auth'
 import Link from 'next/link'
 
@@ -36,9 +37,10 @@ export default function ForgotPasswordForm() {
         </div>
         <Link
           href="/dashboard/login"
-          className="inline-block text-sm text-white/45 hover:text-white transition-colors mt-2"
+          className="inline-flex items-center justify-center gap-1.5 text-sm text-white/45 hover:text-white transition-colors mt-2"
         >
-          ← Volver al inicio de sesión
+          <ArrowLeft size={14} />
+          Volver al inicio de sesión
         </Link>
       </div>
     )
@@ -79,9 +81,10 @@ export default function ForgotPasswordForm() {
 
       <Link
         href="/dashboard/login"
-        className="block text-center text-sm text-white/40 hover:text-white transition-colors pt-1"
+        className="flex items-center justify-center gap-1.5 text-sm text-white/40 hover:text-white transition-colors pt-1"
       >
-        ← Volver al inicio de sesión
+        <ArrowLeft size={14} />
+        Volver al inicio de sesión
       </Link>
     </form>
   )

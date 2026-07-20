@@ -4,6 +4,8 @@ import { createSupabaseClient } from '@/lib/supabase'
 import MiniHero from '@/components/ui/MiniHero'
 import PlanesContent from './PlanesContent'
 
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: 'Planes',
   description:

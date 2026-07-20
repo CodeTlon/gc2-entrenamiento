@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { Node, mergeAttributes } from '@tiptap/core'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import TipTapImage from '@tiptap/extension-image'
@@ -11,8 +12,25 @@ import { createPostAction, updatePostAction, type PostState } from '@/actions/po
 import { TextField, TextArea, ImageUpload, FileUpload, Checkbox } from '@/components/dashboard/Field'
 import { SaveButton, SaveStatus } from '@/components/dashboard/SaveButton'
 import { uploadMediaAction } from '@/actions/settings'
-import { MAX_DOC_BYTES, MAX_VIDEO_BYTES } from '@/lib/upload-limits'
-import { Upload, Loader2, Youtube as YoutubeIcon, X, Bold, Italic, Heading2, List, ListOrdered, Link as LinkIcon, Quote } from 'lucide-react'
+import { uploadDirectToStorage } from '@/lib/client-upload'
+import { MAX_DOC_BYTES, MAX_VIDEO_BYTES, MAX_INLINE_VIDEO_BYTES } from '@/lib/upload-limits'
+import { Upload, Loader2, Youtube as YoutubeIcon, Video as VideoIcon, X, Bold, Italic, Heading2, List, ListOrdered, Link as LinkIcon, Quote } from 'lucide-react'
+
+// Nodo custom: TipTap no trae uno para <video> nativo (solo @tiptap/extension-youtube).
+const InlineVideo = Node.create({
+  name: 'inlineVideo',
+  group: 'block',
+  atom: true,
+  addAttributes() {
+    return { src: { default: null } }
+  },
+  parseHTML() {
+    return [{ tag: 'video' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['video', mergeAttributes(HTMLAttributes, { controls: 'true', style: 'max-width:100%;border-radius:8px' })]
+  },
+})
 
 interface Post {
   id: string
@@ -94,7 +112,10 @@ export default function PostForm({
       <div>
         <label className="field-label">Categorías</label>
         {categories.length > 0 ? (
-          <div className="flex flex-wrap gap-3 mt-1">
+          <div
+            className="flex flex-wrap gap-3 mt-1 max-h-40 overflow-y-auto p-2 rounded-md"
+            style={{ border: '1px solid #102E66' }}
+          >
             {categories.map((cat) => (
               <label key={cat.id} className="flex items-center gap-2 cursor-pointer select-none">
                 <input
@@ -121,7 +142,10 @@ export default function PostForm({
       <div>
         <label className="field-label">Autores / Entrenadores</label>
         {coaches.length > 0 ? (
-          <div className="flex flex-wrap gap-3 mt-1">
+          <div
+            className="flex flex-wrap gap-3 mt-1 max-h-40 overflow-y-auto p-2 rounded-md"
+            style={{ border: '1px solid #102E66' }}
+          >
             {coaches.map((c) => (
               <label key={c.id} className="flex items-center gap-2 cursor-pointer select-none">
                 <input
@@ -267,6 +291,7 @@ function ContentEditor({
     extensions: [
       StarterKit,
       TipTapImage,
+      InlineVideo,
       TipTapLink.configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: 'Escribí el contenido del post acá…' }),
       Youtube.configure({ controls: true, nocookie: false }),
@@ -290,6 +315,28 @@ function ContentEditor({
     if (res.url) {
       editor?.chain().focus().setImage({ src: res.url, alt: '' }).run()
       // Mover el cursor después de la imagen para poder insertar más contenido
+      editor?.commands.createParagraphNear()
+    }
+    e.target.value = ''
+  }
+
+  async function pickVideo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > MAX_INLINE_VIDEO_BYTES) {
+      setErr(`Máximo ${Math.round(MAX_INLINE_VIDEO_BYTES / (1024 * 1024))}MB para un video en el contenido.`)
+      e.target.value = ''
+      return
+    }
+    setBusy(true)
+    setErr(null)
+    // Directo a Storage desde el browser, no vía Server Action: Vercel corta el
+    // body de una Server Action en ~4.5MB, muy por debajo de un video de 15MB.
+    const { url, error } = await uploadDirectToStorage(file, 'blog/content')
+    setBusy(false)
+    if (error) { setErr(error); return }
+    if (url) {
+      editor?.chain().focus().insertContent({ type: 'inlineVideo', attrs: { src: url } }).run()
       editor?.commands.createParagraphNear()
     }
     e.target.value = ''
@@ -363,6 +410,17 @@ function ContentEditor({
           {busy ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
           {busy ? 'Subiendo…' : 'Imagen'}
           <input type="file" accept="image/*" onChange={pickImage} disabled={busy} className="hidden" />
+        </label>
+
+        {/* Video propio */}
+        <label
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-colors"
+          style={{ color: '#38BDF8', background: 'rgba(56,189,248,0.08)' }}
+          title={`Subir e insertar video propio (máx. ${Math.round(MAX_INLINE_VIDEO_BYTES / (1024 * 1024))}MB)`}
+        >
+          {busy ? <Loader2 size={13} className="animate-spin" /> : <VideoIcon size={13} />}
+          {busy ? 'Subiendo…' : 'Video propio'}
+          <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={pickVideo} disabled={busy} className="hidden" />
         </label>
 
         {/* YouTube */}
