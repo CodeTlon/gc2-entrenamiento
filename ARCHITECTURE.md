@@ -23,7 +23,9 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Una mutación (coach, plan, post, categoría, settings) | `src/actions/*.ts` (firma `(prevState, formData)`) |
 | Formulario de contacto | `src/components/sections/ContactForm.tsx` + `src/actions/contact.ts` |
 | Auth gate del dashboard | `src/proxy.ts` (antes `middleware.ts` — renombrado por Next 16) + `src/lib/supabase-server.ts` |
-| Flujo de recovery de contraseña | `src/app/auth/callback/route.ts` (exchange PKCE) → `src/app/dashboard/(auth)/set-password/` · `forgotPasswordAction` en `src/actions/auth.ts` |
+| Flujo de recovery de contraseña | `forgotPasswordAction` en `src/actions/auth.ts` (genera el link con la Admin API de Supabase — `service_role` — y lo manda por Resend, no por el email nativo de Supabase) → `src/app/auth/confirm/route.ts` (`verifyOtp`) → `set-password` |
+| Cache/ISR de páginas públicas | `export const revalidate = 3600` en el `page.tsx` de home, `/blog`, `/blog/[slug]` y `/planes` |
+| Insertar video propio en el cuerpo de un post | Nodo custom de TipTap `InlineVideo` en `PostForm.tsx` + `uploadDirectToStorage` (mismo bypass que PDF/video adjunto) → límite `MAX_INLINE_VIDEO_BYTES` (15MB, más chico que el de "video propio" del post) en `src/lib/upload-limits.ts` |
 | Flujo de invite de usuario | Email template (`docs/supabase-email-invite.html`) → `{{ .SiteURL }}/auth/confirm?token_hash=…&type=invite` → `src/app/auth/confirm/route.ts` (`verifyOtp`) → `set-password`. **No usar `{{ .ConfirmationURL }}`** (PKCE sin code_verifier = "Verificando link…" infinito) |
 | Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media`. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) |
 | Adjuntar PDF o video propio a un post | `FileUpload` en `src/components/dashboard/Field.tsx` → `uploadDirectToStorage` (`src/lib/client-upload.ts`, bypassea el Server Action por el límite ~4.5MB de Vercel, sube directo al bucket `media` con `createBrowserClient`) |
