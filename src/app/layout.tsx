@@ -56,7 +56,7 @@ export const metadata: Metadata = {
       'Equipo de entrenamiento para corredores, duatletas y triatletas en Córdoba, Argentina.',
     images: [
       {
-        url: '/images/hero-bg.jpg',
+        url: '/images/run.jpg',
         width: 1200,
         height: 630,
         alt: 'GC² Entrenamiento de la Resistencia',
