@@ -11,7 +11,7 @@ import { getCoaches, getSiteSettings } from '@/lib/content'
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'GC² Entrenamiento de la Resistencia | Corredores, Duatletas & Triatletas',
+  title: { absolute: 'GC² Entrenamiento de la Resistencia | Córdoba' },
   description:
     'Equipo de entrenamiento para corredores, duatletas y triatletas. Planificación individualizada y grupal, presencial y a distancia. Córdoba, Argentina.',
 }

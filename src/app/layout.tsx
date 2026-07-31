@@ -28,6 +28,7 @@ export const metadata: Metadata = {
       { url: '/favicon-light-mode.ico', media: '(prefers-color-scheme: light)' },
       { url: '/favicon-dark-mode.ico', media: '(prefers-color-scheme: dark)' },
     ],
+    apple: '/apple-touch-icon.png',
   },
   title: {
     default: 'GC² Entrenamiento de la Resistencia | Córdoba',
@@ -35,6 +36,9 @@ export const metadata: Metadata = {
   },
   description:
     'Equipo de entrenamiento para corredores, duatletas y triatletas. Planificación individualizada y grupal, presencial y a distancia. Córdoba, Argentina.',
+  alternates: {
+    canonical: 'https://gc2entrenamientoderesistencia.com.ar',
+  },
   keywords: [
     'entrenamiento running Córdoba',
     'triatlón Córdoba',
@@ -56,7 +60,7 @@ export const metadata: Metadata = {
       'Equipo de entrenamiento para corredores, duatletas y triatletas en Córdoba, Argentina.',
     images: [
       {
-        url: '/images/run.jpg',
+        url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'GC² Entrenamiento de la Resistencia',
@@ -67,6 +71,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'GC² Entrenamiento de la Resistencia',
     description: 'Entrenamiento para corredores, duatletas y triatletas en Córdoba.',
+    images: ['/images/og-image.jpg'],
   },
   robots: {
     index: true,
