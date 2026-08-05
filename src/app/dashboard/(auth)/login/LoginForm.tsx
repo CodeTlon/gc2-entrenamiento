@@ -1,8 +1,9 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { signInAction, type SignInState } from '@/actions/auth'
+import PasswordInput from '@/components/dashboard/PasswordInput'
 import Link from 'next/link'
 
 function SubmitButton() {
@@ -21,6 +22,13 @@ function SubmitButton() {
 
 export default function LoginForm({ next }: { next: string }) {
   const [state, action] = useActionState<SignInState, FormData>(signInAction, undefined)
+  // Email controlado: React resetea los campos no controlados al terminar la action,
+  // y si solo erró la contraseña no queremos hacerle re-escribir el email.
+  const [email, setEmail] = useState('')
+
+  useEffect(() => {
+    if (state?.clearEmail) setEmail('')
+  }, [state])
 
   return (
     <form action={action} className="space-y-5">
@@ -34,6 +42,8 @@ export default function LoginForm({ next }: { next: string }) {
           type="email"
           autoComplete="email"
           required
+          value={email}
+          onChange={e => setEmail(e.target.value)}
           placeholder="tu@email.com"
           className="field-input"
         />
@@ -41,14 +51,12 @@ export default function LoginForm({ next }: { next: string }) {
 
       <div>
         <label htmlFor="password" className="field-label">Contraseña</label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           autoComplete="current-password"
           required
           placeholder="••••••••"
-          className="field-input"
         />
       </div>
 

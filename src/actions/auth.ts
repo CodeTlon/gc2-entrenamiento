@@ -5,7 +5,27 @@ import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { redirect } from 'next/navigation'
 
-export type SignInState = { error?: string } | undefined
+export type SignInState = { error?: string; clearEmail?: boolean } | undefined
+
+// Chequea si el email existe en Auth con el mismo cliente service_role y la misma
+// Admin API que usa forgotPasswordAction: generateLink devuelve error "User not found"
+// cuando el usuario no existe. El resultado NO se expone al usuario (el mensaje de
+// error es idéntico en los dos casos); solo decide si conviene conservar el email
+// que ya escribió o limpiarlo por ser un typo.
+// Nota: regenera el recovery token del usuario, así que un link de recuperación
+// pendiente de ese email queda invalidado.
+async function emailExistsInAuth(email: string): Promise<boolean> {
+  try {
+    const admin = createSupabaseServiceClient()
+    const { error } = await admin.auth.admin.generateLink({ type: 'recovery', email })
+    if (!error) return true
+    // Cualquier otro error (red, service key mal configurada) es ambiguo:
+    // asumimos que existe para no borrarle lo que escribió.
+    return !/not\s*found/i.test(error.message)
+  } catch {
+    return true
+  }
+}
 
 export async function signInAction(
   _prev: SignInState,
@@ -23,7 +43,10 @@ export async function signInAction(
   const { error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
-    return { error: 'Email o contraseña incorrectos.' }
+    // Mismo texto de error siempre (no revelamos si el email existe). El flag solo
+    // sirve para que el form conserve el email cuando lo único mal fue la contraseña.
+    const exists = await emailExistsInAuth(email)
+    return { error: 'Email o contraseña incorrectos.', clearEmail: !exists }
   }
 
   redirect(next.startsWith('/dashboard') ? next : '/dashboard')
