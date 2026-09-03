@@ -10,6 +10,7 @@ import { focalImageProps } from '@/lib/image-focal'
 export const metadata: Metadata = {
   title: 'Contacto',
   description: 'Contactá a GC² Entrenamiento. Escribinos por WhatsApp, Instagram o completá el formulario.',
+  alternates: { canonical: '/contacto' },
 }
 
 export default async function ContactoPage({

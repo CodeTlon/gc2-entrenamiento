@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Planes',
   description:
     'Planes personalizados para corredores y triatletas. Individual, grupal, presencial y a distancia.',
+  alternates: { canonical: '/planes' },
 }
 
 export default async function PlanesPage() {

@@ -9,6 +9,7 @@ export const revalidate = 3600
 export const metadata: Metadata = {
   title: 'Blog',
   description: 'Artículos sobre running, triatlón y entrenamiento de resistencia. Tips, guías y más.',
+  alternates: { canonical: '/blog' },
 }
 
 async function getData(): Promise<{ posts: PostSummary[]; categories: Category[] }> {
