@@ -9,7 +9,8 @@ import { maxBytesForMime } from '@/lib/upload-limits'
 const ALLOWED_TYPES = /^(image\/(jpeg|png|webp|avif|gif)|application\/pdf|video\/(mp4|webm|quicktime))$/
 
 const body = z.object({
-  folder: z.string().regex(/^[a-z0-9_-]{1,40}$/i),
+  // Hasta 3 segmentos (ej. blog/adjuntos); sin "..", sin segmentos vacíos ni caracteres raros.
+  folder: z.string().regex(/^[a-z0-9_-]{1,40}(\/[a-z0-9_-]{1,40}){0,2}$/i),
   filename: z.string().min(1).max(200),
   contentType: z.string().min(1).max(100),
   size: z.number().int().positive(),

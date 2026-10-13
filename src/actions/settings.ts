@@ -43,7 +43,7 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
     const rawFolder = String(formData.get('folder') ?? 'uploads')
-    const folder = /^[a-z0-9_-]{1,40}$/i.test(rawFolder) ? rawFolder : 'uploads'
+    const folder = /^[a-z0-9_-]{1,40}(\/[a-z0-9_-]{1,40}){0,2}$/i.test(rawFolder) ? rawFolder : 'uploads'
 
     // Borrar imagen anterior si viene de nuestro bucket
     const oldUrl = String(formData.get('oldUrl') ?? '')
