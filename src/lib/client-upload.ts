@@ -1,22 +1,19 @@
 /**
- * Sube un archivo directo al bucket S3 desde el navegador con una URL firmada que emite
- * /api/upload (solo usuarios autenticados) — sin pasar por un Server Action: Vercel corta el
- * body en ~4.5MB, muy por debajo de los límites de PDF/video en upload-limits.ts.
+ * Sube un archivo al servidor (volumen de Coolify) con un POST directo a /api/upload, sin pasar por un
+ * Server Action: el límite de body de las acciones (20MB) es menor que el de video/PDF en upload-limits.ts.
+ * Solo funciona con sesión del dashboard.
  */
 export async function uploadDirectToStorage(
   file: File,
   folder: string,
 ): Promise<{ url?: string; error?: string }> {
   const contentType = file.type || 'application/octet-stream'
-  const res = await fetch('/api/upload', {
+  const res = await fetch(`/api/upload?folder=${encodeURIComponent(folder)}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder, filename: file.name, contentType, size: file.size }),
+    headers: { 'Content-Type': contentType },
+    body: file,
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) return { error: data.error ?? 'No se pudo preparar la subida.' }
-
-  const put = await fetch(data.uploadUrl, { method: 'PUT', headers: { 'Content-Type': contentType }, body: file })
-  if (!put.ok) return { error: 'Falló la subida del archivo.' }
-  return { url: data.publicUrl }
+  if (!res.ok) return { error: data.error ?? 'Falló la subida del archivo.' }
+  return { url: data.url }
 }

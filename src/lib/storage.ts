@@ -1,53 +1,79 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { createReadStream } from 'node:fs'
+import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
+import { dirname, join, resolve, sep } from 'node:path'
 
-// Bucket S3-compatible (Cloudflare R2): vive fuera del VPS, no consume RAM de Coolify.
-// El cliente se crea perezosamente para que el build no necesite credenciales.
-let client: S3Client | undefined
-function s3() {
-  client ??= new S3Client({
-    region: process.env.S3_REGION || 'auto',
-    endpoint: process.env.S3_ENDPOINT,
-    forcePathStyle: true,
-    // Desde el SDK 3.729 firma por defecto un CRC32 del cuerpo vacío en la URL; el PUT del navegador
-    // manda otro cuerpo y el bucket (R2 incluido) lo rechaza con 400. Solo se pide checksum si el servicio lo exige.
-    requestChecksumCalculation: 'WHEN_REQUIRED',
-    responseChecksumValidation: 'WHEN_REQUIRED',
-    credentials: {
-      accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
-      secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
-    },
-  })
-  return client
+// Archivos en disco: volumen persistente de Coolify (STORAGE_DIR). Todo es público y se sirve por /media/[...ruta].
+// Las keys son `carpeta[/subcarpeta[/subcarpeta]]/uuid.ext`. Los nombres con UUID no se reutilizan, por eso se cachean un año.
+const SEGMENTO = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
+
+export const STORAGE_DIR = resolve(process.env.STORAGE_DIR ?? './storage')
+
+export const MEDIA_PREFIX = '/media/'
+
+// Extensiones servibles y su Content-Type. El tipo sale de la extensión, nunca de lo que diga el cliente.
+export const TIPOS_POR_EXT: Record<string, string> = {
+  webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', avif: 'image/avif', gif: 'image/gif',
+  pdf: 'application/pdf', mp4: 'video/mp4', webm: 'video/webm', mov: 'video/quicktime',
 }
 
-const bucket = () => process.env.S3_BUCKET ?? ''
-const publicBase = () => (process.env.S3_PUBLIC_BASE_URL ?? '').replace(/\/$/, '')
+// Resuelve la ruta dentro del volumen y rechaza todo lo que se escape (.., absolutas, caracteres raros).
+function rutaSegura(key: string): string {
+  const partes = key.split('/')
+  if (partes.length < 2 || partes.length > 4 || !partes.every((p) => SEGMENTO.test(p) && !p.includes('..'))) {
+    throw new Error('Ruta de archivo inválida')
+  }
+  const abs = resolve(STORAGE_DIR, ...partes)
+  if (!abs.startsWith(STORAGE_DIR + sep)) throw new Error('Ruta de archivo inválida')
+  return abs
+}
 
-export const publicUrl = (key: string) => `${publicBase()}/${key}`
+export const publicUrl = (key: string) => `${MEDIA_PREFIX}${key}`
 
-/** Devuelve la key si la URL pertenece a nuestro bucket (para poder borrarla), si no null. */
+/** Devuelve la key si la URL es un archivo propio (/media/...), para poder borrarlo; si no, null. */
 export function keyFromUrl(url: string): string | null {
-  const base = publicBase()
-  if (!base || !url.startsWith(`${base}/`)) return null
-  return decodeURIComponent(url.slice(base.length + 1).split(/[?#]/)[0])
+  if (!url.startsWith(MEDIA_PREFIX)) return null
+  const key = decodeURIComponent(url.slice(MEDIA_PREFIX.length).split(/[?#]/)[0])
+  try {
+    rutaSegura(key)
+    return key
+  } catch {
+    return null
+  }
 }
 
-export async function putObject(key: string, body: Buffer, contentType: string) {
-  await s3().send(new PutObjectCommand({ Bucket: bucket(), Key: key, Body: body, ContentType: contentType }))
+/** Guarda un archivo nuevo (nunca pisa uno existente: la key lleva un UUID). Devuelve la URL pública. */
+export async function putObject(key: string, body: Buffer | Uint8Array) {
+  const abs = rutaSegura(key)
+  await mkdir(dirname(abs), { recursive: true })
+  await writeFile(abs, body, { flag: 'wx' })
   return publicUrl(key)
 }
 
 export async function deleteObject(key: string) {
-  await s3().send(new DeleteObjectCommand({ Bucket: bucket(), Key: key }))
+  try {
+    await rm(rutaSegura(key), { force: true })
+  } catch {
+    // Ruta inválida o archivo ya borrado: no es un error para quien llama.
+  }
 }
 
-/** URL firmada para que el navegador suba directo (bypass del límite de ~4.5MB de Vercel). */
-export async function presignPut(key: string, contentType: string, contentLength: number) {
-  const url = await getSignedUrl(
-    s3(),
-    new PutObjectCommand({ Bucket: bucket(), Key: key, ContentType: contentType, ContentLength: contentLength }),
-    { expiresIn: 300 },
-  )
-  return { uploadUrl: url, publicUrl: publicUrl(key) }
+/** Ruta absoluta de la key para escribir en streaming (crea la carpeta). */
+export async function reservePath(key: string): Promise<string> {
+  const abs = rutaSegura(key)
+  await mkdir(dirname(abs), { recursive: true })
+  return abs
 }
+
+export async function fileInfo(key: string): Promise<{ size: number; abs: string } | null> {
+  try {
+    const abs = rutaSegura(key)
+    const s = await stat(abs)
+    return s.isFile() ? { size: s.size, abs } : null
+  } catch {
+    return null
+  }
+}
+
+export const streamFile = (abs: string, rango?: { start: number; end: number }) => createReadStream(abs, rango)
+
+export const rutaDe = (key: string) => join(STORAGE_DIR, key)

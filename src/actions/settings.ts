@@ -6,7 +6,7 @@ import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { errorMessage } from '@/lib/errors'
 import { siteSettings } from '@/db/schema'
-import { putObject, deleteObject, keyFromUrl } from '@/lib/storage'
+import { putObject, deleteObject, keyFromUrl, TIPOS_POR_EXT } from '@/lib/storage'
 import { maxBytesForMime } from '@/lib/upload-limits'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
@@ -45,7 +45,7 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const rawFolder = String(formData.get('folder') ?? 'uploads')
     const folder = /^[a-z0-9_-]{1,40}(\/[a-z0-9_-]{1,40}){0,2}$/i.test(rawFolder) ? rawFolder : 'uploads'
 
-    // Borrar imagen anterior si viene de nuestro bucket
+    // Borrar imagen anterior si es un archivo propio (/media/...)
     const oldUrl = String(formData.get('oldUrl') ?? '')
     if (oldUrl) {
       const oldKey = keyFromUrl(oldUrl)
@@ -62,7 +62,6 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
 
     let buf: Buffer
     let ext: string
-    let contentType: string
 
     if (optimizable) {
       buf = await sharp(original)
@@ -71,16 +70,16 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
         .webp({ quality: 82, effort: 2 })
         .toBuffer()
       ext = 'webp'
-      contentType = 'image/webp'
     } else {
       buf = original
       ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-      contentType = mime || 'application/octet-stream'
     }
 
+    // Solo se guarda lo que /media sabe servir: SVG y otros formatos quedan afuera (un SVG propio sería XSS).
+    if (!TIPOS_POR_EXT[ext]) return { error: 'Formato no permitido.' }
     const path = `${folder}/${id}.${ext}`
 
-    return { url: await putObject(path, buf, contentType) }
+    return { url: await putObject(path, buf) }
   } catch (e) {
     return { error: errorMessage(e) }
   }

@@ -28,6 +28,8 @@ jobs:
       - run: npx tsc --noEmit
       # Migraciones, consultas y Better Auth contra Postgres real en memoria (PGlite), sin servicios externos.
       - run: npm run test:db
+      # Archivos en disco (storage.ts): rutas seguras, no pisar, borrar.
+      - run: npm run test:storage
       # Sin DATABASE_URL real: src/lib/db.ts usa un placeholder y no consulta durante el build.
       - run: npm run build
         env:
