@@ -24,8 +24,11 @@ Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main
 - [ ] Agregar E2E con base: login, CRUD, upload, IDOR (acceder a recursos sin sesion). Sacar capturas con Playwright a `screenshots/` si cambia UI.
 - [x] Lint arreglado: ESLint 9 + `eslint-config-next` 16 (`eslint.config.mjs`); 0 errores, 5 avisos de hidratacion (`react-hooks/set-state-in-effect`, patrones previos).
 - [x] `npm run test:db` (`tests/db/verificar-db.mts`): migraciones, consultas, Better Auth (alta, login, sesion, reset de contrasena, registro bloqueado) y contacto contra Postgres real en memoria (PGlite). 13 verificaciones OK. Sigue sin cubrir S3, acciones con `next/headers` ni el dashboard en navegador.
-- [ ] Probar a mano el export de Instagram Story (`@vercel/og` 1.0.3, antes 0.11) y subidas con sharp 0.35.
-- [ ] Validar con una corrida real `ci.yml`, `entornos.yml` y `produccion.yml` (son esqueletos).
+- [x] 2026-10-13 (dev2, Postgres 16 real en Docker + SeaweedFS S3 local): migrate, seed, login/logout, recuperacion de contrasena con Resend de pruebas (mail entregado, set-password, login con la clave nueva), contacto (lead + mail), CRUD de categorias, planes, coaches y posts (categorias y coautores, duplicado rechazado, borrado con confirmacion y cascada), export de Instagram Story (PNG 200; 307 sin sesion), subida de imagen (sharp, queda en webp), PDF y video por URL firmada, rechazo de SVG/HTML/tamano/traversal en `/api/upload`.
+  - Bugs hallados y arreglados: `folder` con subniveles (`blog/adjuntos`) rechazado por el regex; el SDK firmaba un CRC32 del cuerpo vacio y el bucket rechazaba el PUT (ahora `requestChecksumCalculation: 'WHEN_REQUIRED'`).
+  - NO verificado: R2 real (CORS, dominio publico), guardado de `attachment_url`/`video_url` (el bucket local es http y `safeUrl` solo acepta https), `next/image` con el host de R2 (remotePatterns https), borrado del archivo anterior en el bucket, limite de 4.5MB de Vercel.
+- [x] `ci.yml`: corrida real en verde (PR borrador #3 a `test`, cerrado sin merge; `quality` 1m15s). `actionlint`: `produccion.yml` limpio, `entornos.yml` con un aviso SC2034 (variable de loop sin usar). Avisos de GitHub: actions en Node 20 (subir `checkout`/`setup-node`) y `ubuntu-latest` pasa a Ubuntu 26 el 2026-10-19 (considerar fijar `ubuntu-24.04`).
+- [ ] `entornos.yml` y `produccion.yml`: sin correr (faltan secrets/Environments de Coolify y B2).
 
 ## Migracion de datos de produccion (read-only sobre Supabase)
 Ver `scripts/migracion/README.md`.
