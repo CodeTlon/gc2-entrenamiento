@@ -11,7 +11,7 @@
 
 Sitio web oficial de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equipo de entrenamiento para corredores, duatletas y triatletas. Incluye un sitio público y un dashboard administrativo (CMS interno) para editar todo el contenido sin tocar código.
 
-Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
+Producto desplegado en Coolify (app + Postgres + volumen de archivos). Dominio: `gc2entrenamientoderesistencia.com.ar`.
 
 ## Stack
 
@@ -19,7 +19,7 @@ Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 - **React 19** — `react` ^19.2.4
 - **TypeScript** estricto, alias `@/* → src/*`
 - **Tailwind CSS 3** — escala de colores y tokens definidos en `tailwind.config.ts`
-- **PostgreSQL** (Coolify) + **Drizzle ORM** (`src/db/schema.ts`, migraciones en `drizzle/`) · **Better Auth** (login/recovery del dashboard) · **S3/Cloudflare R2** (`@aws-sdk/client-s3`, archivos). Supabase ya no se usa
+- **PostgreSQL** (Coolify) + **Drizzle ORM** (`src/db/schema.ts`, migraciones en `drizzle/`) · **Better Auth** (login/recovery del dashboard) · **archivos en el volumen del servidor** (`src/lib/storage.ts`, servidos por `/media`). Supabase ya no se usa
 - **Resend** — envío de emails (leads y recuperación) vía `src/lib/mail.ts`, con sandbox por entorno
 - **Zod** — validación de inputs en server actions
 - **lucide-react** — iconos
@@ -85,13 +85,13 @@ src/
     db.ts                    # Drizzle + pg (pool chico, placeholder para build sin DB)
     auth.ts / auth-client.ts # Better Auth (servidor / cliente)
     session.ts               # getUser / requireUser (validación real de sesión)
-    storage.ts               # S3: putObject, deleteObject, presignPut, keyFromUrl
+    storage.ts               # Disco (STORAGE_DIR): putObject, deleteObject, keyFromUrl, fileInfo, streamFile
     mail.ts                  # sendMail + sandbox por APP_ENV
     content.ts               # Tipos + getters (getSiteSettings, getCoaches, getPlans*) con FALLBACKs
     constants.ts             # Datos hardcodeados de fallback (coaches, planes, contacto, imágenes)
     youtube.ts               # Helper para embeds de YouTube en posts
     upload-limits.ts         # Límites de tamaño por mime (imagen/PDF/video) — uploadMediaAction y FileUpload
-    client-upload.ts         # uploadDirectToStorage: sube al bucket `media` desde el browser, bypass del Server Action
+    client-upload.ts         # uploadDirectToStorage: POST /api/upload desde el browser, bypass del Server Action
     utils.ts
 db/schema.ts                 # (en src/) schema Drizzle; drizzle/ = migraciones SQL; src/db/queries.ts = consultas compartidas
 scripts/                     # migracion/ (revisión Supabase), backup/, crear-usuario.mts, seed-dev.mts
@@ -110,7 +110,7 @@ tests/                       # Playwright e2e
 - **`coaches`** — equipo de entrenadores (slug, nombre, especialidad, bio, foto, IG, certificaciones, logros, servicios, `display_order`).
 - **`plans`** — planes (`category` ∈ `runner | triathlon | group`, `plan_category_id` FK→plan_categories, `name`, `name_display`, `badge`, `features[]`, `featured`, `display_order`, `description_long` *(texto del modal "más información")*).
 - **`plan_categories`** — categorías de planes (`name`, `slug`, `display_order`).
-- **Storage:** bucket `media` para imágenes subidas desde el dashboard.
+- **Storage:** volumen persistente `/data/storage` (`STORAGE_DIR`), público por `/media/[...ruta]` (sin listado, tipo por extensión, `nosniff`, Range para video). El backup lo cubre con `FILES_MODE=volume`.
 
 **Autorización:** sin RLS. Toda escritura del dashboard exige `requireUser()` (`src/lib/session.ts`) en la acción — no quitarlo; `contact_leads` solo se inserta desde `contactAction` con validación Zod. Las claves de `src/db/schema.ts` son snake_case para que las filas mantengan la forma que consumen los componentes.
 
@@ -121,8 +121,8 @@ tests/                       # Playwright e2e
 - **Fallbacks de contenido:** `src/lib/content.ts` siempre devuelve datos. Si Supabase no responde o las env vars son placeholder, usa `FALLBACK_*` desde `src/lib/constants.ts`. **No romper esta cadena**: el sitio tiene que renderizar aunque no haya DB.
 - **Auth gate:** `src/proxy.ts` (antes `middleware.ts`) protege `/dashboard/**`. Se renombró a `proxy.ts` por Next 16.
 - **Estilos:** Tailwind + componentes utilitarios en `globals.css` (`.btn`, `.btn--primary`, `.plan-card`, `.field-input`, `.section-title`, `.gradient-text`, `.reveal`, etc.). Paleta `blue-900..blue-100` + `accent` (`#38BDF8`). Spacing custom: `section`, `gap-sm/md/lg/xl`.
-- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y el host de `S3_PUBLIC_BASE_URL`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB).
-- **PDF / video propio (posts):** `uploadMediaAction` pasa por un Server Action, y Vercel corta el body real en ~4.5MB antes de llegar al chequeo de tamaño — muy por debajo de los límites de PDF/video. Por eso `FileUpload` (`src/components/dashboard/Field.tsx`) usa `uploadDirectToStorage` (`src/lib/client-upload.ts`, `createBrowserClient` de `@supabase/ssr`) para subir directo al bucket `media` desde el navegador, bypasseando el Server Action. La policy RLS de `storage.objects` ya acepta `insert` de `authenticated` (`003_editorial.sql`), no requiere cambios de storage.
+- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y YouTube; los archivos propios son rutas locales `/media/...`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. GIF se sube tal cual; SVG y cualquier formato que `/media` no sirva se rechazan. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB).
+- **PDF / video propio (posts):** `uploadMediaAction` pasa por un Server Action (límite de body 20MB, `bodySizeLimit`), por debajo del de video (60MB). Por eso `FileUpload` (`src/components/dashboard/Field.tsx`) usa `uploadDirectToStorage` (`src/lib/client-upload.ts`): `POST /api/upload?folder=` con el archivo crudo, que `src/app/api/upload/route.ts` escribe en streaming al volumen validando sesión, origen (anti-CSRF), tipo (lista cerrada, sin SVG) y tamaño real (corta si se pasa).
 - **Export a Instagram Story:** `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` genera un PNG 1080x1920 con `@vercel/og` (`ImageResponse`) a partir del post — corre 100% server-side para evitar CORS al leer la portada desde el bucket S3.
 - **SEO:** metadata + JSON-LD `SportsOrganization` en `src/app/layout.tsx`. `sitemap.ts` y `robots.ts` en App Router. Redirects 301 desde URLs `.php` legacy en `next.config.mjs`.
 - **i18n:** todo en español (es_AR). Mantenelo así.
@@ -136,7 +136,7 @@ Definidas en `.env.development.local` / `.env.test.local` / `.env.production.loc
 |---|---|
 | `DATABASE_URL` | Postgres (`sslmode=require` en Coolify) |
 | `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Auth (secret distinto por entorno) |
-| `S3_ENDPOINT` / `S3_BUCKET` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` / `S3_PUBLIC_BASE_URL` / `S3_REGION` | Archivos (R2) |
+| `STORAGE_DIR` | Carpeta de archivos subidos (volumen; en Docker `/data/storage`, local `./storage`) |
 | `APP_ENV` / `MAIL_SANDBOX_TO` | Entorno y sandbox de correo (obligatorio en test, prohibido en prod) |
 | `RESEND_API_KEY` | Envío de emails |
 | `RESEND_FROM_NAME` / `RESEND_FROM_EMAIL` | Remitente |
@@ -165,6 +165,7 @@ Si falta `DATABASE_URL` o la base no responde, `content.ts` cae a fallbacks y el
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-10-13 | feature/dev2-coolify | **Todo en Coolify** (regla CodeTlon: solo sitios sin base van a Vercel). Archivos en volumen del servidor: `src/lib/storage.ts` pasa de S3 a disco (`STORAGE_DIR`), nueva ruta pública `/media/[...ruta]` (tipo por extensión, `nosniff`, Range para video, sin listado) y `/api/upload` recibe el archivo crudo en streaming (sesión + origen + tipo + tamaño real); se quitan `@aws-sdk/*`. Empaquetado: `Dockerfile` (standalone, node 22), `docker-entrypoint.sh` (migra al arrancar y falla cerrado), `docker-compose.coolify.yml` (app + Postgres internos, sin puerto público), `.dockerignore`; `scripts/migrate.mts` y `crear-usuario.mts` se empaquetan con esbuild para `docker exec`. Fix: páginas públicas y sitemap pasan a dinámicos (el build de Coolify no tiene base y congelaba el contenido de respaldo hasta una hora). Fix: `/api/upload` rechazaba carpetas con `/` (`blog/adjuntos`). Fix: `/media` y `storage` aceptan archivos en la raíz (migrados de Supabase). Migración de datos: `scripts/migracion/` ahora lee de Supabase solo por la Management API read-only (`07-exportar-datos`, `08-generar-import` con leads anonimizados, `05-copiar-storage` a disco con reescritura de URLs por objeto). Nuevo `npm run test:storage` (11) en CI. Verificado: imagen Docker real, ensayo de migración en limpio (conteos idénticos, 0 referencias a Supabase, 15/15 URLs 200). |
 | 2026-10-13 | feature/dev2-backend-propio | v2.0.0 — **Salida de Supabase** a Postgres (Coolify) + Drizzle + Better Auth + S3/R2; front sigue en Vercel. Ramas `dev` y `test` creadas como espejo de `main`; CI para test y main; `scripts/migracion/` para revisar schema/backup/storage. Detalle en README (Changelog) y `docs/environments.md`. Build + 45/45 E2E sin base; **sin verificar contra base real ni corte de producción**. |
 | 2026-07-19 | feat/recovery-resend-inline-video-isr | v1.4.0 — **Recovery de contraseña vía Resend**: `forgotPasswordAction` (`src/actions/auth.ts`) ya no usa `supabase.auth.resetPasswordForEmail` (rate limit bajo en free tier, el email llegaba lento o a spam) — genera el link con `admin.generateLink` (Admin API, `service_role`) y lo envía con Resend (mismo proveedor que el resto del sitio); el link apunta a `/auth/confirm` (`verifyOtp`) en vez de `/auth/callback` (PKCE) porque no hay `code_verifier` en el navegador del usuario, mismo motivo que los invites del panel. **Video propio inline en posts**: nodo custom de TipTap `InlineVideo` (no existe uno nativo, solo `@tiptap/extension-youtube`) en `PostForm.tsx` + botón "Video propio" que sube directo al bucket `media` vía `uploadDirectToStorage` — límite nuevo `MAX_INLINE_VIDEO_BYTES` (15MB, en `src/lib/upload-limits.ts`, más chico que el de "video propio" adjunto al post que sigue en 60MB). **ISR**: `export const revalidate = 3600` en home, `/blog`, `/blog/[slug]` y `/planes` — antes eran dinámicas en cada request. Build verde + 45/45 E2E (1 flake de timeout en `/contacto.php` no relacionado, pasó en rerun aislado). |
 | 2026-07-18 | feat/planes-modal-ig-story-blog-media | v1.3.0 — **Modal de planes**: `plans.description_long` (`011_plans_description.sql`) + `PlanModal.tsx` (patrón `CoachModal`/`Modal.tsx` genérico) + botón "Más información" en `PlanesContent.tsx` (extraído de `planes/page.tsx`, que ahora solo hace fetch). **Export a Instagram Story**: nueva dep `@vercel/og`; `dashboard/blog/[id]/story/route.tsx` genera un PNG 1080x1920 (título + portada + branding) server-side (evita CORS con `*.supabase.co`); botón "Exportar a Instagram" en el `PageHeader` de la edición de post. **PDF y video propio en posts**: `posts.attachment_url`/`video_url` (`012_posts_attachments.sql`); `FileUpload` (`Field.tsx`) sube directo al bucket `media` desde el browser vía `uploadDirectToStorage` (`client-upload.ts`, `createBrowserClient`) — bypassea el Server Action porque Vercel corta el body real en ~4.5MB, muy por debajo de los límites de PDF/video; la RLS de `storage.objects` ya permitía ese insert `authenticated`, sin migración de storage. **Límites de upload más generosos y por tipo** (antes 12MB fijo para todo): `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) consumido por `uploadMediaAction` y `FileUpload`; `next.config.mjs` `bodySizeLimit` 15mb→20mb. Build verde + 45/45 E2E. |

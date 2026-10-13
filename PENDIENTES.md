@@ -1,55 +1,46 @@
 # Pendientes de la migracion fuera de Supabase
 
-Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main` sin tocar; `dev` y `test` son espejo de `main` (`3594ec3`) hasta que se mergee el PR.
+Rama: `feature/dev2-coolify`. Estado al 2026-10-13. Todo corre en Coolify (regla de CodeTlon: solo sitios sin base van a Vercel): app y Postgres en la misma red interna, archivos en el volumen `storage`. `main` sin tocar.
 
-## Hecho (solo verificado sin base)
-- Codigo sin Supabase: Drizzle + Better Auth + S3/R2. `tsc` limpio, `next build` verde, E2E 45/45 (sin base, con fallbacks).
-- `scripts/migracion/`, entornos, CI, workflows, scripts de backup y docs (`docs/environments.md`, `docs/BACKUPS.md`).
+## Hecho y verificado (local, imagen Docker real)
+- Codigo sin Supabase: Postgres + Drizzle + Better Auth; archivos en disco (`src/lib/storage.ts`, `/media`, `/api/upload`).
+- `Dockerfile` + `docker-compose.coolify.yml`: la app migra al arrancar y falla cerrada; healthcheck `/api/health`. Medido en reposo: app ~60 MB, base ~25 MB.
+- Alta de admin dentro del contenedor: `docker exec <app> node scripts/crear-usuario.mjs <email> <nombre> admin`.
+- Suite: `tsc`, lint (0 errores, 5 avisos previos), `test:db` 13/13 (Postgres real), `test:storage` 11/11, E2E 45/45 contra el contenedor, `ci.yml` en verde en una corrida real de GitHub (PR #3, cerrado sin merge).
+- Flujos probados en el navegador contra Postgres real: login/logout, recuperacion de contrasena con Resend de pruebas (mail entregado, set-password, login con la clave nueva), contacto (lead + mail), CRUD de categorias, planes, coaches y posts (categorias, coautores, duplicado rechazado, borrado con confirmacion y cascada), export de Instagram Story (PNG 200; 307 sin sesion).
+- Subidas contra el volumen: imagen (sharp, queda webp), PDF y video propio (URL guardada), Range 206 para video, 401 sin sesion, 403 sin origen, 415 SVG/HTML, 413 por tamano, 400 por carpeta invalida, traversal en `/media` sin 200, archivos sobreviven al reinicio del contenedor.
+- Bugs hallados y arreglados: `folder` con subniveles rechazado; paginas publicas y sitemap prerenderizados sin base en el build (mostraban el contenido de respaldo hasta una hora): ahora dinamicos; archivos en la raiz del bucket no servibles.
+- Ensayo de migracion de datos en limpio (Supabase prod en solo lectura -> Postgres del compose): conteos identicos en las 9 tablas, 33/33 archivos descargados y cargados, 0 referencias a `supabase.co`, 15/15 URLs `/media` en 200, 16/16 imagenes del home cargan. `contact_leads` anonimizados (no hay PII en test).
 
 ## A cargo de Mateo (infraestructura)
-- [ ] R2: regla CORS del bucket (PUT desde los origenes del sitio), ver `docs/environments.md`.
-- [ ] `DATABASE_URL` con `?sslmode=require&uselibpqcompat=true` (o CA de Coolify + `verify-full`).
-- [x] Workflows en `.github/workflows/` (ci, entornos, produccion), rama `feature/dev2-workflows`. Falta validarlos con una corrida real y cargar secrets/Environments.
-- [ ] Coolify: crear Postgres `gc2-test` y `gc2-prod` (usuario propio con minimos privilegios, `sslmode=require`, puerto publico no estandar). Backup diario a B2 en prod.
-- [ ] Cloudflare R2: bucket de test y de produccion con dominio publico; claves S3.
-- [ ] Vercel: variables de `.env.example` en Preview (rama `test`) y Production; `BETTER_AUTH_SECRET` distinto por entorno; confirmar que el preview de `test` use la base de test.
-- [ ] GitHub: proteger `dev` y `test` (PR obligatorio); secrets `COOLIFY_URL`, `COOLIFY_TOKEN`, `TEST_DB_UUID`, `TEST_DB_HOST`, `TEST_DB_PORT`, `TEST_DATABASE_URL`, `TEST_URL`; Environment `production` con reviewers, secrets `PROD_DATABASE_URL`, `B2_READ_KEY_ID`, `B2_READ_APP_KEY`, vars `PROD_URL`, `BACKUP_BUCKET`, `BACKUP_PROJECT`; variable de repo `PRODUCCION_HABILITADA=true` solo al final.
+- [ ] Coolify: crear los recursos Docker Compose `gc2-test` y `gc2-prod` (`docs/environments.md`), dominio en el servicio `app`, variables sin comillas, `BETTER_AUTH_SECRET` y `POSTGRES_PASSWORD` distintos por entorno.
+- [ ] Verificar RAM libre del VPS de Coolify (`free -h`): la app necesita ~300-400 MB estables y 1-2 GB de pico solo al compilar (estimado, no medido).
+- [ ] Backup de prod: cron en el VPS con `scripts/backup/backup-coolify.sh` (`FILES_MODE=volume`, `PROJECT=gc2`, `ENV_FILE=/etc/backup/gc2.env` copiado del de recoveryparts), y un simulacro con `restore-test.sh`. Probar antes la v2 del script: no esta validada contra la v1 que ya corre para recoveryparts.
+- [ ] Rotar las claves que pasaron por el chat: Resend de pruebas, la clave de B2 `backups` (ademas tiene permisos de mas: `deleteFiles`, `writeBuckets`) y el token `sbp_` de Supabase (revocar al terminar).
 - [ ] Resend: remitente del dominio verificado para prod; en test `APP_ENV=test` + `MAIL_SANDBOX_TO`.
+- [ ] GitHub: proteger `dev` y `test`; secrets de Coolify (`COOLIFY_URL`, `COOLIFY_TOKEN` con minimos permisos, UUIDs) cuando se adapten los workflows.
 
-## Verificar con una base real (nada de esto se probo)
-> 2026-10-13 (sesion dev2): Docker bloqueado por el sandbox de Claude Code (`permission denied ... /run/user/1004/docker.sock`; el `excludedCommands: [docker, docker-compose]` agregado a `~/.claude/settings.json` recien aplica al reiniciar la sesion). Verificado sin Docker: `test:db` 13 OK (PGlite), `tsc` limpio, lint 0 errores/5 avisos, `build` verde, E2E 45/45. NO verificado: migrate/seed/usuario, login, CRUD, recuperacion de contrasena y `/api/health` contra Postgres real. Retomar con `docker compose up -d` desde una sesion nueva.
-- [ ] `docker compose up -d`, `npx drizzle-kit migrate`, `scripts/seed-dev.mts`, `scripts/crear-usuario.mts`.
-- [ ] Login, logout, "Olvide mi contrasena" (mail + `set-password`), CRUD de coaches, planes, categorias y posts (transacciones de `post_categories`/`post_authors`), leads, export a Instagram Story (debe dar 401 sin sesion).
-- [ ] Subida a S3: imagenes (sharp), PDF y video via `/api/upload`; borrado del archivo anterior; `next/image` con el host de `S3_PUBLIC_BASE_URL`.
-- [ ] Agregar E2E con base: login, CRUD, upload, IDOR (acceder a recursos sin sesion). Sacar capturas con Playwright a `screenshots/` si cambia UI.
-- [x] Lint arreglado: ESLint 9 + `eslint-config-next` 16 (`eslint.config.mjs`); 0 errores, 5 avisos de hidratacion (`react-hooks/set-state-in-effect`, patrones previos).
-- [x] `npm run test:db` (`tests/db/verificar-db.mts`): migraciones, consultas, Better Auth (alta, login, sesion, reset de contrasena, registro bloqueado) y contacto contra Postgres real en memoria (PGlite). 13 verificaciones OK. Sigue sin cubrir S3, acciones con `next/headers` ni el dashboard en navegador.
-- [x] 2026-10-13 (dev2, Postgres 16 real en Docker + SeaweedFS S3 local): migrate, seed, login/logout, recuperacion de contrasena con Resend de pruebas (mail entregado, set-password, login con la clave nueva), contacto (lead + mail), CRUD de categorias, planes, coaches y posts (categorias y coautores, duplicado rechazado, borrado con confirmacion y cascada), export de Instagram Story (PNG 200; 307 sin sesion), subida de imagen (sharp, queda en webp), PDF y video por URL firmada, rechazo de SVG/HTML/tamano/traversal en `/api/upload`.
-  - Bugs hallados y arreglados: `folder` con subniveles (`blog/adjuntos`) rechazado por el regex; el SDK firmaba un CRC32 del cuerpo vacio y el bucket rechazaba el PUT (ahora `requestChecksumCalculation: 'WHEN_REQUIRED'`).
-  - NO verificado: R2 real (CORS, dominio publico), guardado de `attachment_url`/`video_url` (el bucket local es http y `safeUrl` solo acepta https), `next/image` con el host de R2 (remotePatterns https), borrado del archivo anterior en el bucket, limite de 4.5MB de Vercel.
-- [x] `ci.yml`: corrida real en verde (PR borrador #3 a `test`, cerrado sin merge; `quality` 1m15s). `actionlint`: `produccion.yml` limpio, `entornos.yml` con un aviso SC2034 (variable de loop sin usar). Avisos de GitHub: actions en Node 20 (subir `checkout`/`setup-node`) y `ubuntu-latest` pasa a Ubuntu 26 el 2026-10-19 (considerar fijar `ubuntu-24.04`).
-- [ ] `entornos.yml` y `produccion.yml`: sin correr (faltan secrets/Environments de Coolify y B2).
+## Por hacer en el codigo
+- [ ] Adaptar `entornos.yml` y `produccion.yml` a todo-en-Coolify (hoy asumen preview de Vercel y base con puerto publico). `actionlint`: `produccion.yml` limpio, `entornos.yml` con un aviso SC2034. Subir `checkout`/`setup-node` (Node 20 deprecado) y fijar `ubuntu-24.04` (`ubuntu-latest` pasa a 26 el 2026-10-19).
+- [ ] `posts.author_id` queda sin FK ni valor en posts nuevos (ids de Better Auth son texto): eliminar la columna o migrarla a `text`.
+- [ ] Honeypot/rate limit del formulario de contacto.
+- [ ] Imagenes originales sin optimizar en la raiz del bucket (hasta 4,7 MB, p. ej. `Mica.jpg`): `next/image` ya las sirve optimizadas; opcional pasarlas por sharp al migrar.
+- [ ] Un coach de prueba (`ASDASDASDA`, sin foto) esta en la base de produccion actual: decidir si se borra antes del corte.
 
 ## Migracion de datos de produccion (read-only sobre Supabase)
-Ver `scripts/migracion/README.md`.
-- [ ] Crear `scripts/migracion/.env.migracion` (gitignored) con `SUPABASE_DB_URL` (idealmente usuario de solo lectura), `LOCAL_DB_URL`, `SUPABASE_URL` y `S3_*`.
-- [ ] `01` dump, `02` sanear, `03` inventario, `04` restaurar y validar conteos en una base local/test.
-- [ ] Comparar `drizzle/0000_baseline.sql` (salio de las migraciones) con el schema real del dump; corregir drift en `src/db/schema.ts` y regenerar.
-- [ ] `05-copiar-storage.mjs` (dry-run, luego `--yes`) y ejecutar `out/reescribir-urls.sql` en la base nueva; revisar muestras de imagen, PDF y video, incluido HTML de `posts.content`.
-- [ ] Usuarios (`06-usuarios.md`): alta con `crear-usuario.mts` y reset de contrasena; avisar que las sesiones e invites de Supabase dejan de funcionar.
-- [ ] Backup de la base nueva y simulacro de restauracion con `scripts/backup/restore-test.sh`; anotar la fecha en `.claude/CLAUDE.md`. Replicar el bucket R2 a B2.
+Ver `scripts/migracion/README.md`. Ensayo hecho; falta repetirlo contra `gc2-test` en Coolify y, al final, el corte.
+- [ ] Cargar en `gc2-test`: `07` exportar, `08` generar (leads anonimizados), `05 --yes` descargar, aplicar `import.sql`, subir `out/storage/` al volumen, `reescribir-urls.sql`, `verificar-urls.sql` y comparar conteos. Correr E2E contra su URL.
+- [ ] Usuarios (`06-usuarios.md`): Supabase tiene 2 usuarios. Alta con `crear-usuario.mjs` por email y reset de contrasena por Resend; avisar que las sesiones e invites de Supabase dejan de funcionar.
+- [ ] Backup de la base nueva y simulacro de restauracion; anotar la fecha en `.claude/CLAUDE.md`.
 
-## Corte
-- [ ] Ventana de bajo trafico, aviso a la dueña del sitio, dump final, modo mantenimiento.
-- [ ] Variables de Production en Vercel, redeploy, smoke test (`/api/health`, home, blog, login).
-- [ ] Supabase en solo lectura 1-2 semanas con fecha de baja anotada; despues dar de baja el proyecto.
-- [ ] Promover por PR: `dev` -> `test` -> `main` (lo hace Mateo).
+## Corte (lo ejecuta Mateo)
+- [ ] Ventana de bajo trafico, aviso a la duena del sitio, `07` + `08 --real` (datos reales de leads) + `05 --yes` finales, modo mantenimiento.
+- [ ] DNS al servicio de Coolify, smoke test (`/api/health`, home, blog, login, subida), Google Analytics y sitemap.
+- [ ] Supabase en solo lectura 1-2 semanas con fecha de baja anotada; despues dar de baja el proyecto y revocar el token.
+- [ ] Promover por PR: `dev` -> `test` -> `main`.
 
-## Decisiones abiertas
-- Datos sensibles: la doctrina pide app y base en Coolify sin puerto publico; aca el front esta en Vercel y la base expuesta por TCP con SSL. Revisar si se acepta.
-- `posts.author_id` queda sin FK y sin completar en posts nuevos (ids de Better Auth son texto): eliminar la columna o migrarla a `text`.
-- Orden de migraciones vs deploy de Vercel en `produccion.yml` (hoy en paralelo; migraciones deben ser compatibles hacia atras).
-- `npm audit --omit=dev`: resueltos critical/high (Next 16.4.0, TipTap 3.32, sharp 0.35.5, @vercel/og 1.0.3). Quedan 4 moderate en drizzle-kit/esbuild (herramienta de dev). El CI corta en `high`.
-- Auditoria 2026-10-13: corregidos ssl, rate limit en base, `.catch` en mail de recuperacion, contacto que no pierde leads en silencio, trustedOrigins, errores sin SQL, URLs https en posts, pagina de leads con `?page` invalido. Sigue abierto: honeypot/rate limit del formulario de contacto.
-- SVG en `uploadMediaAction` (Server Action) se sube tal cual al bucket publico; `/api/upload` ya lo rechaza. Evaluar sanitizarlo o bloquearlo.
-- Compartir una sola instancia de Postgres entre test y prod para ahorrar RAM (menos aislamiento).
+## Sin verificar
+- Despliegue en el Coolify real (solo se probo el mismo compose en Docker local).
+- Pico de RAM del build y RAM libre del VPS.
+- El dashboard con los datos reales migrados (solo se vio el sitio publico); el export de Story con una portada real migrada.
+- `entornos.yml` y `produccion.yml` (faltan secrets de Coolify y adaptarlos).

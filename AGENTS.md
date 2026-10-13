@@ -1,6 +1,6 @@
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
@@ -28,7 +28,7 @@ Sitio web + CMS de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equi
 
 ## Stack
 
-Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 3 · PostgreSQL + Drizzle ORM + Better Auth + S3/R2 · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: Vercel, auto-deploy on push a `main` vía integración Git nativa (verificado — ver `.ai/context/ARCHITECTURE.md`).
+Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 3 · PostgreSQL + Drizzle ORM + Better Auth + archivos en volumen del servidor · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: Coolify (app + Postgres en la misma red interna, `docker-compose.coolify.yml`); Vercel ya no se usa para este proyecto (regla de CodeTlon: solo sitios sin base van a Vercel).
 
 ## Comandos básicos
 
@@ -46,7 +46,7 @@ npm run test:e2e:ui    # Playwright UI
 - **Server Actions** (`src/actions/*.ts`), firma estándar `(prevState, formData) => Promise<State>`, usadas con `useFormState`/`useFormStatus`. Toda acción que muta datos del dashboard llama `requireUser()`/`getUser()` porque ya no hay RLS: ese chequeo es la autorización (no lo quites).
 - **Fallback de contenido obligatorio**: `src/lib/content.ts` siempre debe devolver datos, cayendo a `FALLBACK_*` (`src/lib/constants.ts`) si la base no responde. No rompas esta cadena.
 - **Sin RLS**: la autorización vive en el servidor (`requireUser()` en `src/lib/session.ts`). `contact_leads` se inserta solo desde `submitContact`. Si agregás una tabla escrita desde el dashboard, toda acción que la muta debe llamar `requireUser()`.
-- **Uploads grandes** (PDF/video en posts) van directo al bucket S3 desde el browser con URL firmada (`uploadDirectToStorage` + `/api/upload`, bypass del Server Action) porque Vercel corta el body real en ~4.5MB — no muevas ese código a un Server Action.
+- **Uploads grandes** (PDF/video en posts) van por `uploadDirectToStorage` → `POST /api/upload` (cuerpo crudo en streaming al volumen, bypass del Server Action, que limita el body a 20MB) — no muevas ese código a un Server Action.
 - **i18n**: todo en español (es_AR). Mantenelo así.
 - **Comentarios**: en español, sólo cuando aportan — no comentarios obvios.
 - `src/proxy.ts` (no `middleware.ts`, renombrado por Next 16) es el auth gate de `/dashboard/**`.

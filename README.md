@@ -6,9 +6,9 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 
 - **Next.js 16** (App Router, RSC, Turbopack) + React 19 + **TypeScript** (strict)
 - **Tailwind CSS 3** (Barlow + Barlow Condensed)
-- **PostgreSQL** (Coolify) + **Drizzle ORM** · **Better Auth** (login del dashboard) · **S3/Cloudflare R2** (archivos)
+- **PostgreSQL** (Coolify) + **Drizzle ORM** · **Better Auth** (login del dashboard) · **archivos en volumen del servidor** (`/media`)
 - **Resend** (formulario de contacto) · **Zod** + Server Actions
-- **Playwright** (E2E) · Deploy en **Vercel**
+- **Playwright** (E2E) · Deploy en **Coolify** (Docker: app + Postgres)
 
 ## Setup
 
@@ -32,7 +32,7 @@ npm run test:e2e:ui  # Playwright UI mode
 
 ## Variables de entorno
 
-Ver `.env.example`: `DATABASE_URL`, `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`, `S3_*`, `RESEND_API_KEY`, `COMPANY_EMAIL`, `APP_ENV`, `MAIL_SANDBOX_TO` (solo test), `NEXT_PUBLIC_GA_ID` (opcional). Entornos y ramas: `docs/environments.md`.
+Ver `.env.example`: `DATABASE_URL`, `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`, `STORAGE_DIR`, `RESEND_API_KEY`, `COMPANY_EMAIL`, `APP_ENV`, `MAIL_SANDBOX_TO` (solo test), `NEXT_PUBLIC_GA_ID` (opcional). Entornos y ramas: `docs/environments.md`.
 
 ## Estructura
 
@@ -60,6 +60,7 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| v2.1.0 | 2026-10-13 | **Todo en Coolify** (regla CodeTlon: solo sitios sin base van a Vercel). Archivos en volumen del servidor: `src/lib/storage.ts` pasa de S3 a disco (`STORAGE_DIR`), nueva ruta pública `/media/[...ruta]` (tipo por extensión, `nosniff`, Range para video, sin listado) y `/api/upload` recibe el archivo crudo en streaming (sesión + origen + tipo + tamaño real); se quitan `@aws-sdk/*`. Empaquetado: `Dockerfile` (standalone, node 22), `docker-entrypoint.sh` (migra al arrancar y falla cerrado), `docker-compose.coolify.yml` (app + Postgres internos, sin puerto público), `.dockerignore`; `scripts/migrate.mts` y `crear-usuario.mts` se empaquetan con esbuild para `docker exec`. Fix: páginas públicas y sitemap pasan a dinámicos (el build de Coolify no tiene base y congelaba el contenido de respaldo hasta una hora). Fix: `/api/upload` rechazaba carpetas con `/` (`blog/adjuntos`). Fix: `/media` y `storage` aceptan archivos en la raíz (migrados de Supabase). Migración de datos: `scripts/migracion/` ahora lee de Supabase solo por la Management API read-only (`07-exportar-datos`, `08-generar-import` con leads anonimizados, `05-copiar-storage` a disco con reescritura de URLs por objeto). Nuevo `npm run test:storage` (11) en CI. Verificado: imagen Docker real, ensayo de migración en limpio (conteos idénticos, 0 referencias a Supabase, 15/15 URLs 200). |
 | v2.0.1 | 2026-10-13 | Auditoria y endurecimiento: Next 16.4.0 (RCE critico en `next/og`, SSRF, cache poisoning), TipTap 3.32, sharp 0.35.5, @vercel/og 1.0.3 (audit sin high/critical); ESLint 9 funcionando (`npm run lint`); `npm run test:db` con PGlite (13 verificaciones de migraciones, consultas, Better Auth y contacto); rate limit de login en base, errores sin SQL, `submitContact` robusto ante campos faltantes, URLs https en posts, guia SSL para Coolify. |
 | v2.0.0 | 2026-10-13 | **Salida de Supabase** (sin cortar producción todavía): Postgres + Drizzle (`src/db/schema.ts`, migración `drizzle/0000_baseline.sql`), Better Auth (sin registro público; recuperación de contraseña por Resend), archivos en S3/R2 con subida directa por URL firmada (`/api/upload`). Se eliminan `@supabase/*`, `resend` (el envío usa `src/lib/mail.ts` con sandbox por entorno), `/auth/callback`, `/auth/confirm`, `InviteHandler` y `supabase/`. Flujo de ramas dev > test > main, CI para test y main, workflows de entornos y producción (esqueletos sin ejecutar), `scripts/migracion/`. Build verde + 45/45 E2E sin base (fallbacks); **no verificado contra una base real**. |
 | v1.4.0 | 2026-07-19 | Recovery de contraseña vía Resend en vez del email nativo de Supabase (rate limit bajo en free tier, llegaba lento o a spam): `forgotPasswordAction` genera el link con la Admin API (`service_role`) y lo envía por Resend, reusando `/auth/confirm` (`verifyOtp`). Video propio insertable en el cuerpo de un post (nodo custom de TipTap + subida directa a Storage, límite 15MB). ISR (`revalidate = 3600`) en home, blog, blog/[slug] y planes. Build verde + 45/45 E2E. |

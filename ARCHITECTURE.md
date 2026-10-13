@@ -3,7 +3,7 @@
 Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio acá y abrí solo esos archivos. El detalle fino (estructura completa, modelo de datos, convenciones) vive en `.claude/CLAUDE.md`.
 
 ## Stack
-**Next.js 16** (App Router, RSC, Turbopack) · React 19 · TS strict · Tailwind 3 (Barlow + Barlow Condensed) · PostgreSQL en Coolify + Drizzle ORM · Better Auth · S3-compatible (Cloudflare R2) · Resend (vía `src/lib/mail.ts`) · `@vercel/og` (Satori, export de posts a Instagram Story) · Vercel. Alias `@/*` → `src/*`. Dominio: `gc2entrenamientoderesistencia.com.ar`.
+**Next.js 16** (App Router, RSC, Turbopack) · React 19 · TS strict · Tailwind 3 (Barlow + Barlow Condensed) · PostgreSQL en Coolify + Drizzle ORM · Better Auth · archivos en el volumen del servidor (`STORAGE_DIR`, servidos por `/media`) · Resend (vía `src/lib/mail.ts`) · `@vercel/og` (Satori, export de posts a Instagram Story) · Docker en Coolify (app + Postgres, red interna). Alias `@/*` → `src/*`. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 
 ## Route Groups
 - `src/app/(public)/` — público (home, planes, blog + `[slug]`, contacto, privacidad, terminos)
@@ -27,8 +27,8 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 | Cache/ISR de páginas públicas | `export const revalidate = 3600` en el `page.tsx` de home, `/blog`, `/blog/[slug]` y `/planes` |
 | Insertar video propio en el cuerpo de un post | Nodo custom de TipTap `InlineVideo` en `PostForm.tsx` + `uploadDirectToStorage` (mismo bypass que PDF/video adjunto) → límite `MAX_INLINE_VIDEO_BYTES` (15MB, más chico que el de "video propio" del post) en `src/lib/upload-limits.ts` |
 | Flujo de invite de usuario | No hay invites ni registro público: `scripts/crear-usuario.mts` da de alta (contraseña temporal) y el usuario la cambia con "Olvidé mi contraseña" |
-| Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → bucket `media`. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) |
-| Adjuntar PDF o video propio a un post | `FileUpload` en `src/components/dashboard/Field.tsx` → `uploadDirectToStorage` (`src/lib/client-upload.ts`, bypassea el Server Action por el límite ~4.5MB de Vercel, sube directo al bucket `media` con `createBrowserClient`) |
+| Upload de imágenes del CMS | `uploadMediaAction` en `src/actions/settings.ts` (sharp: resize 2000px, WebP q82) → volumen (`src/lib/storage.ts`), URL pública `/media/<ruta>`. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) |
+| Adjuntar PDF o video propio a un post | `FileUpload` en `src/components/dashboard/Field.tsx` → `uploadDirectToStorage` (`src/lib/client-upload.ts`) → `POST /api/upload?folder=` (`src/app/api/upload/route.ts`): cuerpo crudo en streaming al volumen, con sesión, origen, tipo y tamaño validados (bypassea el límite de body de los Server Actions) |
 | Export de post a Instagram Story | `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` (`ImageResponse` de `@vercel/og`, 1080x1920) — botón en `PageHeader` de `[id]/page.tsx` |
 | Modal "más información" (coaches/planes) | Patrón: `short_desc`/`description_long` en el modelo + `Modal.tsx` genérico (`src/components/ui/`) + `CoachModal.tsx`/`PlanModal.tsx` (`src/components/sections/`) |
 | Schema / nueva columna / tabla | editar `src/db/schema.ts` + `npx drizzle-kit generate` (se commitea el SQL en `drizzle/`) + tipos en `content.ts`; consultas compartidas en `src/db/queries.ts` |
@@ -41,7 +41,7 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 - **`src/lib/content.ts` + `src/lib/constants.ts`** — la cadena de fallbacks mantiene el sitio vivo sin DB. Si cambiás la forma de un JSONB de `site_settings`, actualizá el getter/tipo acá Y el editor del dashboard, o el front rompe.
 - **`drizzle/`** — nunca editar una migración aplicada: generar una nueva. Sin RLS: la autorización de toda escritura del dashboard es `requireUser()` en la acción (no quitarlo) y los uploads pasan por `/api/upload` (autenticado). `drizzle-kit push` solo en dev local.
 - **`src/proxy.ts`** — es el middleware de Next 16 (renombrado). No volver a `middleware.ts`.
-- `next.config.mjs` — remote patterns (host de `S3_PUBLIC_BASE_URL`, `images.unsplash.com`) + redirects 301 desde URLs `.php`. `tailwind.config.ts` — tokens compartidos.
+- `next.config.mjs` — `output: 'standalone'` (imagen Docker), remote patterns (`images.unsplash.com`, YouTube) + redirects 301 desde URLs `.php`. `tailwind.config.ts` — tokens compartidos.
 - TS strict + lint: `npm run build` falla con cualquier `any` implícito o warning.
 
 ## Patrones clave
