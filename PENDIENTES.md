@@ -9,7 +9,7 @@ Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main
 ## A cargo de Mateo (infraestructura)
 - [ ] R2: regla CORS del bucket (PUT desde los origenes del sitio), ver `docs/environments.md`.
 - [ ] `DATABASE_URL` con `?sslmode=require&uselibpqcompat=true` (o CA de Coolify + `verify-full`).
-- [ ] **Activar los workflows:** `cp docs/workflows/*.yml .github/workflows/` y pushear con un token con scope `workflow` (o desde la PC). Estan en `docs/workflows/` porque el token de la VPS no puede crear workflows.
+- [x] Workflows en `.github/workflows/` (ci, entornos, produccion). Falta validarlos con una corrida real y cargar secrets/Environments.
 - [ ] Coolify: crear Postgres `gc2-test` y `gc2-prod` (usuario propio con minimos privilegios, `sslmode=require`, puerto publico no estandar). Backup diario a B2 en prod.
 - [ ] Cloudflare R2: bucket de test y de produccion con dominio publico; claves S3.
 - [ ] Vercel: variables de `.env.example` en Preview (rama `test`) y Production; `BETTER_AUTH_SECRET` distinto por entorno; confirmar que el preview de `test` use la base de test.

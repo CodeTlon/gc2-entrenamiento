@@ -13,7 +13,7 @@ Coolify aloja **solo Postgres** (un contenedor chico por entorno). El resto no c
 - Front, Server Actions y Better Auth corren en Vercel (route handlers/serverless).
 - Los archivos viven en Cloudflare R2 (S3-compatible), no en un MinIO propio.
 - Los backups salen a Backblaze B2.
-- La base de `test` se apaga cuando no hay un PR abierto a `main` (`docs/workflows/entornos.yml`).
+- La base de `test` se apaga cuando no hay un PR abierto a `main` (`.github/workflows/entornos.yml`).
 Para ahorrar mas, `test` y `prod` pueden compartir una sola instancia de Postgres con dos bases y usuarios distintos, a costa de aislamiento.
 
 ## Conexion Vercel -> Postgres en Coolify
@@ -27,8 +27,8 @@ Coolify publica la base por TCP (*Public access*). Compensaciones obligatorias (
 Ver `.env.example`. Archivos `.env.development.local`, `.env.test.local`, `.env.production.local` (gitignored). Variables de Vercel: cargar las de `test` en el scope *Preview* de la rama `test` y las de produccion en *Production*.
 
 ## CI
-Los workflows viven en `docs/workflows/` y hay que copiarlos a `.github/workflows/` (el token usado para pushear no tenia el scope `workflow`, GitHub rechaza pushear ahi): `cp docs/workflows/*.yml .github/workflows/`. El keep-alive de Supabase ya se elimino.
-- PR a `test` y `main`: `docs/workflows/ci.yml` (lint, tsc, build, audit).
+Los workflows viven en `.github/workflows/`. El keep-alive de Supabase ya se elimino.
+- PR a `test` y `main`: `.github/workflows/ci.yml` (lint, tsc, build, audit).
 - PR a `main`: `entornos.yml` enciende la base de test, migra y corre los E2E contra el preview de `test`.
 - Push a `main`: `produccion.yml` (aprobacion manual, backup reciente en B2, migraciones, smoke test). Activar con la variable `PRODUCCION_HABILITADA=true`.
 Los workflows son esqueletos sin ejecutar: validar con una corrida real.
