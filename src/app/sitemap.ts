@@ -5,6 +5,9 @@ import { posts } from '@/db/schema'
 
 const BASE_URL = 'https://gc2entrenamientoderesistencia.com.ar'
 
+// Dinámico: el build de Coolify no tiene base y congelaría el sitemap sin los posts publicados.
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     {

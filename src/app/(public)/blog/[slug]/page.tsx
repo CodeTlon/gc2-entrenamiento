@@ -3,9 +3,6 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, FileText } from 'lucide-react'
-import { eq } from 'drizzle-orm'
-import { db } from '@/lib/db'
-import { posts } from '@/db/schema'
 import { getPublishedPostBySlug } from '@/db/queries'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
@@ -15,7 +12,8 @@ import { sanitizeHtml } from '@/lib/sanitize'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
-export const revalidate = 3600
+// Dinámica: en Coolify el build corre sin base de datos, así que prerenderizar dejaría el contenido de respaldo hasta la próxima revalidación.
+export const dynamic = 'force-dynamic'
 
 interface Post {
   id: string
@@ -37,19 +35,6 @@ async function getPost(slug: string): Promise<Post | null> {
   } catch (err) {
     console.error('Post fetch error:', err)
     return null
-  }
-}
-
-async function getAllSlugs(): Promise<{ slug: string }[]> {
-  return db.select({ slug: posts.slug }).from(posts).where(eq(posts.published, true))
-}
-
-export async function generateStaticParams() {
-  try {
-    const slugs = await getAllSlugs()
-    return slugs.map((p) => ({ slug: p.slug }))
-  } catch {
-    return []
   }
 }
 

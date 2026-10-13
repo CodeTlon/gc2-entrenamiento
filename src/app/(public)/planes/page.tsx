@@ -6,7 +6,8 @@ import { plans as plansTable, planCategories } from '@/db/schema'
 import MiniHero from '@/components/ui/MiniHero'
 import PlanesContent from './PlanesContent'
 
-export const revalidate = 3600
+// Dinámica: en Coolify el build corre sin base de datos, así que prerenderizar dejaría el contenido de respaldo hasta la próxima revalidación.
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Planes',

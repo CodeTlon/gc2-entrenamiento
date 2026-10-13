@@ -8,7 +8,8 @@ import Coaches from '@/components/sections/Coaches'
 import TeamGallery from '@/components/sections/TeamGallery'
 import { getCoaches, getSiteSettings } from '@/lib/content'
 
-export const revalidate = 3600
+// Dinámica: en Coolify el build corre sin base de datos, así que prerenderizar dejaría el contenido de respaldo hasta la próxima revalidación.
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: { absolute: 'GC² Entrenamiento de la Resistencia | Córdoba' },
