@@ -1,3 +1,5 @@
+> **Obsoleto:** este documento describe la versión previa (Supabase, Next 14). Vigente: `README.md`, `ARCHITECTURE.md`, `docs/environments.md` y `docs/BACKUPS.md`.
+
 # GC² Entrenamiento — Sitio Web Oficial
 
 Migración del sitio PHP+SASS original a **Next.js 14** con App Router, TypeScript, Tailwind CSS, Supabase y Resend.

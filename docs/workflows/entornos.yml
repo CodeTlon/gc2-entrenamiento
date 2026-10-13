@@ -1,0 +1,61 @@
+# Test efimero: enciende la base de test en Coolify, migra, corre E2E contra el preview de Vercel de la rama
+# `test` y la apaga al cerrar el PR. Esqueleto sin ejecutar: validar con una corrida real antes de confiar en el.
+#
+# Configuracion (la hace el usuario):
+#   Secrets del repo: COOLIFY_URL, COOLIFY_TOKEN, TEST_DB_UUID, TEST_DB_HOST, TEST_DB_PORT, TEST_DATABASE_URL, TEST_URL
+#   TEST_URL = URL estable del preview de la rama `test` en Vercel (el preview usa TEST_DATABASE_URL en sus env de Preview).
+name: Entornos
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: entornos-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+  COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+  TEST_DB_UUID: ${{ secrets.TEST_DB_UUID }}
+
+jobs:
+  test-env:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - name: Encender base de test
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/databases/$TEST_DB_UUID/start"
+      - name: Esperar a que Postgres acepte conexiones
+        run: |
+          for i in $(seq 1 36); do
+            pg_isready -h "${{ secrets.TEST_DB_HOST }}" -p "${{ secrets.TEST_DB_PORT }}" && exit 0
+            sleep 5
+          done
+          echo "La base de test no levanto"; exit 1
+      - name: Migraciones contra test
+        run: npx drizzle-kit migrate
+        env: { DATABASE_URL: "${{ secrets.TEST_DATABASE_URL }}" }
+      - name: E2E contra el preview de test
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+        env: { BASE_URL: "${{ secrets.TEST_URL }}" }
+
+  apagar-test:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apagar base de test
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
+            "$COOLIFY_URL/api/v1/databases/$TEST_DB_UUID/stop" || true

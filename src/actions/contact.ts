@@ -1,8 +1,9 @@
 'use server'
 
 import { z } from 'zod'
-import { createSupabaseServiceClient } from '@/lib/supabase'
-import { Resend } from 'resend'
+import { db } from '@/lib/db'
+import { contactLeads } from '@/db/schema'
+import { sendMail } from '@/lib/mail'
 
 const contactSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -52,10 +53,10 @@ export async function submitContact(
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   }
 
-  // Save to Supabase
+  // Guardar el lead en la base
+  let leadSaved = false
   try {
-    const supabase = createSupabaseServiceClient()
-    const { error: dbError } = await supabase.from('contact_leads').insert({
+    await db.insert(contactLeads).values({
       nombre: data.nombre,
       email: data.email,
       telefono: data.telefono,
@@ -65,25 +66,19 @@ export async function submitContact(
       mensaje: data.mensaje,
       coach: coach || null,
     })
-
-    if (dbError) {
-      console.error('Supabase insert error:', dbError)
-      // Don't fail — try to send email anyway
-    }
+    leadSaved = true
   } catch (err) {
+    // No fallamos: igual intentamos mandar el email
     console.error('DB error:', err)
   }
 
-  // Send email via Resend
+  // Email vía Resend (sendMail aplica el sandbox de correo en APP_ENV=test)
+  let mailSent = false
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const fromName = process.env.RESEND_FROM_NAME || 'GC2 Entrenamiento'
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
     const toEmail = process.env.COMPANY_EMAIL || 'gc2entrenamiento@gmail.com'
 
-    await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: [toEmail],
+    mailSent = await sendMail({
+      to: toEmail,
       replyTo: data.email,
       subject: `Nueva Consulta${coach ? ` — ${coach}` : ''}: ${data.servicio || 'Consulta General'} — ${data.nombre}`,
       html: `
@@ -108,8 +103,16 @@ export async function submitContact(
       `,
     })
   } catch (err) {
-    console.error('Resend error:', err)
-    // Email failed but DB may have saved — still return success
+    console.error('Mail error:', err)
+    // Falló el email pero la base pudo guardar: igual devolvemos success
+  }
+
+  // Si no se guardó ni se envió nada, no le decimos al usuario que salió bien.
+  if (!leadSaved && !mailSent) {
+    return {
+      success: false,
+      error: 'No pudimos enviar tu consulta. Intentá de nuevo en unos minutos o escribinos por WhatsApp.',
+    }
   }
 
   return { success: true, error: null }

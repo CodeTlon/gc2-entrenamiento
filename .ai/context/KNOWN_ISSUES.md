@@ -1,5 +1,8 @@
 # KNOWN_ISSUES
 
+> **2026-10-13:** el hallazgo CRÍTICO (`.env.local` apuntando a producción) queda cerrado por diseño en `feature/dev2-backend-propio`: dev usa Postgres local en Docker (`docker compose`), test y prod son bases separadas en Coolify y no hay credenciales de Supabase en el flujo de desarrollo. Hasta mergear y cortar, el `main` actual sigue con Supabase y el riesgo aplica.
+
+
 Severidad explícita. Generado 2026-09-18 por auditoría de evidencia real (no se mutó ningún dato de producción para producir este archivo). Ningún fix se aplicó todavía — son hallazgos con remediación propuesta, no cambios ya hechos.
 
 ---

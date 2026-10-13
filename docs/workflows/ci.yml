@@ -1,0 +1,36 @@
+name: CI
+# Gate de calidad para test y produccion: PR a `test` o `main` (y push a esas ramas).
+# dev no corre CI (se verifica en local con docker compose).
+on:
+  pull_request:
+    branches: [test, main]
+  push:
+    branches: [test, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+      # Sin DATABASE_URL real: src/lib/db.ts usa un placeholder y no consulta durante el build.
+      - run: npm run build
+        env:
+          BETTER_AUTH_SECRET: ci_placeholder_secret_ci_placeholder_secret
+          BETTER_AUTH_URL: http://localhost:3000
+          RESEND_API_KEY: re_placeholder
+      # Se corta en critical: hay highs conocidos sin fix (ver .ai/context/KNOWN_ISSUES.md). Subir a high al resolverlos.
+      - run: npm audit --omit=dev --audit-level=critical

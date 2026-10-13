@@ -1,5 +1,8 @@
 # ARCHITECTURE — GC² Entrenamiento
 
+> **Actualización 2026-10-13 (feature/dev2-backend-propio, aún sin mergear a main):** Supabase fue reemplazado por Postgres (Drizzle) + Better Auth + S3/R2. Donde este archivo mencione Supabase, RLS, `supabase-server.ts`, `/auth/callback` o `/auth/confirm`, ver `ARCHITECTURE.md` (raíz) y `docs/environments.md`. Producción sigue en Supabase hasta el corte.
+
+
 ## Capas
 
 - **Next.js 16 App Router**, RSC por defecto, Turbopack. React 19. TypeScript estricto (`@/* → src/*`).

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { Users, ListChecks, FileText, Tag, Settings, ArrowRight, LayoutGrid, Inbox } from 'lucide-react'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { count } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { coaches, plans, posts, contactLeads } from '@/db/schema'
 
 const SECTIONS = [
   {
@@ -48,21 +50,13 @@ const SECTIONS = [
 ]
 
 export default async function DashboardHome() {
-  const supabase = await createSupabaseServerClient()
-
-  const serviceSupabase = (await import('@/lib/supabase')).createSupabaseServiceClient()
-
-  const [
-    { count: coachesCount },
-    { count: plansCount },
-    { count: postsCount },
-    { count: leadsCount },
-  ] = await Promise.all([
-    supabase.from('coaches').select('*', { count: 'exact', head: true }),
-    supabase.from('plans').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
-    serviceSupabase.from('contact_leads').select('*', { count: 'exact', head: true }),
-  ])
+  const [[{ n: coachesCount }], [{ n: plansCount }], [{ n: postsCount }], [{ n: leadsCount }]] =
+    await Promise.all([
+      db.select({ n: count() }).from(coaches),
+      db.select({ n: count() }).from(plans),
+      db.select({ n: count() }).from(posts),
+      db.select({ n: count() }).from(contactLeads),
+    ])
 
   return (
     <div className="space-y-8">

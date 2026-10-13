@@ -3,7 +3,10 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, FileText } from 'lucide-react'
-import { createSupabaseClient } from '@/lib/supabase'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts } from '@/db/schema'
+import { getPublishedPostBySlug } from '@/db/queries'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
 import type { Coach } from '@/lib/content'
@@ -29,25 +32,16 @@ interface Post {
 }
 
 async function getPost(slug: string): Promise<Post | null> {
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('posts')
-    .select('id, title, slug, excerpt, content, cover_image, youtube_url, attachment_url, video_url, created_at, post_authors(coaches(*))')
-    .eq('slug', slug)
-    .eq('published', true)
-    .single()
-
-  if (error) return null
-  return data as unknown as Post
+  try {
+    return (await getPublishedPostBySlug(slug)) as unknown as Post | null
+  } catch (err) {
+    console.error('Post fetch error:', err)
+    return null
+  }
 }
 
 async function getAllSlugs(): Promise<{ slug: string }[]> {
-  const supabase = createSupabaseClient()
-  const { data } = await supabase
-    .from('posts')
-    .select('slug')
-    .eq('published', true)
-  return data ?? []
+  return db.select({ slug: posts.slug }).from(posts).where(eq(posts.published, true))
 }
 
 export async function generateStaticParams() {

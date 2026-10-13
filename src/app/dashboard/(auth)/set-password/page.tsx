@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
+import { authClient } from '@/lib/auth-client'
 
 export default function SetPasswordPage() {
   const router = useRouter()
-  const [ready, setReady] = useState(false)
-  const [linkExpired, setLinkExpired] = useState(false)
+  // Better Auth redirige acá con ?token=... (o ?error=INVALID_TOKEN si el link venció).
+  const [token, setToken] = useState<string | null | undefined>(undefined)
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState('')
@@ -16,35 +16,18 @@ export default function SetPasswordPage() {
   const [done, setDone] = useState(false)
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) setReady(true)
-    })
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setReady(true)
-    })
-    // Si en unos segundos no hubo sesión, el link era inválido/expiró:
-    // evitamos quedar colgados eternamente en "Verificando link…".
-    const timeout = setTimeout(() => {
-      supabase.auth.getSession().then(({ data }) => {
-        if (!data.session) setLinkExpired(true)
-      })
-    }, 6000)
-    return () => {
-      subscription.unsubscribe()
-      clearTimeout(timeout)
-    }
+    const params = new URLSearchParams(window.location.search)
+    setToken(params.get('error') ? null : params.get('token'))
   }, [])
+  const ready = !!token
+  const linkExpired = token === null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
 
-    if (password.length < 6) {
-      setError('Mínimo 6 caracteres.')
+    if (password.length < 8) {
+      setError('Mínimo 8 caracteres.')
       return
     }
     if (password !== confirm) {
@@ -53,20 +36,16 @@ export default function SetPasswordPage() {
     }
 
     setSubmitting(true)
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-    const { error: updateError } = await supabase.auth.updateUser({ password })
+    const { error: resetError } = await authClient.resetPassword({ newPassword: password, token: token! })
 
-    if (updateError) {
-      setError('No se pudo guardar la contraseña. Intentá de nuevo.')
+    if (resetError) {
+      setError('No se pudo guardar la contraseña. El link pudo haber expirado.')
       setSubmitting(false)
       return
     }
 
     setDone(true)
-    setTimeout(() => router.replace('/dashboard'), 2000)
+    setTimeout(() => router.replace('/dashboard/login'), 2000)
   }
 
   const wrapStyle: React.CSSProperties = {
@@ -96,7 +75,7 @@ export default function SetPasswordPage() {
             <>
               <p className="text-white font-bold text-base">El link no es válido o expiró</p>
               <p className="text-white/55 text-sm mt-2 mb-5">
-                Pedí un link nuevo o reenviá la invitación desde el panel.
+                Pedí un link nuevo para crear tu contraseña.
               </p>
               <Link href="/dashboard/forgot-password" className="btn btn--primary w-full justify-center">
                 Pedir un link nuevo
@@ -115,7 +94,7 @@ export default function SetPasswordPage() {
       <div style={wrapStyle}>
         <div style={{ ...cardStyle, textAlign: 'center' }}>
           <p className="text-accent font-bold text-lg">¡Contraseña creada!</p>
-          <p className="text-white/60 text-sm mt-2">Ingresando al dashboard…</p>
+          <p className="text-white/60 text-sm mt-2">Redirigiendo al login…</p>
         </div>
       </div>
     )

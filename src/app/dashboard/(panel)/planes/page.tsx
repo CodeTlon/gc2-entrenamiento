@@ -1,17 +1,24 @@
 import Link from 'next/link'
 import { Plus, Tag } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { plans as plansTable, planCategories } from '@/db/schema'
 import type { Plan, PlanCategoryItem } from '@/lib/content'
 
 export default async function PlansListPage() {
-  const supabase = await createSupabaseServerClient()
-  const [{ data: plansData }, { data: catsData }] = await Promise.all([
-    supabase.from('plans').select('*').order('display_order', { ascending: true }),
-    supabase.from('plan_categories').select('id, name, slug, display_order').order('display_order', { ascending: true }),
-  ])
-  const plans = (plansData ?? []) as Plan[]
-  const categories = (catsData ?? []) as PlanCategoryItem[]
+  const [plans, categories] = (await Promise.all([
+    db.select().from(plansTable).orderBy(asc(plansTable.display_order)),
+    db
+      .select({
+        id: planCategories.id,
+        name: planCategories.name,
+        slug: planCategories.slug,
+        display_order: planCategories.display_order,
+      })
+      .from(planCategories)
+      .orderBy(asc(planCategories.display_order)),
+  ])) as [Plan[], PlanCategoryItem[]]
   const grouped = categories.map((cat) => ({
     cat,
     plans: plans.filter((p) => p.plan_category_id === cat.id),

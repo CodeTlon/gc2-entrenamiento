@@ -6,7 +6,7 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 
 - **Next.js 16** (App Router, RSC, Turbopack) + React 19 + **TypeScript** (strict)
 - **Tailwind CSS 3** (Barlow + Barlow Condensed)
-- **Supabase** (PostgreSQL + RLS + Auth + Storage)
+- **PostgreSQL** (Coolify) + **Drizzle ORM** · **Better Auth** (login del dashboard) · **S3/Cloudflare R2** (archivos)
 - **Resend** (formulario de contacto) · **Zod** + Server Actions
 - **Playwright** (E2E) · Deploy en **Vercel**
 
@@ -14,7 +14,9 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 
 ```bash
 npm install
-cp .env.example .env.local   # completar credenciales Supabase + Resend
+cp .env.example .env.development.local   # completar BETTER_AUTH_SECRET, S3 y Resend
+docker compose up -d && npx drizzle-kit migrate   # Postgres local (127.0.0.1:42432)
+npx tsx --env-file=.env.development.local scripts/crear-usuario.ts <email> <nombre> admin
 npm run dev                  # http://localhost:3000
 ```
 
@@ -30,7 +32,7 @@ npm run test:e2e:ui  # Playwright UI mode
 
 ## Variables de entorno
 
-Ver `.env.example`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `COMPANY_EMAIL`, `NEXT_PUBLIC_GA_ID` (opcional).
+Ver `.env.example`: `DATABASE_URL`, `BETTER_AUTH_SECRET`/`BETTER_AUTH_URL`, `S3_*`, `RESEND_API_KEY`, `COMPANY_EMAIL`, `APP_ENV`, `MAIL_SANDBOX_TO` (solo test), `NEXT_PUBLIC_GA_ID` (opcional). Entornos y ramas: `docs/environments.md`.
 
 ## Estructura
 
@@ -39,7 +41,9 @@ Ver `.env.example`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 - `src/lib/content.ts` — fetchers con fallbacks tipados (fuente de datos de páginas públicas)
 - `src/actions/` — Server Actions (mutaciones + contacto)
 - `src/proxy.ts` — auth gate de `/dashboard` (era `middleware.ts`, renombrado por Next 16)
-- `supabase/migrations/` — migraciones SQL (001–009)
+- `drizzle/` — migraciones SQL versionadas (`drizzle-kit generate` / `migrate`); `src/db/schema.ts` es el schema
+- `scripts/migracion/` — revisión de schema/backup de Supabase y copia de storage (solo lectura sobre Supabase)
+- `scripts/backup/` — backup y prueba de restauración (Coolify -> B2), ver `docs/BACKUPS.md`
 
 Ver [`ARCHITECTURE.md`](./ARCHITECTURE.md) para el mapa de dónde tocar cada cosa.
 
@@ -56,6 +60,7 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| v2.0.0 | 2026-10-13 | **Salida de Supabase** (sin cortar producción todavía): Postgres + Drizzle (`src/db/schema.ts`, migración `drizzle/0000_baseline.sql`), Better Auth (sin registro público; recuperación de contraseña por Resend), archivos en S3/R2 con subida directa por URL firmada (`/api/upload`). Se eliminan `@supabase/*`, `resend` (el envío usa `src/lib/mail.ts` con sandbox por entorno), `/auth/callback`, `/auth/confirm`, `InviteHandler` y `supabase/`. Flujo de ramas dev > test > main, CI para test y main, workflows de entornos y producción (esqueletos sin ejecutar), `scripts/migracion/`. Build verde + 45/45 E2E sin base (fallbacks); **no verificado contra una base real**. |
 | v1.4.0 | 2026-07-19 | Recovery de contraseña vía Resend en vez del email nativo de Supabase (rate limit bajo en free tier, llegaba lento o a spam): `forgotPasswordAction` genera el link con la Admin API (`service_role`) y lo envía por Resend, reusando `/auth/confirm` (`verifyOtp`). Video propio insertable en el cuerpo de un post (nodo custom de TipTap + subida directa a Storage, límite 15MB). ISR (`revalidate = 3600`) en home, blog, blog/[slug] y planes. Build verde + 45/45 E2E. |
 | v1.3.0 | 2026-07-18 | Modal "más información" en planes (`description_long` + `PlanModal.tsx`, mismo patrón que coaches). Export de artículos a Instagram Story (`@vercel/og`, PNG 1080x1920 server-side, botón en el editor de post). PDF y video propio adjuntables en posts (subida directa al bucket desde el navegador, bypass del Server Action por el límite de body de Vercel). Límites de upload más generosos y diferenciados por tipo (imagen 20MB, PDF 10MB, video 60MB; antes 12MB fijo). Build verde + 45/45 E2E. |
 | v1.2.1 | 2026-07-11 | Seguridad + perf percibida: headers de seguridad en `next.config.mjs` (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`); fix RLS (`post_authors` no aceptaba escrituras del dashboard, migración `010`); fix open redirect en `/auth/callback` y `/auth/confirm` (`next` sin validar); nuevo `Skeleton` compartido para los `loading.tsx` del panel + `error.tsx`/`global-error.tsx`. Build verde. |

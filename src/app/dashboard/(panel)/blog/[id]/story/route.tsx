@@ -1,15 +1,21 @@
 import { ImageResponse } from '@vercel/og'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts } from '@/db/schema'
+import { isUuid } from '@/db/queries'
+import { getUser } from '@/lib/session'
 import { parseFocal } from '@/lib/image-focal'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
-  const { data: post } = await supabase
-    .from('posts')
-    .select('title, slug, cover_image')
-    .eq('id', id)
-    .single()
+  // Esta ruta queda fuera del layout del panel: valida la sesión acá.
+  if (!(await getUser())) return new Response('No autenticado', { status: 401 })
+  if (!isUuid(id)) return new Response('No encontrado', { status: 404 })
+  const [post] = await db
+    .select({ title: posts.title, slug: posts.slug, cover_image: posts.cover_image })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1)
 
   if (!post) return new Response('No encontrado', { status: 404 })
 

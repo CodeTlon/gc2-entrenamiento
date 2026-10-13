@@ -50,3 +50,7 @@ gc2-site/
 # Misc
 .cache/
 .turbo/
+
+# Migracion Supabase -> backend propio (dumps y credenciales, nunca al repo)
+scripts/migracion/out/
+scripts/migracion/.env.migracion

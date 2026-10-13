@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
-import { createSupabaseClient } from '@/lib/supabase'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { categories as categoriesTable } from '@/db/schema'
+import { listPublishedPostSummaries } from '@/db/queries'
 import { getSiteSettings } from '@/lib/content'
 import MiniHero from '@/components/ui/MiniHero'
 import BlogList, { type PostSummary, type Category } from './BlogList'
@@ -13,25 +16,19 @@ export const metadata: Metadata = {
 }
 
 async function getData(): Promise<{ posts: PostSummary[]; categories: Category[] }> {
-  const supabase = createSupabaseClient()
-  const [postsRes, catsRes] = await Promise.all([
-    supabase
-      .from('posts')
-      .select('id, title, slug, excerpt, cover_image, youtube_url, created_at, post_categories(category_id, categories(name, slug)), post_authors(coaches(name, photo_url))')
-      .eq('published', true)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('categories')
-      .select('id, name, slug')
-      .order('display_order', { ascending: true }),
-  ])
-
-  if (postsRes.error) console.error('Blog posts fetch error:', postsRes.error)
-  if (catsRes.error) console.error('Categories fetch error:', catsRes.error)
-
-  return {
-    posts: (postsRes.data ?? []) as unknown as PostSummary[],
-    categories: (catsRes.data ?? []) as unknown as Category[],
+  // El sitio público renderiza aunque la DB no responda (lista vacía).
+  try {
+    const [posts, categories] = await Promise.all([
+      listPublishedPostSummaries(),
+      db
+        .select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug })
+        .from(categoriesTable)
+        .orderBy(asc(categoriesTable.display_order)),
+    ])
+    return { posts: posts as unknown as PostSummary[], categories }
+  } catch (err) {
+    console.error('Blog fetch error:', err)
+    return { posts: [], categories: [] }
   }
 }
 

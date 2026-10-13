@@ -1,5 +1,7 @@
 import Link from 'next/link'
-import { createSupabaseServiceClient } from '@/lib/supabase'
+import { count, desc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { contactLeads } from '@/db/schema'
 import PageHeader from '@/components/dashboard/PageHeader'
 import { formatDate } from '@/lib/utils'
 import { Mail, Phone, MapPin, MessageSquare, User, Tag, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -25,19 +27,24 @@ export default async function LeadsPage({
   searchParams: Promise<{ page?: string }>
 }) {
   const { page: pageParam } = await searchParams
-  const page = Math.max(1, Number(pageParam ?? 1))
-  const from = (page - 1) * PAGE_SIZE
-  const to = from + PAGE_SIZE - 1
+  const parsedPage = Math.floor(Number(pageParam ?? 1))
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1
+  const offset = (page - 1) * PAGE_SIZE
 
-  const supabase = createSupabaseServiceClient()
-  const { data, error, count } = await supabase
-    .from('contact_leads')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(from, to)
-
-  const leads: Lead[] = data ?? []
-  const total = count ?? 0
+  let leads: Lead[] = []
+  let total = 0
+  let error: { message: string } | null = null
+  try {
+    const [rows, [{ n }]] = await Promise.all([
+      db.select().from(contactLeads).orderBy(desc(contactLeads.created_at)).limit(PAGE_SIZE).offset(offset),
+      db.select({ n: count() }).from(contactLeads),
+    ])
+    leads = rows
+    total = n
+  } catch (e) {
+    console.error('[leads]', e)
+    error = { message: 'no se pudo leer la base de datos.' }
+  }
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (

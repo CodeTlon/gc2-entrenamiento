@@ -1,11 +1,11 @@
 import PageHeader from '@/components/dashboard/PageHeader'
 import CoachForm from '../CoachForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { db } from '@/lib/db'
+import { coaches } from '@/db/schema'
 
 export default async function NewCoachPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase.from('coaches').select('display_order')
-  const takenOrders = data?.map((c) => c.display_order as number) ?? []
+  const data = await db.select({ display_order: coaches.display_order }).from(coaches)
+  const takenOrders = data.map((c) => c.display_order)
 
   return (
     <div>

@@ -2,21 +2,24 @@ import { notFound } from 'next/navigation'
 import PageHeader from '@/components/dashboard/PageHeader'
 import DeleteButton from '@/components/dashboard/DeleteButton'
 import PlanForm from '../PlanForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc, eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { plans, planCategories } from '@/db/schema'
+import { isUuid } from '@/db/queries'
 import { deletePlanAction } from '@/actions/plans'
 import type { Plan } from '@/lib/content'
 
 export default async function EditPlanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
-  const [{ data, error }, { data: cats }] = await Promise.all([
-    supabase.from('plans').select('*').eq('id', id).single(),
-    supabase
-      .from('plan_categories')
-      .select('id, name, slug')
-      .order('display_order', { ascending: true }),
+  if (!isUuid(id)) notFound()
+  const [[data], cats] = await Promise.all([
+    db.select().from(plans).where(eq(plans.id, id)).limit(1),
+    db
+      .select({ id: planCategories.id, name: planCategories.name, slug: planCategories.slug })
+      .from(planCategories)
+      .orderBy(asc(planCategories.display_order)),
   ])
-  if (error || !data) notFound()
+  if (!data) notFound()
   const plan = data as Plan
 
   return (
