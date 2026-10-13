@@ -1,0 +1,54 @@
+# Release a produccion: push a `main`. Gate manual (Environment `production` con required reviewers) +
+# backup reciente verificado en B2 + migraciones + smoke test. Esqueleto sin ejecutar: validar con una corrida real.
+#
+# El front se publica por la integracion Git de Vercel (no por este workflow). Por eso las migraciones deben ser
+# compatibles hacia atras (agregar antes de usar; drop/rename en dos releases): migran en paralelo al deploy de Vercel.
+# Para orden estricto, desactivar el auto-deploy de Vercel y deployar desde aca con la CLI.
+#
+# Configuracion (la hace el usuario):
+#   Variable de repo:         PRODUCCION_HABILITADA=true (llave: mientras no sea 'true' el workflow no hace nada)
+#   Environment `production`: required reviewers + vars PROD_URL, BACKUP_BUCKET, BACKUP_PROJECT
+#                             + secrets PROD_DATABASE_URL, B2_READ_KEY_ID, B2_READ_APP_KEY (clave de solo lectura)
+name: Produccion
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: produccion
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ vars.PRODUCCION_HABILITADA == 'true' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - name: Instalar rclone y jq
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone jq
+      - name: Verificar backup reciente de la base de produccion en B2
+        env:
+          RCLONE_CONFIG_B2_TYPE: b2
+          RCLONE_CONFIG_B2_ACCOUNT: ${{ secrets.B2_READ_KEY_ID }}
+          RCLONE_CONFIG_B2_KEY: ${{ secrets.B2_READ_APP_KEY }}
+        run: |
+          ruta="b2:${{ vars.BACKUP_BUCKET }}/prod/${{ vars.BACKUP_PROJECT }}/postgres"
+          recientes=$(rclone lsjson "$ruta" --recursive --files-only --max-age 24h)
+          dumps=$(echo "$recientes" | jq '[.[] | select(.Name | endswith(".dump"))] | length')
+          sums=$(echo "$recientes" | jq '[.[] | select(.Name | endswith(".dump.sha256"))] | length')
+          [ "$dumps" -ge 1 ] || { echo "::error::no hay un .dump de las ultimas 24 h en $ruta"; exit 1; }
+          [ "$sums" -ge 1 ] || { echo "::error::el backup reciente no tiene su .sha256"; exit 1; }
+      - run: npm ci
+      - name: Migraciones contra produccion
+        run: npx drizzle-kit migrate
+        env: { DATABASE_URL: "${{ secrets.PROD_DATABASE_URL }}" }
+      - name: Smoke test
+        run: |
+          curl -fsS --retry 10 --retry-delay 6 --retry-connrefused "${{ vars.PROD_URL }}/api/health"

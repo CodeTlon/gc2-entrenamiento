@@ -19,8 +19,8 @@ Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 - **React 19** — `react` ^19.2.4
 - **TypeScript** estricto, alias `@/* → src/*`
 - **Tailwind CSS 3** — escala de colores y tokens definidos en `tailwind.config.ts`
-- **Supabase** (`@supabase/ssr` + `@supabase/supabase-js`) — Postgres + Auth + Storage (bucket `media`)
-- **Resend** — envío de emails del formulario de contacto
+- **PostgreSQL** (Coolify) + **Drizzle ORM** (`src/db/schema.ts`, migraciones en `drizzle/`) · **Better Auth** (login/recovery del dashboard) · **S3/Cloudflare R2** (`@aws-sdk/client-s3`, archivos). Supabase ya no se usa
+- **Resend** — envío de emails (leads y recuperación) vía `src/lib/mail.ts`, con sandbox por entorno
 - **Zod** — validación de inputs en server actions
 - **lucide-react** — iconos
 - **slugify** — generación de slugs de blog
@@ -82,35 +82,25 @@ src/
     categories.ts            # CRUD categorías de blog
     plan-categories.ts       # CRUD categorías de planes
   lib/
-    supabase.ts              # Clientes browser/anon y service-role (no SSR)
-    supabase-server.ts       # createSupabaseServerClient (cookies SSR) + admin client
+    db.ts                    # Drizzle + pg (pool chico, placeholder para build sin DB)
+    auth.ts / auth-client.ts # Better Auth (servidor / cliente)
+    session.ts               # getUser / requireUser (validación real de sesión)
+    storage.ts               # S3: putObject, deleteObject, presignPut, keyFromUrl
+    mail.ts                  # sendMail + sandbox por APP_ENV
     content.ts               # Tipos + getters (getSiteSettings, getCoaches, getPlans*) con FALLBACKs
     constants.ts             # Datos hardcodeados de fallback (coaches, planes, contacto, imágenes)
     youtube.ts               # Helper para embeds de YouTube en posts
     upload-limits.ts         # Límites de tamaño por mime (imagen/PDF/video) — uploadMediaAction y FileUpload
     client-upload.ts         # uploadDirectToStorage: sube al bucket `media` desde el browser, bypass del Server Action
     utils.ts
-supabase/
-  migrations/
-    001_contact_leads.sql
-    002_blog_posts.sql
-    003_editorial.sql        # site_settings, coaches, plans + RLS + bucket `media` + seed
-    004_categories.sql       # categorías de blog (tabla `categories`)
-    005_plan_categories.sql  # categorías de planes (tabla `plan_categories`, col `plan_category_id` en `plans`)
-    006_posts_coach.sql      # columna `coach_id` en `posts` → FK a `coaches`
-    007_post_categories.sql  # tabla N:N `post_categories` (post_id, category_id) — multi-categoría por post
-    008_post_authors.sql     # tabla N:N `post_authors` (post_id, coach_id) — multi-coach por post
-    008_seed_locations.sql   # seed de `site_settings.locations` (sedes)
-    009_contact_leads_coach.sql  # columna `coach` en `contact_leads`
-    010_post_authors_auth_write.sql  # fix RLS: post_authors solo tenía policy de escritura para service_role
-    011_plans_description.sql        # columna `description_long` en `plans` (modal "más información")
-    012_posts_attachments.sql        # columnas `attachment_url` (PDF) y `video_url` (video propio) en `posts`
+db/schema.ts                 # (en src/) schema Drizzle; drizzle/ = migraciones SQL; src/db/queries.ts = consultas compartidas
+scripts/                     # migracion/ (revisión Supabase), backup/, crear-usuario.ts, seed-dev.ts
 docs/                        # Documentación adicional (README, deployment, technical-docs, maintenance)
 public/images/               # Assets estáticos
 tests/                       # Playwright e2e
 ```
 
-## Modelo de datos (Supabase)
+## Modelo de datos (PostgreSQL + Drizzle)
 
 - **`contact_leads`** — leads del formulario de contacto del sitio público.
 - **`posts`** — artículos de blog (`title`, `slug`, `excerpt`, `content`, `cover_image`, `youtube_url`, `video_url` *(video propio, alternativa a youtube_url)*, `attachment_url` *(PDF adjunto)*, `published`, `author_id`, `coach_id` FK→coaches, `category_id` FK→categories *(legacy, no se actualiza desde el form)*, `created_at`, `updated_at`).
@@ -122,7 +112,7 @@ tests/                       # Playwright e2e
 - **`plan_categories`** — categorías de planes (`name`, `slug`, `display_order`).
 - **Storage:** bucket `media` para imágenes subidas desde el dashboard.
 
-**RLS:** lectura pública en todas las tablas de contenido; escritura solo para usuarios `authenticated`. El dashboard depende de Supabase Auth. Todas las tablas escriben vía `createSupabaseServerClient()` (rol `authenticated`, RLS real) salvo `contact_leads` (lee/escribe con el cliente `service_role`, ver `src/actions/contact.ts` y `dashboard/leads/page.tsx`) — cuando agregues una tabla nueva escrita desde el dashboard, la policy de escritura tiene que ser para `authenticated`, no solo `service_role` (bug real: `010_post_authors_auth_write.sql` arregló justo esto en `post_authors`).
+**Autorización:** sin RLS. Toda escritura del dashboard exige `requireUser()` (`src/lib/session.ts`) en la acción — no quitarlo; `contact_leads` solo se inserta desde `contactAction` con validación Zod. Las claves de `src/db/schema.ts` son snake_case para que las filas mantengan la forma que consumen los componentes.
 
 ## Patrones y convenciones
 
@@ -131,29 +121,30 @@ tests/                       # Playwright e2e
 - **Fallbacks de contenido:** `src/lib/content.ts` siempre devuelve datos. Si Supabase no responde o las env vars son placeholder, usa `FALLBACK_*` desde `src/lib/constants.ts`. **No romper esta cadena**: el sitio tiene que renderizar aunque no haya DB.
 - **Auth gate:** `src/proxy.ts` (antes `middleware.ts`) protege `/dashboard/**`. Se renombró a `proxy.ts` por Next 16.
 - **Estilos:** Tailwind + componentes utilitarios en `globals.css` (`.btn`, `.btn--primary`, `.plan-card`, `.field-input`, `.section-title`, `.gradient-text`, `.reveal`, etc.). Paleta `blue-900..blue-100` + `accent` (`#38BDF8`). Spacing custom: `section`, `gap-sm/md/lg/xl`.
-- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y `*.supabase.co`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB).
+- **Imágenes:** siempre `next/image`. AVIF + WebP, `sharp` instalado. Remote patterns: `images.unsplash.com` y el host de `S3_PUBLIC_BASE_URL`. **Subida desde el dashboard:** `uploadMediaAction` (`src/actions/settings.ts`) optimiza con sharp antes de guardar — resize a 2000px máx, conversión a WebP q=82, EXIF rotation aplicada y metadata stripped. SVG y GIF se suben tal cual. Límites por mime en `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB).
 - **PDF / video propio (posts):** `uploadMediaAction` pasa por un Server Action, y Vercel corta el body real en ~4.5MB antes de llegar al chequeo de tamaño — muy por debajo de los límites de PDF/video. Por eso `FileUpload` (`src/components/dashboard/Field.tsx`) usa `uploadDirectToStorage` (`src/lib/client-upload.ts`, `createBrowserClient` de `@supabase/ssr`) para subir directo al bucket `media` desde el navegador, bypasseando el Server Action. La policy RLS de `storage.objects` ya acepta `insert` de `authenticated` (`003_editorial.sql`), no requiere cambios de storage.
-- **Export a Instagram Story:** `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` genera un PNG 1080x1920 con `@vercel/og` (`ImageResponse`) a partir del post — corre 100% server-side para evitar CORS al leer la portada desde `*.supabase.co`.
+- **Export a Instagram Story:** `src/app/dashboard/(panel)/blog/[id]/story/route.tsx` genera un PNG 1080x1920 con `@vercel/og` (`ImageResponse`) a partir del post — corre 100% server-side para evitar CORS al leer la portada desde el bucket S3.
 - **SEO:** metadata + JSON-LD `SportsOrganization` en `src/app/layout.tsx`. `sitemap.ts` y `robots.ts` en App Router. Redirects 301 desde URLs `.php` legacy en `next.config.mjs`.
 - **i18n:** todo en español (es_AR). Mantenelo así.
 - **Comentarios en código:** los archivos del proyecto usan comentarios en español cuando son necesarios. No agregar comentarios obvios.
 
 ## Variables de entorno
 
-Definidas en `.env.local` (ver `.env.example`):
+Definidas en `.env.development.local` / `.env.test.local` / `.env.production.local` (ver `.env.example` y `docs/environments.md`):
 
 | Var | Uso |
 |---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Cliente Supabase (browser + server) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cliente Supabase anónimo |
-| `SUPABASE_SERVICE_ROLE_KEY` | Cliente admin (solo server) |
+| `DATABASE_URL` | Postgres (`sslmode=require` en Coolify) |
+| `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Auth (secret distinto por entorno) |
+| `S3_ENDPOINT` / `S3_BUCKET` / `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` / `S3_PUBLIC_BASE_URL` / `S3_REGION` | Archivos (R2) |
+| `APP_ENV` / `MAIL_SANDBOX_TO` | Entorno y sandbox de correo (obligatorio en test, prohibido en prod) |
 | `RESEND_API_KEY` | Envío de emails |
 | `RESEND_FROM_NAME` / `RESEND_FROM_EMAIL` | Remitente |
 | `COMPANY_EMAIL` | Destino de leads |
 | `NEXT_PUBLIC_GA_ID` | Google Analytics (opcional) |
 | `NEXT_PUBLIC_SITE_URL` | Base URL para metadata (opcional) |
 
-Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcionando (sin persistir leads ni mandar emails).
+Si falta `DATABASE_URL` o la base no responde, `content.ts` cae a fallbacks y el sitio sigue funcionando (sin persistir leads ni mandar emails).
 
 ## Scripts
 
@@ -174,6 +165,7 @@ Si faltan/son placeholder, `content.ts` cae a fallbacks y el sitio sigue funcion
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-10-13 | feature/dev2-backend-propio | v2.0.0 — **Salida de Supabase** a Postgres (Coolify) + Drizzle + Better Auth + S3/R2; front sigue en Vercel. Ramas `dev` y `test` creadas como espejo de `main`; CI para test y main; `scripts/migracion/` para revisar schema/backup/storage. Detalle en README (Changelog) y `docs/environments.md`. Build + 45/45 E2E sin base; **sin verificar contra base real ni corte de producción**. |
 | 2026-07-19 | feat/recovery-resend-inline-video-isr | v1.4.0 — **Recovery de contraseña vía Resend**: `forgotPasswordAction` (`src/actions/auth.ts`) ya no usa `supabase.auth.resetPasswordForEmail` (rate limit bajo en free tier, el email llegaba lento o a spam) — genera el link con `admin.generateLink` (Admin API, `service_role`) y lo envía con Resend (mismo proveedor que el resto del sitio); el link apunta a `/auth/confirm` (`verifyOtp`) en vez de `/auth/callback` (PKCE) porque no hay `code_verifier` en el navegador del usuario, mismo motivo que los invites del panel. **Video propio inline en posts**: nodo custom de TipTap `InlineVideo` (no existe uno nativo, solo `@tiptap/extension-youtube`) en `PostForm.tsx` + botón "Video propio" que sube directo al bucket `media` vía `uploadDirectToStorage` — límite nuevo `MAX_INLINE_VIDEO_BYTES` (15MB, en `src/lib/upload-limits.ts`, más chico que el de "video propio" adjunto al post que sigue en 60MB). **ISR**: `export const revalidate = 3600` en home, `/blog`, `/blog/[slug]` y `/planes` — antes eran dinámicas en cada request. Build verde + 45/45 E2E (1 flake de timeout en `/contacto.php` no relacionado, pasó en rerun aislado). |
 | 2026-07-18 | feat/planes-modal-ig-story-blog-media | v1.3.0 — **Modal de planes**: `plans.description_long` (`011_plans_description.sql`) + `PlanModal.tsx` (patrón `CoachModal`/`Modal.tsx` genérico) + botón "Más información" en `PlanesContent.tsx` (extraído de `planes/page.tsx`, que ahora solo hace fetch). **Export a Instagram Story**: nueva dep `@vercel/og`; `dashboard/blog/[id]/story/route.tsx` genera un PNG 1080x1920 (título + portada + branding) server-side (evita CORS con `*.supabase.co`); botón "Exportar a Instagram" en el `PageHeader` de la edición de post. **PDF y video propio en posts**: `posts.attachment_url`/`video_url` (`012_posts_attachments.sql`); `FileUpload` (`Field.tsx`) sube directo al bucket `media` desde el browser vía `uploadDirectToStorage` (`client-upload.ts`, `createBrowserClient`) — bypassea el Server Action porque Vercel corta el body real en ~4.5MB, muy por debajo de los límites de PDF/video; la RLS de `storage.objects` ya permitía ese insert `authenticated`, sin migración de storage. **Límites de upload más generosos y por tipo** (antes 12MB fijo para todo): `src/lib/upload-limits.ts` (imagen 20MB, PDF 10MB, video 60MB) consumido por `uploadMediaAction` y `FileUpload`; `next.config.mjs` `bodySizeLimit` 15mb→20mb. Build verde + 45/45 E2E. |
 | 2026-07-11 | chore/security-headers-loading-states | v1.2.1 — Baseline de seguridad + perf percibida. **Headers** en `next.config.mjs` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`). **Fix RLS**: `post_authors` solo tenía policy de escritura para `service_role` — el dashboard escribe coautores de posts con el cliente de sesión (`authenticated`), así que los `insert`/`delete` fallaban silenciosamente bajo RLS (el código no revisaba el error de esa llamada puntual); migración `010_post_authors_auth_write.sql` agrega la policy que faltaba, mismo patrón que `post_categories`. **Fix open redirect**: `/auth/callback` y `/auth/confirm` redirigían a `${origin}${next}` sin validar `next` — un valor tipo `next=@evil.com/x` se parsea como userinfo y termina afuera del dominio justo después de un exchange de sesión válido; ahora `next` solo se acepta si empieza con `/dashboard` (mismo allowlist que ya usaba `signInAction`). **CORS**: revisado — no hay `app/api/**/route.ts`; las rutas `auth/callback` y `auth/confirm` no setean headers CORS (same-origin por default), sin cambios. **Progressive loading**: nuevo primitivo `Skeleton` (`src/components/dashboard/Skeleton.tsx`, mismo API que el `Skeleton` de shadcn/ui — el proyecto no tiene shadcn instalado) aplicado a los `loading.tsx` de nivel sección (`(panel)/`, `blog/`, `entrenadores/`, `planes/`, `categorias/`, `contacto/`, `contenido/`, `leads/`); ya existían `loading.tsx` para todas las subrutas de una sesión previa, no se tocaron los anidados (`nuevo/`, `[id]/`). Nuevos `error.tsx` (raíz y `dashboard/(panel)/`, este último mantiene el sidebar montado) + `global-error.tsx` (root layout). Build verde. Pendiente (fuera de este alcance, no tocado): el form de contacto sigue sin rate-limit/honeypot. |

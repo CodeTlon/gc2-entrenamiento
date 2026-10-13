@@ -8,7 +8,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: process.env.BASE_URL ?? 'http://localhost:3000',
+    // Permite usar un Chromium ya instalado (ej. /opt/playwright) si no coincide con la version de Playwright.
+    launchOptions: { executablePath: process.env.PW_CHROMIUM_PATH || undefined },
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -27,7 +29,8 @@ export default defineConfig({
       use: { viewport: { width: 1280, height: 800 } },
     },
   ],
-  webServer: {
+  // Con BASE_URL (test/preview) se prueba contra ese ambiente y no se levanta servidor local.
+  webServer: process.env.BASE_URL ? undefined : {
     command: 'npm run build && npm start',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,

@@ -23,7 +23,7 @@ Doctrina: `codetlon-cloud/.claude/modules/{backend-propio,entornos,migracion-sup
 | `05-copiar-storage.mjs` | Copia `media` a S3 conservando rutas; genera `out/reescribir-urls.sql` (dry-run por defecto) |
 | `06-usuarios.md` | Plan de usuarios de Auth |
 
-Baseline cruzado: el schema saneado del dump real se compara con el que resulta de `supabase/migrations/*.sql` saneadas (`node 02-sanear-dump.mjs <(cat ../../supabase/migrations/*.sql)`); toda diferencia es drift entre migraciones y produccion y hay que decidirla antes de congelar el schema de Drizzle.
+Baseline cruzado: el schema saneado del dump real se compara con el que resulta de `supabase/migrations/*.sql` saneadas (`git show main:supabase/migrations/<archivo>` de cada migración, concatenadas y pasadas por `node 02-sanear-dump.mjs` (las migraciones ya no están en esta rama; siguen en `main`)); toda diferencia es drift entre migraciones y produccion y hay que decidirla antes de congelar el schema de Drizzle.
 
 ## Checklist (del modulo)
 - [ ] Inventario hecho
@@ -33,3 +33,5 @@ Baseline cruzado: el schema saneado del dump real se compara con el que resulta 
 - [ ] Usuarios: plan de reset acordado
 - [ ] Backup de la base nueva con restauracion de prueba (`restore-test.sh`)
 - [ ] Supabase queda en solo lectura 1-2 semanas tras el corte
+
+Nota: `drizzle/0000_baseline.sql` se generó desde `src/db/schema.ts` (derivado de las migraciones 001-012). Antes del corte hay que compararlo con el schema real del dump de producción y corregir cualquier drift.

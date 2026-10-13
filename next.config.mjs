@@ -1,3 +1,8 @@
+// Host publico del bucket S3/R2 (S3_PUBLIC_BASE_URL) para next/image.
+const s3Host = (() => {
+  try { return new URL(process.env.S3_PUBLIC_BASE_URL ?? '').hostname } catch { return '' }
+})()
+
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 
@@ -21,7 +26,7 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 60,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: '*.supabase.co' },
+      ...(s3Host ? [{ protocol: 'https', hostname: s3Host }] : []),
       { protocol: 'https', hostname: 'img.youtube.com' },
       { protocol: 'https', hostname: 'i.ytimg.com' },
     ],
