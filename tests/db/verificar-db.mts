@@ -89,6 +89,24 @@ await check('Better Auth: alta + login + sesion + rate_limit table', async () =>
   assert.equal(session?.user.email, 'a@b.com')
   await assert.rejects(auth.api.signInEmail({ body: { email: 'a@b.com', password: 'mala' } }))
 })
+await check('Better Auth: usuario con hash bcrypt de Supabase entra con su contrasena y no con otra', async () => {
+  const bcrypt = (await import('bcryptjs')).default
+  const u = await ctx.internalAdapter.createUser({ email: 'legado@b.com', name: 'Legado', emailVerified: true, role: 'admin' }, { method: 'email-password' })
+  await ctx.internalAdapter.linkAccount({ userId: u.id, providerId: 'credential', accountId: u.id, password: bcrypt.hashSync('clave-de-supabase-1', 10) })
+  const res = await auth.api.signInEmail({ body: { email: 'legado@b.com', password: 'clave-de-supabase-1' }, asResponse: true })
+  assert.equal(res.status, 200)
+  await assert.rejects(auth.api.signInEmail({ body: { email: 'legado@b.com', password: 'clave-de-supabase-2' } }))
+  await assert.rejects(auth.api.signInEmail({ body: { email: 'legado@b.com', password: '' } }))
+})
+await check('Better Auth: un usuario bcrypt que restablece su contrasena pasa a scrypt', async () => {
+  await auth.api.requestPasswordReset({ body: { email: 'legado@b.com', redirectTo: '/dashboard/set-password' } })
+  const v = await pg.query<{ identifier: string }>("select identifier from verification where identifier like 'reset-password:%' order by expires_at desc limit 1")
+  await auth.api.resetPassword({ body: { newPassword: 'clave-nueva-xyz-9', token: v.rows[0].identifier.replace('reset-password:', '') } })
+  const r = await pg.query<{ password: string }>("select a.password from account a join \"user\" u on u.id=a.user_id where u.email='legado@b.com'")
+  assert.ok(!r.rows[0].password.startsWith('$2'), 'sigue en bcrypt')
+  assert.equal((await auth.api.signInEmail({ body: { email: 'legado@b.com', password: 'clave-nueva-xyz-9' }, asResponse: true })).status, 200)
+  await pg.query("delete from verification")
+})
 await check('Better Auth: registro publico deshabilitado', async () => {
   await assert.rejects(auth.api.signUpEmail({ body: { email: 'x@y.com', password: 'otra-clave-123', name: 'X' } }))
 })

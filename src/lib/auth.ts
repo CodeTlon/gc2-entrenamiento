@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
+import { hashPassword, verifyPassword } from 'better-auth/crypto'
+import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import * as schema from '@/db/schema'
 import { sendMail } from '@/lib/mail'
@@ -35,6 +37,13 @@ export const auth = betterAuth({
     // Solo entran usuarios dados de alta por un admin (scripts/crear-usuario.ts): sin registro público.
     disableSignUp: true,
     resetPasswordTokenExpiresIn: 60 * 60,
+    // Las contraseñas nuevas usan el hash por defecto de Better Auth (scrypt). Los usuarios traídos de Supabase conservan su
+    // hash bcrypt ($2a$/$2b$/$2y$) y siguen entrando con la misma contraseña; al restablecerla pasan a scrypt.
+    password: {
+      hash: hashPassword,
+      verify: ({ hash, password }) =>
+        /^\$2[aby]\$/.test(hash) ? bcrypt.compare(password, hash) : verifyPassword({ hash, password }),
+    },
     sendResetPassword: async ({ user, url }) => {
       // Sin await: evita revelar por timing si el email existe. El .catch evita un rechazo no manejado
       // (sendMail lanza ante config inválida, ej. MAIL_SANDBOX_TO en producción).
