@@ -6,6 +6,7 @@ import { and, eq, ne, ilike } from 'drizzle-orm'
 import slugify from 'slugify'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { categories } from '@/db/schema'
 
 export type CategoryState = { ok?: boolean; error?: string } | undefined
@@ -40,7 +41,7 @@ export async function createCategoryAction(
 
     revalidatePath('/blog')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/categorias?saved=1')
 }
@@ -64,7 +65,7 @@ export async function updateCategoryAction(
 
     revalidatePath('/blog')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/categorias?saved=1')
 }

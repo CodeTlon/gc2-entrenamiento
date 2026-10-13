@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { and, eq, ne, ilike, isNull } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { plans, planCategories } from '@/db/schema'
 
 export type PlanState = { ok?: boolean; error?: string } | undefined
@@ -96,7 +97,7 @@ export async function createPlanAction(_prev: PlanState, formData: FormData): Pr
     await db.insert(plans).values({ ...data, category })
     revalidatePath('/planes')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/planes?saved=1')
 }
@@ -118,7 +119,7 @@ export async function updatePlanAction(
     await db.update(plans).set({ ...data, category, updated_at: new Date().toISOString() }).where(eq(plans.id, id))
     revalidatePath('/planes')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/planes?saved=1')
 }

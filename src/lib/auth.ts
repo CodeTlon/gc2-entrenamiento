@@ -7,8 +7,28 @@ import { sendMail } from '@/lib/mail'
 
 const siteUrl = process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
+// Orígenes aceptados además de baseURL (previews de Vercel, dominios extra). Coma-separados.
+const trustedOrigins = [
+  ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? '').split(',').map((o) => o.trim()),
+  process.env.VERCEL_BRANCH_URL && `https://${process.env.VERCEL_BRANCH_URL}`,
+  process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}`,
+].filter((o): o is string => !!o)
+
 export const auth = betterAuth({
   baseURL: siteUrl,
+  trustedOrigins,
+  // En serverless la memoria no se comparte entre instancias: el límite vive en la base (tabla rate_limit).
+  // Activo solo en producción por defecto de Better Auth; en test/prod real corre con NODE_ENV=production.
+  rateLimit: {
+    storage: 'database',
+    window: 60,
+    max: 100,
+    customRules: {
+      '/sign-in/email': { window: 300, max: 5 },
+      '/request-password-reset': { window: 600, max: 3 },
+      '/reset-password': { window: 600, max: 5 },
+    },
+  },
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   emailAndPassword: {
     enabled: true,
@@ -16,8 +36,9 @@ export const auth = betterAuth({
     disableSignUp: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     sendResetPassword: async ({ user, url }) => {
-      // Sin await: evita revelar por timing si el email existe.
-      void sendMail({
+      // Sin await: evita revelar por timing si el email existe. El .catch evita un rechazo no manejado
+      // (sendMail lanza ante config inválida, ej. MAIL_SANDBOX_TO en producción).
+      sendMail({
         to: user.email,
         subject: 'Recuperar contraseña — Dashboard GC²',
         html: `
@@ -34,7 +55,7 @@ export const auth = betterAuth({
             <p style="color: #64748b; font-size: 13px;">Si no pediste esto, ignorá este email. El link expira en 1 hora.</p>
           </div>
         </div>`,
-      })
+      }).catch((err) => console.error('[sendResetPassword]', err instanceof Error ? err.message : err))
     },
   },
   // El rol lo asigna solo el servidor: input:false impide que el cliente lo envíe.

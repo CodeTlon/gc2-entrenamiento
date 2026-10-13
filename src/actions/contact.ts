@@ -54,6 +54,7 @@ export async function submitContact(
   }
 
   // Guardar el lead en la base
+  let leadSaved = false
   try {
     await db.insert(contactLeads).values({
       nombre: data.nombre,
@@ -65,16 +66,18 @@ export async function submitContact(
       mensaje: data.mensaje,
       coach: coach || null,
     })
+    leadSaved = true
   } catch (err) {
     // No fallamos: igual intentamos mandar el email
     console.error('DB error:', err)
   }
 
   // Email vía Resend (sendMail aplica el sandbox de correo en APP_ENV=test)
+  let mailSent = false
   try {
     const toEmail = process.env.COMPANY_EMAIL || 'gc2entrenamiento@gmail.com'
 
-    await sendMail({
+    mailSent = await sendMail({
       to: toEmail,
       replyTo: data.email,
       subject: `Nueva Consulta${coach ? ` — ${coach}` : ''}: ${data.servicio || 'Consulta General'} — ${data.nombre}`,
@@ -102,6 +105,14 @@ export async function submitContact(
   } catch (err) {
     console.error('Mail error:', err)
     // Falló el email pero la base pudo guardar: igual devolvemos success
+  }
+
+  // Si no se guardó ni se envió nada, no le decimos al usuario que salió bien.
+  if (!leadSaved && !mailSent) {
+    return {
+      success: false,
+      error: 'No pudimos enviar tu consulta. Intentá de nuevo en unos minutos o escribinos por WhatsApp.',
+    }
   }
 
   return { success: true, error: null }

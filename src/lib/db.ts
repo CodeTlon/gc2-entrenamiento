@@ -12,7 +12,9 @@ const pool =
   new Pool({
     connectionString:
       process.env.DATABASE_URL ?? 'postgres://placeholder:placeholder@localhost:5432/placeholder',
-    max: 3, // pool chico para serverless
+    // Pool chico: cada instancia serverless abre el suyo y Postgres en Coolify tiene pocas conexiones.
+    // Bajar a 1 (DB_POOL_MAX=1) o poner PgBouncer delante si hay picos.
+    max: Number(process.env.DB_POOL_MAX) || 3,
   })
 if (process.env.NODE_ENV !== 'production') globalForDb.pool = pool
 

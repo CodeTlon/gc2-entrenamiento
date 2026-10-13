@@ -6,6 +6,7 @@ import { and, eq, ne, ilike } from 'drizzle-orm'
 import slugify from 'slugify'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { planCategories } from '@/db/schema'
 
 export type PlanCategoryState = { ok?: boolean; error?: string } | undefined
@@ -41,7 +42,7 @@ export async function createPlanCategoryAction(
     revalidatePath('/planes')
     revalidatePath('/dashboard/planes')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/planes/categorias?saved=1')
 }
@@ -66,7 +67,7 @@ export async function updatePlanCategoryAction(
     revalidatePath('/planes')
     revalidatePath('/dashboard/planes')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/planes/categorias?saved=1')
 }

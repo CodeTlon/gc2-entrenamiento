@@ -6,6 +6,7 @@ import slugify from 'slugify'
 import { and, eq, ne, ilike } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { coaches } from '@/db/schema'
 
 export type CoachState = { ok?: boolean; error?: string } | undefined
@@ -61,7 +62,7 @@ export async function createCoachAction(_prev: CoachState, formData: FormData): 
 
     revalidatePath('/')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/entrenadores?saved=1')
 }
@@ -83,7 +84,7 @@ export async function updateCoachAction(
 
     revalidatePath('/')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/entrenadores?saved=1')
 }

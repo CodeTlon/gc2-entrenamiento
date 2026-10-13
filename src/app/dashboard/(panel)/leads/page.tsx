@@ -27,7 +27,8 @@ export default async function LeadsPage({
   searchParams: Promise<{ page?: string }>
 }) {
   const { page: pageParam } = await searchParams
-  const page = Math.max(1, Number(pageParam ?? 1))
+  const parsedPage = Math.floor(Number(pageParam ?? 1))
+  const page = Number.isFinite(parsedPage) ? Math.max(1, parsedPage) : 1
   const offset = (page - 1) * PAGE_SIZE
 
   let leads: Lead[] = []
@@ -41,7 +42,8 @@ export default async function LeadsPage({
     leads = rows
     total = n
   } catch (e) {
-    error = { message: e instanceof Error ? e.message : 'Error desconocido' }
+    console.error('[leads]', e)
+    error = { message: 'no se pudo leer la base de datos.' }
   }
   const totalPages = Math.ceil(total / PAGE_SIZE)
 

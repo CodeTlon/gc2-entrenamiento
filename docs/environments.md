@@ -18,9 +18,9 @@ Para ahorrar mas, `test` y `prod` pueden compartir una sola instancia de Postgre
 
 ## Conexion Vercel -> Postgres en Coolify
 Coolify publica la base por TCP (*Public access*). Compensaciones obligatorias (doctrina `backend-propio.md`):
-- `sslmode=require` en `DATABASE_URL`.
+- SSL en `DATABASE_URL`: con `pg` 8.x, `sslmode=require` se interpreta como `verify-full` y falla con el certificado autofirmado de Coolify. Usar `?sslmode=require&uselibpqcompat=true` (cifra sin validar el CA) o instalar el CA de Coolify y usar `verify-full`.
 - Usuario y base propios por entorno, con privilegios minimos (nunca el superuser en la app) y contrasena larga.
-- Puerto publico no estandar. Pool chico en serverless (`max: 3` en `src/lib/db.ts`).
+- Puerto publico no estandar. Pool chico en serverless (`DB_POOL_MAX`, default 3 en `src/lib/db.ts`; bajar a 1 o poner PgBouncer si Postgres se queda sin conexiones).
 - **Decision a revisar:** la doctrina marca a GC2 (datos de salud) como excepcion con app y base ambas en Coolify y sin puerto publico. Se eligio front en Vercel por RAM; si se prefiere la excepcion, la app pasa a Coolify.
 
 ## Variables por entorno
@@ -38,3 +38,13 @@ Los workflows son esqueletos sin ejecutar: validar con una corrida real.
 
 ## Alta de usuarios del dashboard
 No hay registro publico: `npx tsx --env-file=.env.development.local scripts/crear-usuario.ts <email> <nombre> admin`.
+
+## Auth: origenes y rate limit
+- `BETTER_AUTH_URL` debe ser la URL publica exacta de cada entorno. Origenes extra (previews de Vercel, dominios alternativos): `BETTER_AUTH_TRUSTED_ORIGINS` (coma-separados); `VERCEL_URL`/`VERCEL_BRANCH_URL` se agregan solos.
+- El rate limit de login/recuperacion vive en la tabla `rate_limit` (migracion `0001`), no en memoria. Solo se aplica con `NODE_ENV=production`.
+
+## CORS del bucket R2
+Las subidas directas desde el navegador (`PUT` a la URL firmada) fallan sin esta regla en el bucket (ajustar los origenes por entorno):
+```json
+[{ "AllowedOrigins": ["https://gc2entrenamientoderesistencia.com.ar"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type"], "MaxAgeSeconds": 3600 }]
+```

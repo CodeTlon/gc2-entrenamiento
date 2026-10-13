@@ -6,6 +6,7 @@ import slugify from 'slugify'
 import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { posts, postCategories, postAuthors } from '@/db/schema'
 
 export type PostState = { ok?: boolean; error?: string } | undefined
@@ -27,16 +28,23 @@ function validateYoutubeUrl(url: string | null): string | null {
   return null
 }
 
+// Solo https:// (o ruta propia /...): evita javascript: y data: en href/src guardados por el panel.
+function safeUrl(v: FormDataEntryValue | null): string | null {
+  const s = String(v ?? '').trim()
+  if (!s) return null
+  return /^(https:\/\/|\/(?!\/))/i.test(s) ? s : null
+}
+
 function parseForm(formData: FormData) {
   const rawYt = String(formData.get('youtube_url') ?? '') || null
   return {
     title: String(formData.get('title') ?? '').trim(),
     excerpt: String(formData.get('excerpt') ?? '').trim() || null,
     content: String(formData.get('content') ?? ''),
-    cover_image: String(formData.get('cover_image') ?? '') || null,
+    cover_image: safeUrl(formData.get('cover_image')),
     youtube_url: validateYoutubeUrl(rawYt),
-    attachment_url: String(formData.get('attachment_url') ?? '') || null,
-    video_url: String(formData.get('video_url') ?? '') || null,
+    attachment_url: safeUrl(formData.get('attachment_url')),
+    video_url: safeUrl(formData.get('video_url')),
     published: formData.get('published') === 'on',
     category_ids: formData.getAll('category_ids').map(String).filter(Boolean),
     coach_ids: formData.getAll('coach_ids').map(String).filter(Boolean),
@@ -77,7 +85,7 @@ export async function createPostAction(_prev: PostState, formData: FormData): Pr
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/blog?saved=1')
 }
@@ -93,8 +101,9 @@ export async function updatePostAction(
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const [existing] = await db.select({ slug: posts.slug, title: posts.title }).from(posts).where(eq(posts.id, id)).limit(1)
-    let slug = existing?.slug
-    if (existing && existing.title !== data.title) {
+    if (!existing) return { error: 'El artículo no existe.' }
+    let slug = existing.slug
+    if (existing.title !== data.title) {
       const baseSlug = slugify(data.title, { lower: true, strict: true })
       slug = await uniqueSlug(baseSlug, id)
     }
@@ -116,7 +125,7 @@ export async function updatePostAction(
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/blog?saved=1')
 }

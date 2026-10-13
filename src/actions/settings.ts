@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
 import { siteSettings } from '@/db/schema'
 import { putObject, deleteObject, keyFromUrl } from '@/lib/storage'
 import { maxBytesForMime } from '@/lib/upload-limits'
@@ -29,7 +30,7 @@ export async function saveSiteSettingAction(
     for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
 }
 
@@ -81,6 +82,6 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
 
     return { url: await putObject(path, buf, contentType) }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
 }

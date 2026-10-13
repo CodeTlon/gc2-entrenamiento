@@ -7,6 +7,8 @@ Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main
 - `scripts/migracion/`, entornos, CI, workflows, scripts de backup y docs (`docs/environments.md`, `docs/BACKUPS.md`).
 
 ## A cargo de Mateo (infraestructura)
+- [ ] R2: regla CORS del bucket (PUT desde los origenes del sitio), ver `docs/environments.md`.
+- [ ] `DATABASE_URL` con `?sslmode=require&uselibpqcompat=true` (o CA de Coolify + `verify-full`).
 - [ ] **Activar los workflows:** `cp docs/workflows/*.yml .github/workflows/` y pushear con un token con scope `workflow` (o desde la PC). Estan en `docs/workflows/` porque el token de la VPS no puede crear workflows.
 - [ ] Coolify: crear Postgres `gc2-test` y `gc2-prod` (usuario propio con minimos privilegios, `sslmode=require`, puerto publico no estandar). Backup diario a B2 en prod.
 - [ ] Cloudflare R2: bucket de test y de produccion con dominio publico; claves S3.
@@ -42,5 +44,6 @@ Ver `scripts/migracion/README.md`.
 - `posts.author_id` queda sin FK y sin completar en posts nuevos (ids de Better Auth son texto): eliminar la columna o migrarla a `text`.
 - Orden de migraciones vs deploy de Vercel en `produccion.yml` (hoy en paralelo; migraciones deben ser compatibles hacia atras).
 - `npm audit`: highs conocidos (TipTap, browserslist) sin resolver; el CI corta solo en `critical` por ahora.
+- Auditoria 2026-10-13: corregidos ssl, rate limit en base, `.catch` en mail de recuperacion, contacto que no pierde leads en silencio, trustedOrigins, errores sin SQL, URLs https en posts, pagina de leads con `?page` invalido. Sigue abierto: honeypot/rate limit del formulario de contacto.
 - SVG en `uploadMediaAction` (Server Action) se sube tal cual al bucket publico; `/api/upload` ya lo rechaza. Evaluar sanitizarlo o bloquearlo.
 - Compartir una sola instancia de Postgres entre test y prod para ahorrar RAM (menos aislamiento).
