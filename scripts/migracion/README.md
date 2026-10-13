@@ -6,24 +6,30 @@ Doctrina: `codetlon-cloud/.claude/modules/{backend-propio,entornos,migracion-sup
 ## Preparacion
 1. Crear `scripts/migracion/.env.migracion` (gitignored, `chmod 600`):
    ```
-   SUPABASE_DB_URL=postgresql://...        # usuario de solo lectura si es posible
-   LOCAL_DB_URL=postgresql://app:app@127.0.0.1:<puerto 42000-42999>/app   # base descartable (docker compose)
+   SUPABASE_PROJECT_REF=<ref>          # el de https://<ref>.supabase.co
    SUPABASE_URL=https://<ref>.supabase.co
-   S3_ENDPOINT= S3_BUCKET= S3_ACCESS_KEY_ID= S3_SECRET_ACCESS_KEY= S3_PUBLIC_BASE_URL=
+   SUPABASE_ACCESS_TOKEN=sbp_...       # token personal: se usa SOLO con el endpoint read-only de la Management API
    ```
-2. `psql` y `pg_dump` >= la version del servidor de Supabase.
+2. Node 22. No hace falta `pg_dump` ni la contraseña de la base: todo sale por la API de solo lectura (la base es chica). Revocar el token al terminar.
 
-## Pasos
+## Pasos (flujo actual, todo a Coolify con archivos en volumen)
 | Script | Que hace |
 |---|---|
-| `01-dump-schema.sh` | `pg_dump` de `public` (schema y datos, con `.sha256`) a `out/` |
-| `02-sanear-dump.mjs` | Quita RLS/policies, FKs a `auth`, funciones con `auth.uid()`, sentencias de `storage.*`; avisa de lo eliminado y falla si queda algo de Supabase |
-| `03-inventario.sh` | Filas por tabla, usuarios de auth y peso de storage -> `out/INVENTARIO.md` |
-| `04-restaurar-y-validar.sh` | Restaura en la base local y compara conteos tabla por tabla; falla si difieren |
-| `05-copiar-storage.mjs` | Copia `media` a S3 conservando rutas; genera `out/reescribir-urls.sql` (dry-run por defecto) |
+| `07-exportar-datos.mjs` | Exporta cada tabla de `public` a `out/data/*.json` (solo lectura) y guarda conteos |
+| `08-generar-import.mjs` | Genera `out/data/import.sql` (INSERT con `json_populate_recordset`, usa los tipos de la base nueva). **Anonimiza `contact_leads`** salvo `--real` (solo para el corte a producción) |
+| `05-copiar-storage.mjs` | Descarga el bucket `media` a `out/storage/` (renombra lo que `/media` no sirve), escribe `out/reescribir-urls.sql` y `out/verificar-urls.sql`. Dry-run por defecto; `--yes` descarga |
 | `06-usuarios.md` | Plan de usuarios de Auth |
 
-Baseline cruzado: el schema saneado del dump real se compara con el que resulta de `supabase/migrations/*.sql` saneadas (`git show main:supabase/migrations/<archivo>` de cada migración, concatenadas y pasadas por `node 02-sanear-dump.mjs` (las migraciones ya no están en esta rama; siguen en `main`)); toda diferencia es drift entre migraciones y produccion y hay que decidirla antes de congelar el schema de Drizzle.
+Ensayo/carga en un entorno (nuevo, con migraciones ya aplicadas por la app):
+```
+docker exec -i <db> psql -U <user> -d <base> -v ON_ERROR_STOP=1 -q < out/data/import.sql
+tar -C out/storage -cf - . | docker exec -i <app> tar -C /data/storage -xf -
+docker exec -i <db> psql -U <user> -d <base> -v ON_ERROR_STOP=1 -q < out/reescribir-urls.sql
+docker exec -i <db> psql -U <user> -d <base> -tA < out/verificar-urls.sql   # todo en 0
+```
+Comparar conteos con `out/data/_conteos.json`. `out/` contiene PII real (leads, usuarios): gitignored, no copiarlo fuera del servidor.
+
+Scripts `01`-`04` (pg_dump/pg_restore con `SUPABASE_DB_URL`): flujo alternativo si algún día la base es grande; ya no son el camino principal.
 
 ## Checklist (del modulo)
 - [ ] Inventario hecho
