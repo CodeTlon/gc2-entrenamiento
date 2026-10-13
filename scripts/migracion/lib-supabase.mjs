@@ -6,8 +6,9 @@ import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 export const dir = dirname(fileURLToPath(import.meta.url))
-export const out = resolve(dir, 'out')
-mkdirSync(out, { recursive: true })
+// Carpeta de salida: por defecto scripts/migracion/out; MIGRACION_OUT la cambia (p. ej. un snapshot fuera del repo).
+export const out = process.env.MIGRACION_OUT ? resolve(process.env.MIGRACION_OUT) : resolve(dir, 'out')
+mkdirSync(out, { recursive: true, mode: 0o700 })
 
 const env = { ...process.env }
 const envFile = resolve(dir, '.env.migracion')

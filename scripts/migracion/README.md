@@ -18,9 +18,25 @@ Doctrina: `codetlon-cloud/.claude/modules/{backend-propio,entornos,migracion-sup
 | `07-exportar-datos.mjs` | Exporta cada tabla de `public` a `out/data/*.json` (solo lectura) y guarda conteos |
 | `08-generar-import.mjs` | Genera `out/data/import.sql` (INSERT con `json_populate_recordset`, usa los tipos de la base nueva). **Anonimiza `contact_leads`** salvo `--real` (solo para el corte a producción) |
 | `05-copiar-storage.mjs` | Descarga el bucket `media` a `out/storage/` (renombra lo que `/media` no sirve), escribe `out/reescribir-urls.sql` y `out/verificar-urls.sql`. Dry-run por defecto; `--yes` descarga |
+| `09-exportar-usuarios.mjs` | Usuarios de `auth.users` -> `out/data/import-usuarios.sql`: mismo id y **mismo hash bcrypt**, rol admin. Entran con su contraseña de siempre |
+| `snapshot-completo.sh` | Corre 07, 09, 05, 08 (real y anonimizado) y deja todo en `~/migracion-gc2/<fecha>` (700, fuera del repo) con `MANIFEST.sha256` |
+| `10-verificar-paridad.mjs` | Compara el snapshot contra la base y el volumen nuevos: filas, usuarios (incluido el hash) y sha256 de cada archivo. Exit 1 si algo difiere |
+| `11-comparar-sitio.mjs` | Compara lo que ve un visitante (texto, imágenes, enlaces) en el sitio actual y en el nuevo |
 | `06-usuarios.md` | Plan de usuarios de Auth |
 
-Ensayo/carga en un entorno (nuevo, con migraciones ya aplicadas por la app):
+Copia completa para el corte (la que se carga en producción): `scripts/migracion/snapshot-completo.sh`. Contiene datos personales y hashes de contraseña: queda en `~/migracion-gc2/` con permisos 700, nunca en git ni en un chat. Comprobar integridad: `(cd <carpeta> && sha256sum -c MANIFEST.sha256)`.
+
+Carga y verificación (base nueva ya migrada por la app; `SNAP` = carpeta del snapshot):
+```
+D="docker exec -i <db> psql -U <user> -d <base> -v ON_ERROR_STOP=1 -q"
+$D < $SNAP/data/import-real.sql          # en test/dev usar import.sql (leads anonimizados)
+$D < $SNAP/data/import-usuarios.sql
+tar -C $SNAP/storage -cf - . | docker exec -i <app> tar -C /data/storage -xf -
+$D < $SNAP/reescribir-urls.sql
+SNAPSHOT=$SNAP DEST_PSQL='docker exec -i <db> psql -U <user> -d <base> -tA' DEST_APP=<app> node scripts/migracion/10-verificar-paridad.mjs
+node scripts/migracion/11-comparar-sitio.mjs https://gc2entrenamientoderesistencia.com.ar https://<url-nueva>
+```
+Ensayo/carga en un entorno (variante manual, con leads anonimizados):
 ```
 docker exec -i <db> psql -U <user> -d <base> -v ON_ERROR_STOP=1 -q < out/data/import.sql
 tar -C out/storage -cf - . | docker exec -i <app> tar -C /data/storage -xf -

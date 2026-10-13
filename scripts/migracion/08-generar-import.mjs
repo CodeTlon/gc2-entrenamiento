@@ -30,5 +30,6 @@ for (const t of ORDEN) {
   sql.push(`insert into public."${t}" select * from json_populate_recordset(null::public."${t}", $gc2$${json}$gc2$::json);`)
 }
 sql.push('commit;', '')
-writeFileSync(resolve(datos, 'import.sql'), sql.join('\n'))
-console.log(`Escrito out/data/import.sql (${REAL ? 'DATOS REALES' : 'leads anonimizados'}) para ${Object.values(conteos).reduce((a, b) => a + b, 0)} filas`)
+const archivo = REAL ? 'import-real.sql' : 'import.sql'
+writeFileSync(resolve(datos, archivo), sql.join('\n'), { mode: 0o600 })
+console.log(`Escrito out/data/${archivo} (${REAL ? 'DATOS REALES' : 'leads anonimizados'}) para ${Object.values(conteos).reduce((a, b) => a + b, 0)} filas`)
