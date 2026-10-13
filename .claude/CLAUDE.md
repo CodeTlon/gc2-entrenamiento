@@ -94,7 +94,7 @@ src/
     client-upload.ts         # uploadDirectToStorage: sube al bucket `media` desde el browser, bypass del Server Action
     utils.ts
 db/schema.ts                 # (en src/) schema Drizzle; drizzle/ = migraciones SQL; src/db/queries.ts = consultas compartidas
-scripts/                     # migracion/ (revisión Supabase), backup/, crear-usuario.ts, seed-dev.ts
+scripts/                     # migracion/ (revisión Supabase), backup/, crear-usuario.mts, seed-dev.mts
 docs/                        # Documentación adicional (README, deployment, technical-docs, maintenance)
 public/images/               # Assets estáticos
 tests/                       # Playwright e2e

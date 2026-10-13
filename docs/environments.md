@@ -37,7 +37,7 @@ Los workflows son esqueletos sin ejecutar: validar con una corrida real.
 `npx drizzle-kit generate` crea el SQL (se commitea en `drizzle/`); `npx drizzle-kit migrate` lo aplica. `drizzle-kit push` solo en dev local. Migraciones compatibles hacia atras (drop/rename en dos releases).
 
 ## Alta de usuarios del dashboard
-No hay registro publico: `npx tsx --env-file=.env.development.local scripts/crear-usuario.ts <email> <nombre> admin`.
+No hay registro publico: `npx tsx --env-file=.env.development.local scripts/crear-usuario.mts <email> <nombre> admin`.
 
 ## Auth: origenes y rate limit
 - `BETTER_AUTH_URL` debe ser la URL publica exacta de cada entorno. Origenes extra (previews de Vercel, dominios alternativos): `BETTER_AUTH_TRUSTED_ORIGINS` (coma-separados); `VERCEL_URL`/`VERCEL_BRANCH_URL` se agregan solos.

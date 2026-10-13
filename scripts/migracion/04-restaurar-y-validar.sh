@@ -5,7 +5,8 @@ source "$(dirname "$0")/lib.sh"
 need SUPABASE_DB_URL; need LOCAL_DB_URL
 case "$LOCAL_DB_URL" in *supabase*|*pooler*) echo "LOCAL_DB_URL parece remota: abortado" >&2; exit 1;; esac
 SQL="${1:-$OUT/schema-clean.sql}"; DUMP="${2:-$OUT/data-latest.dump}"
-[ -f "$DUMP.sha256" ] || [ -f "$(readlink -f "$DUMP").sha256" ] && ( cd "$OUT" && sha256sum -c "$(basename "$(readlink -f "$DUMP")").sha256" )
+REAL="$(readlink -f "$DUMP")"
+if [ -f "$REAL.sha256" ]; then ( cd "$(dirname "$REAL")" && sha256sum -c "$(basename "$REAL").sha256" ); else echo "AVISO: sin .sha256, no se verifico la integridad del dump" >&2; fi
 psql "$LOCAL_DB_URL" -X -v ON_ERROR_STOP=1 -qc "drop schema if exists public cascade; create schema public;"
 psql "$LOCAL_DB_URL" -X -v ON_ERROR_STOP=1 -q -f "$SQL"
 pg_restore --data-only --no-owner --disable-triggers --exit-on-error -d "$LOCAL_DB_URL" "$DUMP"

@@ -1,12 +1,12 @@
 // Alta de un usuario del dashboard (no hay registro público). Uso:
-//   npx tsx --env-file=.env.development.local scripts/crear-usuario.ts <email> <nombre> [admin|user]
+//   npx tsx --env-file=.env.development.local scripts/crear-usuario.mts <email> <nombre> [admin|user]
 // Imprime una contraseña temporal una sola vez; el usuario debe cambiarla con "Olvidé mi contraseña".
 import { randomBytes } from 'node:crypto'
 import { auth } from '../src/lib/auth'
 
 const [email, name, role = 'admin'] = process.argv.slice(2)
 if (!email || !name) {
-  console.error('Uso: crear-usuario.ts <email> <nombre> [admin|user]')
+  console.error('Uso: crear-usuario.mts <email> <nombre> [admin|user]')
   process.exit(1)
 }
 

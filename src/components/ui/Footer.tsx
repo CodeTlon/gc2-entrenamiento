@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Instagram, Mail } from 'lucide-react'
-import { SITE_YEAR, SITE_CITY } from '@/lib/constants'
+import { SITE_YEAR } from '@/lib/constants'
 import WhatsAppIcon from './WhatsAppIcon'
 
 interface Props {
