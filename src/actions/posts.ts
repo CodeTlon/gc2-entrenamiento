@@ -3,18 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import slugify from 'slugify'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { posts, postCategories, postAuthors } from '@/db/schema'
 
 export type PostState = { ok?: boolean; error?: string } | undefined
-
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return { supabase, user }
-}
 
 const YT_PATTERNS = [
   /(?:youtube\.com\/watch\?(?:.*&)?v=)([\w-]{11})/i,
@@ -49,45 +43,36 @@ function parseForm(formData: FormData) {
   }
 }
 
-async function uniqueSlug(supabase: Awaited<ReturnType<typeof requireUser>>['supabase'], base: string, excludeId?: string) {
+async function uniqueSlug(base: string, excludeId?: string) {
   let slug = base
   let n = 2
   while (true) {
-    const q = supabase.from('posts').select('id').eq('slug', slug).limit(1)
-    const { data } = await q
-    if (!data || data.length === 0) return slug
-    if (excludeId && data[0].id === excludeId) return slug
+    const [row] = await db.select({ id: posts.id }).from(posts).where(eq(posts.slug, slug)).limit(1)
+    if (!row) return slug
+    if (excludeId && row.id === excludeId) return slug
     slug = `${base}-${n++}`
   }
 }
 
 export async function createPostAction(_prev: PostState, formData: FormData): Promise<PostState> {
   try {
-    const { supabase, user } = await requireUser()
+    await requireUser()
     const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const baseSlug = slugify(data.title, { lower: true, strict: true })
-    const slug = await uniqueSlug(supabase, baseSlug)
+    const slug = await uniqueSlug(baseSlug)
 
-    const { data: inserted, error } = await supabase
-      .from('posts')
-      .insert({ ...data, slug, author_id: user.id })
-      .select('id')
-      .single()
-    if (error) return { error: error.message }
-
-    if (category_ids.length > 0) {
-      await supabase.from('post_categories').insert(
-        category_ids.map((cid) => ({ post_id: inserted.id, category_id: cid }))
-      )
-    }
-
-    if (coach_ids.length > 0) {
-      await supabase.from('post_authors').insert(
-        coach_ids.map((cid) => ({ post_id: inserted.id, coach_id: cid }))
-      )
-    }
+    await db.transaction(async (tx) => {
+      // author_id era un uuid de Supabase Auth; con Better Auth (id texto) queda null.
+      const [inserted] = await tx.insert(posts).values({ ...data, slug }).returning({ id: posts.id })
+      if (category_ids.length > 0) {
+        await tx.insert(postCategories).values(category_ids.map((cid) => ({ post_id: inserted.id, category_id: cid })))
+      }
+      if (coach_ids.length > 0) {
+        await tx.insert(postAuthors).values(coach_ids.map((cid) => ({ post_id: inserted.id, coach_id: cid })))
+      }
+    })
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
@@ -103,36 +88,30 @@ export async function updatePostAction(
   formData: FormData,
 ): Promise<PostState> {
   try {
-    const { supabase } = await requireUser()
+    await requireUser()
     const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
-    const { data: existing } = await supabase.from('posts').select('slug, title').eq('id', id).single()
+    const [existing] = await db.select({ slug: posts.slug, title: posts.title }).from(posts).where(eq(posts.id, id)).limit(1)
     let slug = existing?.slug
     if (existing && existing.title !== data.title) {
       const baseSlug = slugify(data.title, { lower: true, strict: true })
-      slug = await uniqueSlug(supabase, baseSlug, id)
+      slug = await uniqueSlug(baseSlug, id)
     }
 
-    const { error } = await supabase
-      .from('posts')
-      .update({ ...data, slug, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) return { error: error.message }
+    await db.transaction(async (tx) => {
+      await tx.update(posts).set({ ...data, slug, updated_at: new Date().toISOString() }).where(eq(posts.id, id))
 
-    await supabase.from('post_categories').delete().eq('post_id', id)
-    if (category_ids.length > 0) {
-      await supabase.from('post_categories').insert(
-        category_ids.map((cid) => ({ post_id: id, category_id: cid }))
-      )
-    }
+      await tx.delete(postCategories).where(eq(postCategories.post_id, id))
+      if (category_ids.length > 0) {
+        await tx.insert(postCategories).values(category_ids.map((cid) => ({ post_id: id, category_id: cid })))
+      }
 
-    await supabase.from('post_authors').delete().eq('post_id', id)
-    if (coach_ids.length > 0) {
-      await supabase.from('post_authors').insert(
-        coach_ids.map((cid) => ({ post_id: id, coach_id: cid }))
-      )
-    }
+      await tx.delete(postAuthors).where(eq(postAuthors.post_id, id))
+      if (coach_ids.length > 0) {
+        await tx.insert(postAuthors).values(coach_ids.map((cid) => ({ post_id: id, coach_id: cid })))
+      }
+    })
 
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
@@ -145,9 +124,8 @@ export async function updatePostAction(
 export async function deletePostAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  const { supabase } = await requireUser()
-  const { error } = await supabase.from('posts').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  await requireUser()
+  await db.delete(posts).where(eq(posts.id, id))
   revalidatePath('/blog')
   redirect('/dashboard/blog')
 }

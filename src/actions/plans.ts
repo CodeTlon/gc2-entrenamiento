@@ -2,22 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { and, eq, ne, ilike, isNull } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { plans, planCategories } from '@/db/schema'
 
 export type PlanState = { ok?: boolean; error?: string } | undefined
 
-type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+type PlanEnum = (typeof plans.$inferInsert)['category']
 
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return supabase
-}
-
-const SLUG_TO_ENUM: Record<string, string> = {
+const SLUG_TO_ENUM: Record<string, PlanEnum> = {
   runner: 'runner',
   corredores: 'runner',
   triathlon: 'triathlon',
@@ -26,53 +20,54 @@ const SLUG_TO_ENUM: Record<string, string> = {
   grupales: 'group',
 }
 
+// Escapa % y _ para que ilike compare el nombre literal.
+const likeLiteral = (v: string) => v.replace(/[\%_]/g, '\$&')
+
+const sameCategory = (plan_category_id: string | null) =>
+  plan_category_id ? eq(plans.plan_category_id, plan_category_id) : isNull(plans.plan_category_id)
+
 async function checkDuplicateName(
-  supabase: SupabaseClient,
   name: string,
   plan_category_id: string | null,
   excludeId?: string,
 ): Promise<boolean> {
-  let query = supabase.from('plans').select('id').ilike('name', name)
-  query = plan_category_id
-    ? query.eq('plan_category_id', plan_category_id)
-    : query.is('plan_category_id', null)
-  if (excludeId) query = query.neq('id', excludeId)
-  const { data } = await query
-  return (data?.length ?? 0) > 0
+  const rows = await db
+    .select({ id: plans.id })
+    .from(plans)
+    .where(and(ilike(plans.name, likeLiteral(name)), sameCategory(plan_category_id), excludeId ? ne(plans.id, excludeId) : undefined))
+    .limit(1)
+  return rows.length > 0
 }
 
 async function checkDuplicateNameDisplay(
-  supabase: SupabaseClient,
   name_display: string | null,
   plan_category_id: string | null,
   excludeId?: string,
 ): Promise<boolean> {
   if (!name_display) return false
-  let query = supabase.from('plans').select('id').ilike('name_display', name_display)
-  query = plan_category_id
-    ? query.eq('plan_category_id', plan_category_id)
-    : query.is('plan_category_id', null)
-  if (excludeId) query = query.neq('id', excludeId)
-  const { data } = await query
-  return (data?.length ?? 0) > 0
+  const rows = await db
+    .select({ id: plans.id })
+    .from(plans)
+    .where(and(ilike(plans.name_display, likeLiteral(name_display)), sameCategory(plan_category_id), excludeId ? ne(plans.id, excludeId) : undefined))
+    .limit(1)
+  return rows.length > 0
 }
 
-async function resolveCategory(supabase: SupabaseClient, plan_category_id: string | null): Promise<string> {
+async function resolveCategory(plan_category_id: string | null): Promise<PlanEnum> {
   if (!plan_category_id) return 'runner'
-  const { data } = await supabase
-    .from('plan_categories')
-    .select('slug')
-    .eq('id', plan_category_id)
-    .single()
-  const slug = data?.slug ?? 'runner'
-  return SLUG_TO_ENUM[slug] ?? 'runner'
+  const [row] = await db
+    .select({ slug: planCategories.slug })
+    .from(planCategories)
+    .where(eq(planCategories.id, plan_category_id))
+    .limit(1)
+  return SLUG_TO_ENUM[row?.slug ?? 'runner'] ?? 'runner'
 }
 
 function parseFormData(formData: FormData) {
-  let features: unknown[]
+  let features: string[]
   try {
     const parsed = JSON.parse(String(formData.get('features') ?? '[]'))
-    features = Array.isArray(parsed) ? parsed : []
+    features = Array.isArray(parsed) ? parsed.map(String) : []
   } catch {
     features = []
   }
@@ -90,16 +85,15 @@ function parseFormData(formData: FormData) {
 
 export async function createPlanAction(_prev: PlanState, formData: FormData): Promise<PlanState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
-    const isDuplicateName = await checkDuplicateName(supabase, data.name, data.plan_category_id)
+    const isDuplicateName = await checkDuplicateName(data.name, data.plan_category_id)
     if (isDuplicateName) return { error: 'Ya existe un plan con ese nombre interno en esta categoría.' }
-    const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id)
+    const isDuplicate = await checkDuplicateNameDisplay(data.name_display, data.plan_category_id)
     if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
-    const category = await resolveCategory(supabase, data.plan_category_id)
-    const { error } = await supabase.from('plans').insert({ ...data, category })
-    if (error) return { error: error.message }
+    const category = await resolveCategory(data.plan_category_id)
+    await db.insert(plans).values({ ...data, category })
     revalidatePath('/planes')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
@@ -113,19 +107,15 @@ export async function updatePlanAction(
   formData: FormData,
 ): Promise<PlanState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
-    const isDuplicateName = await checkDuplicateName(supabase, data.name, data.plan_category_id, id)
+    const isDuplicateName = await checkDuplicateName(data.name, data.plan_category_id, id)
     if (isDuplicateName) return { error: 'Ya existe un plan con ese nombre interno en esta categoría.' }
-    const isDuplicate = await checkDuplicateNameDisplay(supabase, data.name_display, data.plan_category_id, id)
+    const isDuplicate = await checkDuplicateNameDisplay(data.name_display, data.plan_category_id, id)
     if (isDuplicate) return { error: 'Ya existe un plan con ese nombre visible en esta categoría.' }
-    const category = await resolveCategory(supabase, data.plan_category_id)
-    const { error } = await supabase
-      .from('plans')
-      .update({ ...data, category, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) return { error: error.message }
+    const category = await resolveCategory(data.plan_category_id)
+    await db.update(plans).set({ ...data, category, updated_at: new Date().toISOString() }).where(eq(plans.id, id))
     revalidatePath('/planes')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
@@ -136,9 +126,8 @@ export async function updatePlanAction(
 export async function deletePlanAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  const supabase = await requireUser()
-  const { error } = await supabase.from('plans').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  await requireUser()
+  await db.delete(plans).where(eq(plans.id, id))
   revalidatePath('/', 'layout')
   redirect('/dashboard/planes')
 }

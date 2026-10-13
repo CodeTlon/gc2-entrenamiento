@@ -2,19 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { siteSettings } from '@/db/schema'
+import { putObject, deleteObject, keyFromUrl } from '@/lib/storage'
 import { maxBytesForMime } from '@/lib/upload-limits'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
-
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return supabase
-}
 
 const SETTING_PATHS: Record<string, string[]> = {
   page_banners: ['/', '/planes', '/blog'],
@@ -25,12 +19,12 @@ export async function saveSiteSettingAction(
   value: unknown,
 ): Promise<SaveState> {
   try {
-    const supabase = await requireUser()
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
-
-    if (error) return { error: error.message }
+    await requireUser()
+    const updated_at = new Date().toISOString()
+    await db
+      .insert(siteSettings)
+      .values({ key, value, updated_at })
+      .onConflictDoUpdate({ target: siteSettings.key, set: { value, updated_at } })
 
     for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
@@ -39,29 +33,22 @@ export async function saveSiteSettingAction(
   }
 }
 
-function extractStoragePath(url: string): string | null {
-  // URLs de Supabase Storage: .../storage/v1/object/public/media/<path>
-  const match = url.split('#')[0].match(/\/storage\/v1\/object\/public\/media\/(.+)/)
-  return match?.[1] ?? null
-}
-
 export async function uploadMediaAction(formData: FormData): Promise<{ url?: string; error?: string }> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const file = formData.get('file')
     if (!(file instanceof File)) return { error: 'Archivo inválido.' }
     const maxBytes = maxBytesForMime(file.type || '')
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
-    const folder = String(formData.get('folder') ?? 'uploads')
+    const rawFolder = String(formData.get('folder') ?? 'uploads')
+    const folder = /^[a-z0-9_-]{1,40}$/i.test(rawFolder) ? rawFolder : 'uploads'
 
-    // Borrar imagen anterior si viene del mismo bucket
+    // Borrar imagen anterior si viene de nuestro bucket
     const oldUrl = String(formData.get('oldUrl') ?? '')
     if (oldUrl) {
-      const oldPath = extractStoragePath(oldUrl)
-      if (oldPath) {
-        await supabase.storage.from('media').remove([oldPath])
-      }
+      const oldKey = keyFromUrl(oldUrl)
+      if (oldKey) await deleteObject(oldKey)
     }
     const id = crypto.randomUUID()
     const original = Buffer.from(await file.arrayBuffer())
@@ -92,13 +79,7 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
 
     const path = `${folder}/${id}.${ext}`
 
-    const { error: upErr } = await supabase.storage
-      .from('media')
-      .upload(path, buf, { contentType, upsert: false })
-    if (upErr) return { error: upErr.message }
-
-    const { data } = supabase.storage.from('media').getPublicUrl(path)
-    return { url: data.publicUrl }
+    return { url: await putObject(path, buf, contentType) }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }

@@ -1,4 +1,6 @@
-import { createSupabaseClient } from '@/lib/supabase'
+import { asc, eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { siteSettings, coaches, plans, planCategories } from '@/db/schema'
 import {
   COACHES as COACHES_FALLBACK,
   GROUP_PLANS,
@@ -358,22 +360,20 @@ const FALLBACK_PLANS: Plan[] = [
 // =========================================================
 // Fetchers
 // =========================================================
+// Sin DATABASE_URL (build de CI, dev sin base) el sitio sigue renderizando con los FALLBACK_*.
 function isPlaceholder() {
-  return (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
-  )
+  return !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder')
 }
 
 
 export async function getSiteSettings(): Promise<SiteSettings> {
   if (isPlaceholder()) return FALLBACK_SETTINGS
 
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase.from('site_settings').select('key, value')
-
-  if (error || !data) {
-    if (error) console.error('site_settings fetch error:', error.message)
+  let data: { key: string; value: unknown }[]
+  try {
+    data = await db.select({ key: siteSettings.key, value: siteSettings.value }).from(siteSettings)
+  } catch (e) {
+    console.error('site_settings fetch error:', e instanceof Error ? e.message : e)
     return FALLBACK_SETTINGS
   }
 
@@ -398,51 +398,41 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 export async function getCoaches(): Promise<Coach[]> {
   if (isPlaceholder()) return FALLBACK_COACHES
 
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('coaches')
-    .select('*')
-    .order('display_order', { ascending: true })
-
-  if (error || !data || data.length === 0) {
-    if (error) console.error('coaches fetch error:', error.message)
+  try {
+    const data = await db.select().from(coaches).orderBy(asc(coaches.display_order))
+    return data.length === 0 ? FALLBACK_COACHES : (data as Coach[])
+  } catch (e) {
+    console.error('coaches fetch error:', e instanceof Error ? e.message : e)
     return FALLBACK_COACHES
   }
-  return data as Coach[]
 }
 
 export async function getPlansByCategory(category: PlanCategory): Promise<Plan[]> {
   if (isPlaceholder()) return FALLBACK_PLANS.filter((p) => p.category === category)
 
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('plans')
-    .select('*')
-    .eq('category', category)
-    .order('display_order', { ascending: true })
-
-  if (error || !data || data.length === 0) {
-    if (error) console.error(`plans (${category}) fetch error:`, error.message)
+  try {
+    const data = await db
+      .select()
+      .from(plans)
+      .where(eq(plans.category, category as 'runner' | 'triathlon' | 'group'))
+      .orderBy(asc(plans.display_order))
+    return data.length === 0 ? FALLBACK_PLANS.filter((p) => p.category === category) : (data as Plan[])
+  } catch (e) {
+    console.error(`plans (${category}) fetch error:`, e instanceof Error ? e.message : e)
     return FALLBACK_PLANS.filter((p) => p.category === category)
   }
-  return data as Plan[]
 }
 
 export async function getAllPlans(): Promise<Plan[]> {
   if (isPlaceholder()) return FALLBACK_PLANS
 
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('plans')
-    .select('*')
-    .order('category', { ascending: true })
-    .order('display_order', { ascending: true })
-
-  if (error || !data || data.length === 0) {
-    if (error) console.error('plans fetch error:', error.message)
+  try {
+    const data = await db.select().from(plans).orderBy(asc(plans.category), asc(plans.display_order))
+    return data.length === 0 ? FALLBACK_PLANS : (data as Plan[])
+  } catch (e) {
+    console.error('plans fetch error:', e instanceof Error ? e.message : e)
     return FALLBACK_PLANS
   }
-  return data as Plan[]
 }
 
 const FALLBACK_PLAN_CATEGORIES: PlanCategoryItem[] = [
@@ -454,15 +444,14 @@ const FALLBACK_PLAN_CATEGORIES: PlanCategoryItem[] = [
 export async function getPlanCategories(): Promise<PlanCategoryItem[]> {
   if (isPlaceholder()) return FALLBACK_PLAN_CATEGORIES
 
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('plan_categories')
-    .select('id, name, slug, display_order')
-    .order('display_order', { ascending: true })
-
-  if (error || !data || data.length === 0) {
-    if (error) console.error('plan_categories fetch error:', error.message)
+  try {
+    const data = await db
+      .select({ id: planCategories.id, name: planCategories.name, slug: planCategories.slug, display_order: planCategories.display_order })
+      .from(planCategories)
+      .orderBy(asc(planCategories.display_order))
+    return data.length === 0 ? FALLBACK_PLAN_CATEGORIES : data
+  } catch (e) {
+    console.error('plan_categories fetch error:', e instanceof Error ? e.message : e)
     return FALLBACK_PLAN_CATEGORIES
   }
-  return data as PlanCategoryItem[]
 }

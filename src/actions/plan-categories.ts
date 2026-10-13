@@ -2,32 +2,24 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { and, eq, ne, ilike } from 'drizzle-orm'
 import slugify from 'slugify'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { planCategories } from '@/db/schema'
 
 export type PlanCategoryState = { ok?: boolean; error?: string } | undefined
 
-type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+// Escapa % y _ para que ilike compare el nombre literal.
+const likeLiteral = (v: string) => v.replace(/[\\%_]/g, '\\$&')
 
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return supabase
-}
-
-async function checkDuplicateCategoryName(
-  supabase: SupabaseClient,
-  name: string,
-  excludeId?: string,
-): Promise<boolean> {
-  let query = supabase
-    .from('plan_categories')
-    .select('id')
-    .ilike('name', name)
-  if (excludeId) query = query.neq('id', excludeId)
-  const { data } = await query
-  return (data?.length ?? 0) > 0
+async function checkDuplicateCategoryName(name: string, excludeId?: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: planCategories.id })
+    .from(planCategories)
+    .where(and(ilike(planCategories.name, likeLiteral(name)), excludeId ? ne(planCategories.id, excludeId) : undefined))
+    .limit(1)
+  return rows.length > 0
 }
 
 export async function createPlanCategoryAction(
@@ -35,17 +27,16 @@ export async function createPlanCategoryAction(
   formData: FormData,
 ): Promise<PlanCategoryState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const name = String(formData.get('name') ?? '').trim()
     const display_order = Number(formData.get('display_order') ?? 0)
     if (!name) return { error: 'El nombre es obligatorio.' }
 
-    const isDuplicate = await checkDuplicateCategoryName(supabase, name)
+    const isDuplicate = await checkDuplicateCategoryName(name)
     if (isDuplicate) return { error: 'Ya existe una categoría con ese nombre.' }
 
     const slug = slugify(name, { lower: true, strict: true })
-    const { error } = await supabase.from('plan_categories').insert({ name, slug, display_order })
-    if (error) return { error: error.message }
+    await db.insert(planCategories).values({ name, slug, display_order })
 
     revalidatePath('/planes')
     revalidatePath('/dashboard/planes')
@@ -61,20 +52,16 @@ export async function updatePlanCategoryAction(
   formData: FormData,
 ): Promise<PlanCategoryState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const name = String(formData.get('name') ?? '').trim()
     const display_order = Number(formData.get('display_order') ?? 0)
     if (!name) return { error: 'El nombre es obligatorio.' }
 
-    const isDuplicate = await checkDuplicateCategoryName(supabase, name, id)
+    const isDuplicate = await checkDuplicateCategoryName(name, id)
     if (isDuplicate) return { error: 'Ya existe una categoría con ese nombre.' }
 
     const slug = slugify(name, { lower: true, strict: true })
-    const { error } = await supabase
-      .from('plan_categories')
-      .update({ name, slug, display_order })
-      .eq('id', id)
-    if (error) return { error: error.message }
+    await db.update(planCategories).set({ name, slug, display_order }).where(eq(planCategories.id, id))
 
     revalidatePath('/planes')
     revalidatePath('/dashboard/planes')
@@ -87,9 +74,8 @@ export async function updatePlanCategoryAction(
 export async function deletePlanCategoryAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  const supabase = await requireUser()
-  const { error } = await supabase.from('plan_categories').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  await requireUser()
+  await db.delete(planCategories).where(eq(planCategories.id, id))
   revalidatePath('/planes')
   revalidatePath('/dashboard/planes')
   redirect('/dashboard/planes/categorias')
