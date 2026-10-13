@@ -1,0 +1,55 @@
+# Test y producción en Coolify (recurso "Docker Compose", Compose Location: /docker-compose.coolify.yml).
+# La base no publica ningún puerto: solo la app llega a ella por la red interna del compose.
+# Las migraciones corren solas al arrancar la app. El desarrollo local usa docker-compose.yml (solo Postgres).
+# Un recurso por entorno (test y prod), cada uno con sus propios secretos, base y volúmenes.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gc2_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-gc2}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?Falta NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gc2_app}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-gc2}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Falta BETTER_AUTH_SECRET}
+      BETTER_AUTH_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      STORAGE_DIR: /data/storage
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
+      COMPANY_EMAIL: ${COMPANY_EMAIL:-}
+      MAIL_SANDBOX_TO: ${MAIL_SANDBOX_TO:-}
+    volumes:
+      - storage:/data/storage
+    expose:
+      - '3000'
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  db_data:
+  storage:
