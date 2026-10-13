@@ -1,16 +1,20 @@
 import Link from 'next/link'
 import { Plus, Tag } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { categories as categoriesTable } from '@/db/schema'
 
 export default async function CategoriasListPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name, slug, display_order')
-    .order('display_order', { ascending: true })
-
-  const list = categories ?? []
+  const list = await db
+    .select({
+      id: categoriesTable.id,
+      name: categoriesTable.name,
+      slug: categoriesTable.slug,
+      display_order: categoriesTable.display_order,
+    })
+    .from(categoriesTable)
+    .orderBy(asc(categoriesTable.display_order))
 
   return (
     <div>

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { getSiteSettings, type Plan, type PlanCategoryItem } from '@/lib/content'
-import { createSupabaseClient } from '@/lib/supabase'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { plans as plansTable, planCategories } from '@/db/schema'
 import MiniHero from '@/components/ui/MiniHero'
 import PlanesContent from './PlanesContent'
 
@@ -14,14 +16,22 @@ export const metadata: Metadata = {
 }
 
 export default async function PlanesPage() {
-  const supabase = createSupabaseClient()
-  const [{ data: plansData }, { data: catsData }, settings] = await Promise.all([
-    supabase.from('plans').select('*').order('display_order', { ascending: true }),
-    supabase.from('plan_categories').select('id, name, slug, display_order').order('display_order', { ascending: true }),
+  const [plansData, catsData, settings] = await Promise.all([
+    db.select().from(plansTable).orderBy(asc(plansTable.display_order)).catch(() => []),
+    db
+      .select({
+        id: planCategories.id,
+        name: planCategories.name,
+        slug: planCategories.slug,
+        display_order: planCategories.display_order,
+      })
+      .from(planCategories)
+      .orderBy(asc(planCategories.display_order))
+      .catch(() => []),
     getSiteSettings(),
   ])
-  const plans = (plansData ?? []) as Plan[]
-  const categories = (catsData ?? []) as PlanCategoryItem[]
+  const plans = plansData as Plan[]
+  const categories = catsData as PlanCategoryItem[]
   const whatsappLink = settings.contact.whatsapp_link
 
   return (

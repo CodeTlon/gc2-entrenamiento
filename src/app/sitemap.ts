@@ -1,5 +1,7 @@
 import type { MetadataRoute } from 'next'
-import { createSupabaseClient } from '@/lib/supabase'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts } from '@/db/schema'
 
 const BASE_URL = 'https://gc2entrenamientoderesistencia.com.ar'
 
@@ -27,23 +29,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Blog posts from Supabase
+  // Posts publicados del blog
   let blogRoutes: MetadataRoute.Sitemap = []
   try {
-    const supabase = createSupabaseClient()
-    const { data } = await supabase
-      .from('posts')
-      .select('slug, created_at')
-      .eq('published', true)
+    const data = await db
+      .select({ slug: posts.slug, created_at: posts.created_at })
+      .from(posts)
+      .where(eq(posts.published, true))
 
-    if (data) {
-      blogRoutes = data.map((post) => ({
-        url: `${BASE_URL}/blog/${post.slug}`,
-        lastModified: new Date(post.created_at),
-        changeFrequency: 'monthly' as const,
-        priority: 0.5,
-      }))
-    }
+    blogRoutes = data.map((post) => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: new Date(post.created_at),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }))
   } catch (err) {
     console.error('Sitemap blog fetch error:', err)
   }

@@ -2,7 +2,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Plus, Eye, EyeOff, Youtube } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { desc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts as postsTable } from '@/db/schema'
 import { formatDate } from '@/lib/utils'
 
 interface PostRow {
@@ -16,13 +18,18 @@ interface PostRow {
 }
 
 export default async function BlogListPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase
-    .from('posts')
-    .select('id, title, slug, cover_image, youtube_url, published, created_at')
-    .order('created_at', { ascending: false })
-
-  const posts = (data ?? []) as PostRow[]
+  const posts: PostRow[] = await db
+    .select({
+      id: postsTable.id,
+      title: postsTable.title,
+      slug: postsTable.slug,
+      cover_image: postsTable.cover_image,
+      youtube_url: postsTable.youtube_url,
+      published: postsTable.published,
+      created_at: postsTable.created_at,
+    })
+    .from(postsTable)
+    .orderBy(desc(postsTable.created_at))
 
   return (
     <div>
