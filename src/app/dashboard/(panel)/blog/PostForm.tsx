@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import Link from 'next/link'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -132,9 +133,9 @@ export default function PostForm({
         ) : (
           <p className="text-white/40 text-sm mt-1">
             No hay categorías creadas todavía.{' '}
-            <a href="/dashboard/categorias/nuevo" className="text-accent hover:underline">
+            <Link href="/dashboard/categorias/nuevo" className="text-accent hover:underline">
               Crear una
-            </a>
+            </Link>
           </p>
         )}
       </div>

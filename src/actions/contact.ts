@@ -25,16 +25,16 @@ export async function submitContact(
   prevState: unknown,
   formData: FormData
 ): Promise<ContactState> {
-  const coach = (formData.get('coach') as string) || null
+  const coach = String(formData.get('coach') ?? '').trim().slice(0, 100) || null
 
   const raw = {
-    nombre: formData.get('nombre') as string,
-    email: formData.get('email') as string,
-    telefono: formData.get('telefono') as string,
-    ciudad: formData.get('ciudad') as string,
-    servicio: formData.get('servicio') as string,
-    objetivo: formData.get('objetivo') as string,
-    mensaje: formData.get('mensaje') as string,
+    nombre: String(formData.get('nombre') ?? '').trim(),
+    email: String(formData.get('email') ?? '').trim(),
+    telefono: String(formData.get('telefono') ?? '').trim(),
+    ciudad: String(formData.get('ciudad') ?? '').trim(),
+    servicio: String(formData.get('servicio') ?? '').trim(),
+    objetivo: String(formData.get('objetivo') ?? '').trim(),
+    mensaje: String(formData.get('mensaje') ?? '').trim(),
   }
 
   const parsed = contactSchema.safeParse(raw)

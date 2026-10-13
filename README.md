@@ -16,7 +16,7 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 npm install
 cp .env.example .env.development.local   # completar BETTER_AUTH_SECRET, S3 y Resend
 docker compose up -d && npx drizzle-kit migrate   # Postgres local (127.0.0.1:42432)
-npx tsx --env-file=.env.development.local scripts/crear-usuario.ts <email> <nombre> admin
+npx tsx --env-file=.env.development.local scripts/crear-usuario.mts <email> <nombre> admin
 npm run dev                  # http://localhost:3000
 ```
 
@@ -60,6 +60,7 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| v2.0.1 | 2026-10-13 | Auditoria y endurecimiento: Next 16.4.0 (RCE critico en `next/og`, SSRF, cache poisoning), TipTap 3.32, sharp 0.35.5, @vercel/og 1.0.3 (audit sin high/critical); ESLint 9 funcionando (`npm run lint`); `npm run test:db` con PGlite (13 verificaciones de migraciones, consultas, Better Auth y contacto); rate limit de login en base, errores sin SQL, `submitContact` robusto ante campos faltantes, URLs https en posts, guia SSL para Coolify. |
 | v2.0.0 | 2026-10-13 | **Salida de Supabase** (sin cortar producción todavía): Postgres + Drizzle (`src/db/schema.ts`, migración `drizzle/0000_baseline.sql`), Better Auth (sin registro público; recuperación de contraseña por Resend), archivos en S3/R2 con subida directa por URL firmada (`/api/upload`). Se eliminan `@supabase/*`, `resend` (el envío usa `src/lib/mail.ts` con sandbox por entorno), `/auth/callback`, `/auth/confirm`, `InviteHandler` y `supabase/`. Flujo de ramas dev > test > main, CI para test y main, workflows de entornos y producción (esqueletos sin ejecutar), `scripts/migracion/`. Build verde + 45/45 E2E sin base (fallbacks); **no verificado contra una base real**. |
 | v1.4.0 | 2026-07-19 | Recovery de contraseña vía Resend en vez del email nativo de Supabase (rate limit bajo en free tier, llegaba lento o a spam): `forgotPasswordAction` genera el link con la Admin API (`service_role`) y lo envía por Resend, reusando `/auth/confirm` (`verifyOtp`). Video propio insertable en el cuerpo de un post (nodo custom de TipTap + subida directa a Storage, límite 15MB). ISR (`revalidate = 3600`) en home, blog, blog/[slug] y planes. Build verde + 45/45 E2E. |
 | v1.3.0 | 2026-07-18 | Modal "más información" en planes (`description_long` + `PlanModal.tsx`, mismo patrón que coaches). Export de artículos a Instagram Story (`@vercel/og`, PNG 1080x1920 server-side, botón en el editor de post). PDF y video propio adjuntables en posts (subida directa al bucket desde el navegador, bypass del Server Action por el límite de body de Vercel). Límites de upload más generosos y diferenciados por tipo (imagen 20MB, PDF 10MB, video 60MB; antes 12MB fijo). Build verde + 45/45 E2E. |
