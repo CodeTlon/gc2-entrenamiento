@@ -9,6 +9,10 @@ function s3() {
     region: process.env.S3_REGION || 'auto',
     endpoint: process.env.S3_ENDPOINT,
     forcePathStyle: true,
+    // Desde el SDK 3.729 firma por defecto un CRC32 del cuerpo vacío en la URL; el PUT del navegador
+    // manda otro cuerpo y el bucket (R2 incluido) lo rechaza con 400. Solo se pide checksum si el servicio lo exige.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
     credentials: {
       accessKeyId: process.env.S3_ACCESS_KEY_ID ?? '',
       secretAccessKey: process.env.S3_SECRET_ACCESS_KEY ?? '',
