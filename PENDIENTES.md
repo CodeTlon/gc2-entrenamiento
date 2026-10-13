@@ -9,7 +9,7 @@ Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main
 ## A cargo de Mateo (infraestructura)
 - [ ] R2: regla CORS del bucket (PUT desde los origenes del sitio), ver `docs/environments.md`.
 - [ ] `DATABASE_URL` con `?sslmode=require&uselibpqcompat=true` (o CA de Coolify + `verify-full`).
-- [x] Workflows en `.github/workflows/` (ci, entornos, produccion). Falta validarlos con una corrida real y cargar secrets/Environments.
+- [x] Workflows en `.github/workflows/` (ci, entornos, produccion), rama `feature/dev2-workflows`. Falta validarlos con una corrida real y cargar secrets/Environments.
 - [ ] Coolify: crear Postgres `gc2-test` y `gc2-prod` (usuario propio con minimos privilegios, `sslmode=require`, puerto publico no estandar). Backup diario a B2 en prod.
 - [ ] Cloudflare R2: bucket de test y de produccion con dominio publico; claves S3.
 - [ ] Vercel: variables de `.env.example` en Preview (rama `test`) y Production; `BETTER_AUTH_SECRET` distinto por entorno; confirmar que el preview de `test` use la base de test.
@@ -17,6 +17,7 @@ Rama: `feature/dev2-backend-propio` (PR #1 a `dev`). Estado al 2026-10-13. `main
 - [ ] Resend: remitente del dominio verificado para prod; en test `APP_ENV=test` + `MAIL_SANDBOX_TO`.
 
 ## Verificar con una base real (nada de esto se probo)
+> 2026-10-13 (sesion dev2): Docker bloqueado por el sandbox de Claude Code (`permission denied ... /run/user/1004/docker.sock`; el `excludedCommands: [docker, docker-compose]` agregado a `~/.claude/settings.json` recien aplica al reiniciar la sesion). Verificado sin Docker: `test:db` 13 OK (PGlite), `tsc` limpio, lint 0 errores/5 avisos, `build` verde, E2E 45/45. NO verificado: migrate/seed/usuario, login, CRUD, recuperacion de contrasena y `/api/health` contra Postgres real. Retomar con `docker compose up -d` desde una sesion nueva.
 - [ ] `docker compose up -d`, `npx drizzle-kit migrate`, `scripts/seed-dev.mts`, `scripts/crear-usuario.mts`.
 - [ ] Login, logout, "Olvide mi contrasena" (mail + `set-password`), CRUD de coaches, planes, categorias y posts (transacciones de `post_categories`/`post_authors`), leads, export a Instagram Story (debe dar 401 sin sesion).
 - [ ] Subida a S3: imagenes (sharp), PDF y video via `/api/upload`; borrado del archivo anterior; `next/image` con el host de `S3_PUBLIC_BASE_URL`.

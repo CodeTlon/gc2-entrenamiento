@@ -19,7 +19,7 @@
 
 - `.vercel/project.json` existe y está linkeado a un proyecto Vercel real (`projectName: "gc2-entrenamiento"`), gitignoreado.
 - No existe `vercel.json` en el repo (sin overrides de build/rutas).
-- El único workflow en `.github/workflows/` es `supabase-keepalive.yml` (cron cada 3 días, sólo hace un `curl` a la REST API de Supabase para evitar que el free tier pause el proyecto) — **no es un pipeline de deploy**.
+- (Histórico, previo a la migración) el único workflow era `supabase-keepalive.yml`, ya eliminado. Tras la migración, `.github/workflows/` tiene `ci.yml` (PR a `test`/`main`: lint, tsc, build, audit), `entornos.yml` (base de test según PR abierto a `main`) y `produccion.yml`; ver `docs/environments.md`. El deploy de la app sigue siendo la integración Git de Vercel.
 - `package.json` no tiene ningún script de deploy (`dev`/`build`/`start`/`lint`/`test:e2e` únicamente).
 - `git remote -v` → `origin` es `github.com/CodeTlon/gc2-entrenamiento.git`.
 - `docs/deployment-guide.md` y `docs/maintenance-guide.md` describen explícitamente "Import from GitHub" en Vercel + "commit y push → Vercel re-deploya automáticamente".

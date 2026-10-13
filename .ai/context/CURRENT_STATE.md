@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-> **2026-10-13:** en curso `feature/dev2-backend-propio` (PR #1 a `dev`): migración de Supabase a Postgres/Drizzle/Better Auth/S3 con entornos dev > test > main. Falta: verificar contra una base real, dump/restauración de prod, copia del bucket, usuarios, recursos en Coolify/R2/Vercel, corte.
+> **2026-10-13:** en curso `feature/dev2-backend-propio` (PR #1 a `dev`): migración de Supabase a Postgres/Drizzle/Better Auth/S3 con entornos dev > test > main. Los workflows de CI viven en `.github/workflows/` (rama `feature/dev2-workflows`, ver `PENDIENTES.md`). Sin Docker en la sesion del 2026-10-13: test:db (PGlite), tsc, lint, build y E2E 45/45 verdes. Falta: verificar contra una base real (Docker), dump/restauración de prod, copia del bucket, usuarios, recursos en Coolify/R2/Vercel, corte.
 
 
 Snapshot al 2026-09-18. Esto envejece rápido — si parece desactualizado, confiá en `git log`/`git status` reales antes que en este archivo.
