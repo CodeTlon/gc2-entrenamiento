@@ -12,6 +12,14 @@ Rama: `feature/dev2-coolify`. Estado al 2026-10-13. Todo corre en Coolify (regla
 - Bugs hallados y arreglados: `folder` con subniveles rechazado; paginas publicas y sitemap prerenderizados sin base en el build (mostraban el contenido de respaldo hasta una hora): ahora dinamicos; archivos en la raiz del bucket no servibles.
 - Ensayo de migracion de datos en limpio (Supabase prod en solo lectura -> Postgres del compose): conteos identicos en las 9 tablas, 33/33 archivos descargados y cargados, 0 referencias a `supabase.co`, 15/15 URLs `/media` en 200, 16/16 imagenes del home cargan. `contact_leads` anonimizados (no hay PII en test).
 
+## Paridad con el sitio actual (Vercel + Supabase)
+- [x] Copia completa en `~/migracion-gc2/20261013-232723` (VPS, 700, 50 archivos, 37 MB, `MANIFEST.sha256`): 9 tablas (25 filas), 2 usuarios con hash bcrypt, 33 archivos, SQL de importacion real y anonimizado. Es una foto de ese momento: **repetir `snapshot-completo.sh` justo antes del corte**.
+- [x] Usuarios con su contrasena actual: `auth.ts` verifica bcrypt (`bcryptjs`) ademas de scrypt; 2 tests nuevos en `test:db` (15/15). Login incorrecto sobre un hash migrado responde 401 (sin errores de servidor). La contrasena real de los 2 usuarios no se pudo probar (no la tengo): probarla en `gc2-test` con ellos.
+- [x] `10-verificar-paridad.mjs` contra una carga completa con datos reales: 9 tablas idénticas en todas las columnas, 2 usuarios identicos (incluido el hash), 33/33 archivos identicos por sha256. Con prueba negativa: detecta un dato, un hash y un archivo alterados.
+- [x] `11-comparar-sitio.mjs` contra https://gc2entrenamientoderesistencia.com.ar: las 6 paginas publicas identicas en texto, imagenes (el unico renombre es `LUIS (2).jpg` -> `LUIS-2.jpg`) y enlaces. La comparacion encontro y se arreglo que `/privacidad` y `/terminos` mostraban WhatsApp y mail de relleno (layout publico prerenderizado sin base): ahora dinamico.
+- [ ] **Configurar `NEXT_PUBLIC_GA_ID` en Coolify con el mismo valor que hoy en Vercel**: sin esa variable no aparece el banner de cookies ni se mide (el sitio actual lo tiene). Es variable de build (ARG del compose).
+- [ ] Revisar en Vercel otras variables que usa el sitio actual (`RESEND_*`, `COMPANY_EMAIL`, `NEXT_PUBLIC_SITE_URL`) y copiarlas a Coolify de produccion.
+
 ## A cargo de Mateo (infraestructura)
 - [ ] Coolify: crear los recursos Docker Compose `gc2-test` y `gc2-prod` (`docs/environments.md`), dominio en el servicio `app`, variables sin comillas, `BETTER_AUTH_SECRET` y `POSTGRES_PASSWORD` distintos por entorno.
 - [ ] Verificar RAM libre del VPS de Coolify (`free -h`): la app necesita ~300-400 MB estables y 1-2 GB de pico solo al compilar (estimado, no medido).
@@ -30,7 +38,7 @@ Rama: `feature/dev2-coolify`. Estado al 2026-10-13. Todo corre en Coolify (regla
 ## Migracion de datos de produccion (read-only sobre Supabase)
 Ver `scripts/migracion/README.md`. Ensayo hecho; falta repetirlo contra `gc2-test` en Coolify y, al final, el corte.
 - [ ] Cargar en `gc2-test`: `07` exportar, `08` generar (leads anonimizados), `05 --yes` descargar, aplicar `import.sql`, subir `out/storage/` al volumen, `reescribir-urls.sql`, `verificar-urls.sql` y comparar conteos. Correr E2E contra su URL.
-- [ ] Usuarios (`06-usuarios.md`): Supabase tiene 2 usuarios. Alta con `crear-usuario.mjs` por email y reset de contrasena por Resend; avisar que las sesiones e invites de Supabase dejan de funcionar.
+- [ ] Usuarios (`06-usuarios.md`): `import-usuarios.sql` (mismo id y hash). Que cada uno pruebe entrar con su contrasena actual en `gc2-test`; avisar que las sesiones e invites de Supabase dejan de funcionar al corte.
 - [ ] Backup de la base nueva y simulacro de restauracion; anotar la fecha en `.claude/CLAUDE.md`.
 
 ## Corte (lo ejecuta Mateo)
