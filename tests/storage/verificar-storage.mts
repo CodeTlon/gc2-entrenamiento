@@ -23,10 +23,12 @@ await deleteObject(key)
 assert.equal(await fileInfo(key), null); ok('deleteObject borra el archivo')
 await deleteObject(key); ok('borrar uno inexistente no falla')
 
-for (const mala of ['../x/a.png', 'a/../b/c.png', '/abs/a.png', 'a//b.png', 'solo.png', 'a/b/c/d/e.png', 'a/.oculto/x.png', 'a/b/c d.png']) {
+for (const mala of ['../x/a.png', 'a/../b/c.png', '/abs/a.png', 'a//b.png', 'a/b/c/d/e.png', 'a/.oculto/x.png', 'a/b/c d.png']) {
   await assert.rejects(putObject(mala, Buffer.from('x')), /inválida/, mala)
 }
 ok('rechaza rutas con .., absolutas, vacías, demasiado profundas o con caracteres raros')
+const raiz = await putObject('equipo.jpg', Buffer.from('r'))
+assert.equal(raiz, '/media/equipo.jpg'); assert.equal(keyFromUrl(raiz), 'equipo.jpg'); await deleteObject('equipo.jpg'); ok('acepta archivos en la raíz (migrados de Supabase)')
 assert.equal(TIPOS_POR_EXT.svg, undefined); assert.equal(TIPOS_POR_EXT.html, undefined); ok('SVG y HTML no son servibles')
 
 rmSync(process.env.STORAGE_DIR!, { recursive: true, force: true })

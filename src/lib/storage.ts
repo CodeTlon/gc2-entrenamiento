@@ -3,7 +3,7 @@ import { mkdir, rm, stat, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve, sep } from 'node:path'
 
 // Archivos en disco: volumen persistente de Coolify (STORAGE_DIR). Todo es público y se sirve por /media/[...ruta].
-// Las keys son `carpeta[/subcarpeta[/subcarpeta]]/uuid.ext`. Los nombres con UUID no se reutilizan, por eso se cachean un año.
+// Las keys son `[carpeta[/subcarpeta[/subcarpeta]]/]archivo.ext` (hasta 4 segmentos; los archivos migrados de Supabase pueden estar en la raíz). Los nombres con UUID no se reutilizan, por eso se cachean un año.
 const SEGMENTO = /^[A-Za-z0-9][A-Za-z0-9._-]*$/
 
 export const STORAGE_DIR = resolve(process.env.STORAGE_DIR ?? './storage')
@@ -19,7 +19,7 @@ export const TIPOS_POR_EXT: Record<string, string> = {
 // Resuelve la ruta dentro del volumen y rechaza todo lo que se escape (.., absolutas, caracteres raros).
 function rutaSegura(key: string): string {
   const partes = key.split('/')
-  if (partes.length < 2 || partes.length > 4 || !partes.every((p) => SEGMENTO.test(p) && !p.includes('..'))) {
+  if (partes.length > 4 || !partes.every((p) => SEGMENTO.test(p) && !p.includes('..'))) {
     throw new Error('Ruta de archivo inválida')
   }
   const abs = resolve(STORAGE_DIR, ...partes)
