@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     await db.execute(sql`select 1`)
-    // `commit` lo completa Coolify (SOURCE_COMMIT) y sirve para que CI sepa que version esta desplegada.
-    return Response.json({ status: 'ok', commit: process.env.GIT_COMMIT || null })
+    // `started_at` (arranque del proceso) permite a CI saber que ya corre el contenedor del deploy que acaba de pedir.
+    return Response.json({ status: 'ok', started_at: new Date(Date.now() - process.uptime() * 1000).toISOString() })
   } catch {
     return Response.json({ status: 'db_error' }, { status: 503 })
   }

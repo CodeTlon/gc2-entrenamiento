@@ -29,7 +29,7 @@ Rama: `feature/dev2-coolify`. Estado al 2026-10-13. Todo corre en Coolify (regla
 - [ ] GitHub: proteger `dev` y `test`; secrets de Coolify (`COOLIFY_URL`, `COOLIFY_TOKEN` con minimos permisos, UUIDs) cuando se adapten los workflows.
 
 ## Por hacer en el codigo
-- [x] `entornos.yml` y `produccion.yml` adaptados a todo-en-Coolify (v2.1.5): validados con `actionlint`, sin correr en GitHub. Falta: variable `TEST_URL`, desactivar auto-deploy de `gc2-prod`, token de Coolify con permiso de deploy y las vars/secrets del Environment `production` (ver `docs/produccion-coolify.md`); comprobar que `SOURCE_COMMIT` llega a la app.
+- [x] `entornos.yml` y `produccion.yml` adaptados a todo-en-Coolify (v2.1.5): validados con `actionlint`, sin correr en GitHub. Falta: variable `TEST_URL`, desactivar auto-deploy de `gc2-prod`, token de Coolify con permiso de deploy y las vars/secrets del Environment `production` (ver `docs/produccion-coolify.md`).
 - [ ] `posts.author_id` queda sin FK ni valor en posts nuevos (ids de Better Auth son texto): eliminar la columna o migrarla a `text`.
 - [ ] Honeypot/rate limit del formulario de contacto.
 - [ ] Imagenes originales sin optimizar en la raiz del bucket (hasta 4,7 MB, p. ej. `Mica.jpg`): `next/image` ya las sirve optimizadas; opcional pasarlas por sharp al migrar.

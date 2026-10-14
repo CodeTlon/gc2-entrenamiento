@@ -32,7 +32,7 @@ Los workflows viven en `.github/workflows/`. El keep-alive de Supabase ya se eli
 - PR a `test` y `main`: `ci.yml` (lint, tsc, `test:db`, `test:storage`, build, audit). Corrida real verificada.
 - Push a `test`: Coolify despliega `gc2-test` solo y `entornos.yml` espera ese deploy y corre los E2E contra la URL de test. Necesita la **variable** del repo `TEST_URL` (sin ella no hace nada) y ningun secret.
 - Push a `main`: `produccion.yml` (aprobacion manual con Environment `production`, backup reciente en B2, deploy de `gc2-prod` por la API de Coolify, espera del deploy y smoke test). Requiere que `gc2-prod` tenga el **auto-deploy desactivado** (si no, Coolify despliega antes de la aprobacion), el token de Coolify con permiso de deploy y nada mas, y `PRODUCCION_HABILITADA=true`. Las migraciones las corre la app al arrancar, no el CI.
-- `/api/health` informa `commit` si Coolify le pasa `SOURCE_COMMIT` (el compose lo copia a `GIT_COMMIT`); los workflows lo usan para saber que version esta desplegada y, si viene vacio, caen a una espera fija. **Sin verificar** hasta que el compose nuevo se despliegue en `gc2-test`.
+- `/api/health` informa `started_at` (arranque del proceso). Coolify no le pasa `SOURCE_COMMIT` al compose (verificado en `gc2-test`: llegaba vacio), asi que los workflows detectan el deploy esperando un contenedor que haya arrancado despues de que empezo el job (test) o de que se pidio el deploy (produccion).
 Los workflows `entornos.yml` y `produccion.yml` estan validados con `actionlint` y la logica de espera se probo contra un servidor local, pero **no se corrieron en GitHub**: validar con una corrida real.
 
 ## Migraciones

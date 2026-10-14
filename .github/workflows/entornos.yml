@@ -3,8 +3,7 @@
 #
 # Configuracion (la hace el usuario):
 #   Variable del repo: TEST_URL (por ejemplo https://test.gc2entrenamientoderesistencia.com.ar). Sin ella el workflow no hace nada.
-# Si Coolify le pasa SOURCE_COMMIT a la app, /api/health informa el commit desplegado y el workflow espera a que sea el de este push;
-# si no (commit vacio), espera a que el health responda y deja un margen fijo para el deploy.
+# El deploy se detecta por `started_at` de /api/health: se espera un contenedor que haya arrancado despues de que empezo este job.
 name: Entornos
 on:
   push:
@@ -30,27 +29,23 @@ jobs:
       - name: Esperar el deploy de test en Coolify
         env:
           TEST_URL: ${{ vars.TEST_URL }}
-          SHA: ${{ github.sha }}
+          EVENTO: ${{ github.event_name }}
         run: |
+          inicio=$(date +%s)
           deadline=$((SECONDS + 900))
-          primera=1
           while [ $SECONDS -lt $deadline ]; do
             cuerpo=$(curl -fsS --max-time 10 "$TEST_URL/api/health" 2>/dev/null || true)
             estado=$(echo "$cuerpo" | jq -r '.status // empty' 2>/dev/null || true)
-            commit=$(echo "$cuerpo" | jq -r '.commit // empty' 2>/dev/null || true)
+            arranque=$(echo "$cuerpo" | jq -r '.started_at // empty' 2>/dev/null || true)
             if [ "$estado" = "ok" ]; then
-              if [ -n "$commit" ]; then
-                [ "$commit" = "$SHA" ] && { echo "Test desplegado en $commit"; exit 0; }
-                echo "Test sirve $commit, esperando $SHA"
-              else
-                # Sin commit informado: margen para que Coolify termine de construir y reemplazar el contenedor.
-                if [ "$primera" = 1 ]; then echo "El health no informa commit: espero 4 min fijos"; sleep 240; primera=0; fi
-                echo "Test responde (version sin verificar)"; exit 0
-              fi
+              # Disparado a mano no hay deploy nuevo que esperar: alcanza con que responda.
+              [ "$EVENTO" = "workflow_dispatch" ] && { echo "Test responde"; exit 0; }
+              if [ -n "$arranque" ] && [ "$(date -d "$arranque" +%s)" -ge "$inicio" ]; then echo "Test desplegado (arranque $arranque)"; exit 0; fi
+              echo "Test sigue con el contenedor anterior (arranque ${arranque:-desconocido})"
             fi
             sleep 15
           done
-          echo "::error::el deploy de test no llego a $SHA en 15 min"; exit 1
+          echo "::error::no hubo un deploy nuevo de test en 15 min"; exit 1
       - run: npm ci
       - name: E2E contra test
         run: |

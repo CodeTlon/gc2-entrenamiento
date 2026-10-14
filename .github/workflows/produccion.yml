@@ -50,31 +50,25 @@ jobs:
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
           PROD_APP_UUID: ${{ vars.PROD_APP_UUID }}
         run: |
+          date +%s > "$RUNNER_TEMP/deploy_pedido"
           curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" "$COOLIFY_URL/api/v1/deploy?uuid=$PROD_APP_UUID" > /dev/null
           echo "Deploy pedido para $PROD_APP_UUID"
       - name: Esperar el deploy
         env:
           PROD_URL: ${{ vars.PROD_URL }}
-          SHA: ${{ github.sha }}
         run: |
           deadline=$((SECONDS + 1500))
-          primera=1
           while [ $SECONDS -lt $deadline ]; do
             cuerpo=$(curl -fsS --max-time 10 "$PROD_URL/api/health" 2>/dev/null || true)
             estado=$(echo "$cuerpo" | jq -r '.status // empty' 2>/dev/null || true)
-            commit=$(echo "$cuerpo" | jq -r '.commit // empty' 2>/dev/null || true)
-            if [ "$estado" = "ok" ]; then
-              if [ -n "$commit" ]; then
-                [ "$commit" = "$SHA" ] && { echo "Produccion en $commit"; exit 0; }
-                echo "Produccion sirve $commit, esperando $SHA"
-              else
-                if [ "$primera" = 1 ]; then echo "El health no informa commit: espero 5 min fijos"; sleep 300; primera=0; fi
-                echo "Produccion responde (version sin verificar)"; exit 0
-              fi
+            arranque=$(echo "$cuerpo" | jq -r '.started_at // empty' 2>/dev/null || true)
+            if [ "$estado" = "ok" ] && [ -n "$arranque" ] && [ "$(date -d "$arranque" +%s)" -ge "$(cat "$RUNNER_TEMP/deploy_pedido")" ]; then
+              echo "Produccion desplegada (arranque $arranque)"; exit 0
             fi
+            echo "Produccion sigue con el contenedor anterior o no responde"
             sleep 15
           done
-          echo "::error::el deploy de produccion no llego a $SHA en 25 min"; exit 1
+          echo "::error::el deploy de produccion no termino en 25 min"; exit 1
       - name: Smoke test
         env:
           PROD_URL: ${{ vars.PROD_URL }}
