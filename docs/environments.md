@@ -30,9 +30,10 @@ Ver `.env.example` (desarrollo local). En Coolify las carga el compose; `DATABAS
 ## CI
 Los workflows viven en `.github/workflows/`. El keep-alive de Supabase ya se eliminó.
 - PR a `test` y `main`: `ci.yml` (lint, tsc, `test:db`, `test:storage`, build, audit). Corrida real verificada.
-- PR a `main`: `entornos.yml` enciende la base de test, migra y corre E2E. **Pendiente de adaptar:** hoy asume preview de Vercel y base con puerto público; con todo en Coolify se reemplaza por deploy del recurso `gc2-test` por la API de Coolify y E2E contra su URL (las migraciones corren al arrancar la app).
-- Push a `main`: `produccion.yml` (aprobación manual, backup reciente en B2, smoke test). Mismo pendiente: sacar el paso de migraciones por CI y el supuesto de Vercel. Activar con `PRODUCCION_HABILITADA=true`.
-Los workflows de test y producción son esqueletos sin ejecutar: validar con una corrida real.
+- Push a `test`: Coolify despliega `gc2-test` solo y `entornos.yml` espera ese deploy y corre los E2E contra la URL de test. Necesita la **variable** del repo `TEST_URL` (sin ella no hace nada) y ningun secret.
+- Push a `main`: `produccion.yml` (aprobacion manual con Environment `production`, backup reciente en B2, deploy de `gc2-prod` por la API de Coolify, espera del deploy y smoke test). Requiere que `gc2-prod` tenga el **auto-deploy desactivado** (si no, Coolify despliega antes de la aprobacion), el token de Coolify con permiso de deploy y nada mas, y `PRODUCCION_HABILITADA=true`. Las migraciones las corre la app al arrancar, no el CI.
+- `/api/health` informa `commit` si Coolify le pasa `SOURCE_COMMIT` (el compose lo copia a `GIT_COMMIT`); los workflows lo usan para saber que version esta desplegada y, si viene vacio, caen a una espera fija. **Sin verificar** hasta que el compose nuevo se despliegue en `gc2-test`.
+Los workflows `entornos.yml` y `produccion.yml` estan validados con `actionlint` y la logica de espera se probo contra un servidor local, pero **no se corrieron en GitHub**: validar con una corrida real.
 
 ## Migraciones
 `npx drizzle-kit generate` crea el SQL (se commitea en `drizzle/`). Las aplica la app al arrancar (`scripts/migrate.mts`, idempotente, fail-closed); en local `npx drizzle-kit migrate`. `drizzle-kit push` solo en dev local. Migraciones compatibles hacia atrás (drop/rename en dos releases).

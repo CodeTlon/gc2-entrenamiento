@@ -68,7 +68,7 @@ En el proveedor de DNS:
 ## 8. Después del corte
 - Supabase en solo lectura **1 a 2 semanas** con fecha de baja anotada; después darlo de baja y revocar el token `sbp_`.
 - Desconectar y borrar el proyecto de Vercel; limpiar sus referencias en `.github/workflows/{entornos,produccion}.yml`, docs y `AGENTS.md` (`@vercel/og` es solo la librería del Story).
-- Adaptar `entornos.yml` y `produccion.yml` a todo-en-Coolify (secrets `COOLIFY_URL`, `COOLIFY_TOKEN` con permisos mínimos y UUIDs) y recién ahí `PRODUCCION_HABILITADA=true`. Subir `checkout`/`setup-node` y fijar `ubuntu-24.04`.
+- Workflows (ya adaptados, sin correr en GitHub): `entornos.yml` verifica test en cada push a `test` (variable `TEST_URL`). Para `produccion.yml`: desactivar el auto-deploy de `gc2-prod` en Coolify, crear un token de API con permiso de deploy y nada mas (Allowed IPs vacio: los runners de GitHub usan rangos amplios), cargarlo como secret `COOLIFY_TOKEN` junto con `COOLIFY_URL`, y definir en el Environment `production` las variables `PROD_URL`, `PROD_APP_UUID`, `BACKUP_BUCKET`, `BACKUP_PROJECT`, los secrets `B2_READ_KEY_ID` y `B2_READ_APP_KEY` y los required reviewers. Recien al final `PRODUCCION_HABILITADA=true`.
 - Proteger `dev`, `test` y `main` en GitHub.
 
 ## Marcha atrás

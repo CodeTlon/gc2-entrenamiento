@@ -1,14 +1,15 @@
-# Release a produccion: push a `main`. Gate manual (Environment `production` con required reviewers) +
-# backup reciente verificado en B2 + migraciones + smoke test. Esqueleto sin ejecutar: validar con una corrida real.
+# Release a produccion: push a `main`. Gate manual (Environment `production` con required reviewers) + backup reciente
+# verificado en B2 + deploy de Coolify por su API + espera del deploy + smoke test.
 #
-# El front se publica por la integracion Git de Vercel (no por este workflow). Por eso las migraciones deben ser
-# compatibles hacia atras (agregar antes de usar; drop/rename en dos releases): migran en paralelo al deploy de Vercel.
-# Para orden estricto, desactivar el auto-deploy de Vercel y deployar desde aca con la CLI.
+# El recurso `gc2-prod` de Coolify tiene que tener el auto-deploy DESACTIVADO: si no, Coolify desplegaria al hacer push, antes de la
+# aprobacion. Las migraciones las corre la app al arrancar (fail-closed) porque la base no tiene puerto publico: deben ser compatibles
+# hacia atras (agregar antes de usar; drop/rename en dos releases).
 #
 # Configuracion (la hace el usuario):
 #   Variable de repo:         PRODUCCION_HABILITADA=true (llave: mientras no sea 'true' el workflow no hace nada)
-#   Environment `production`: required reviewers + vars PROD_URL, BACKUP_BUCKET, BACKUP_PROJECT
-#                             + secrets PROD_DATABASE_URL, B2_READ_KEY_ID, B2_READ_APP_KEY (clave de solo lectura)
+#   Environment `production`: required reviewers
+#                             + vars PROD_URL, PROD_APP_UUID, BACKUP_BUCKET, BACKUP_PROJECT
+#                             + secrets COOLIFY_URL, COOLIFY_TOKEN (token con permiso de deploy y nada mas), B2_READ_KEY_ID, B2_READ_APP_KEY (clave de solo lectura)
 name: Produccion
 on:
   push:
@@ -25,14 +26,12 @@ concurrency:
 jobs:
   release:
     if: ${{ vars.PRODUCCION_HABILITADA == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
     environment: production
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '22', cache: 'npm' }
-      - name: Instalar rclone y jq
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone jq
+      - name: Instalar rclone
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone
       - name: Verificar backup reciente de la base de produccion en B2
         env:
           RCLONE_CONFIG_B2_TYPE: b2
@@ -45,10 +44,46 @@ jobs:
           sums=$(echo "$recientes" | jq '[.[] | select(.Name | endswith(".dump.sha256"))] | length')
           [ "$dumps" -ge 1 ] || { echo "::error::no hay un .dump de las ultimas 24 h en $ruta"; exit 1; }
           [ "$sums" -ge 1 ] || { echo "::error::el backup reciente no tiene su .sha256"; exit 1; }
-      - run: npm ci
-      - name: Migraciones contra produccion
-        run: npx drizzle-kit migrate
-        env: { DATABASE_URL: "${{ secrets.PROD_DATABASE_URL }}" }
-      - name: Smoke test
+      - name: Pedir el deploy a Coolify
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          PROD_APP_UUID: ${{ vars.PROD_APP_UUID }}
         run: |
-          curl -fsS --retry 10 --retry-delay 6 --retry-connrefused "${{ vars.PROD_URL }}/api/health"
+          curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" "$COOLIFY_URL/api/v1/deploy?uuid=$PROD_APP_UUID" > /dev/null
+          echo "Deploy pedido para $PROD_APP_UUID"
+      - name: Esperar el deploy
+        env:
+          PROD_URL: ${{ vars.PROD_URL }}
+          SHA: ${{ github.sha }}
+        run: |
+          deadline=$((SECONDS + 1500))
+          primera=1
+          while [ $SECONDS -lt $deadline ]; do
+            cuerpo=$(curl -fsS --max-time 10 "$PROD_URL/api/health" 2>/dev/null || true)
+            estado=$(echo "$cuerpo" | jq -r '.status // empty' 2>/dev/null || true)
+            commit=$(echo "$cuerpo" | jq -r '.commit // empty' 2>/dev/null || true)
+            if [ "$estado" = "ok" ]; then
+              if [ -n "$commit" ]; then
+                [ "$commit" = "$SHA" ] && { echo "Produccion en $commit"; exit 0; }
+                echo "Produccion sirve $commit, esperando $SHA"
+              else
+                if [ "$primera" = 1 ]; then echo "El health no informa commit: espero 5 min fijos"; sleep 300; primera=0; fi
+                echo "Produccion responde (version sin verificar)"; exit 0
+              fi
+            fi
+            sleep 15
+          done
+          echo "::error::el deploy de produccion no llego a $SHA en 25 min"; exit 1
+      - name: Smoke test
+        env:
+          PROD_URL: ${{ vars.PROD_URL }}
+        run: |
+          set -e
+          curl -fsS --retry 5 --retry-delay 6 --retry-connrefused "$PROD_URL/api/health" > /dev/null
+          for ruta in / /planes /blog /contacto /privacidad /terminos /sitemap.xml /robots.txt; do
+            curl -fsS --max-time 20 -o /dev/null "$PROD_URL$ruta" || { echo "::error::$ruta no responde"; exit 1; }
+          done
+          # Produccion no puede quedar bloqueada para buscadores (el bloqueo es solo de test).
+          if curl -fsS "$PROD_URL/robots.txt" | grep -qx 'Disallow: /'; then echo "::error::robots.txt bloquea todo el sitio"; exit 1; fi
+          echo "Smoke test ok"

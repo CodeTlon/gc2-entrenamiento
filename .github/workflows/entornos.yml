@@ -1,61 +1,70 @@
-# Test efimero: enciende la base de test en Coolify, migra, corre E2E contra el preview de Vercel de la rama
-# `test` y la apaga al cerrar el PR. Esqueleto sin ejecutar: validar con una corrida real antes de confiar en el.
+# Verifica el test real: cada push a `test` lo despliega Coolify (recurso `gc2-test`, mismo compose que prod, base y archivos propios).
+# Este workflow espera a que ese deploy termine y corre los E2E contra la URL de test. No necesita token de Coolify ni acceso a la base.
 #
 # Configuracion (la hace el usuario):
-#   Secrets del repo: COOLIFY_URL, COOLIFY_TOKEN, TEST_DB_UUID, TEST_DB_HOST, TEST_DB_PORT, TEST_DATABASE_URL, TEST_URL
-#   TEST_URL = URL estable del preview de la rama `test` en Vercel (el preview usa TEST_DATABASE_URL en sus env de Preview).
+#   Variable del repo: TEST_URL (por ejemplo https://test.gc2entrenamientoderesistencia.com.ar). Sin ella el workflow no hace nada.
+# Si Coolify le pasa SOURCE_COMMIT a la app, /api/health informa el commit desplegado y el workflow espera a que sea el de este push;
+# si no (commit vacio), espera a que el health responda y deja un margen fijo para el deploy.
 name: Entornos
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened, closed]
+  push:
+    branches: [test]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: entornos-${{ github.event.pull_request.number }}
+  group: entornos-test
   cancel-in-progress: true
 
-env:
-  COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
-  COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-  TEST_DB_UUID: ${{ secrets.TEST_DB_UUID }}
-
 jobs:
-  test-env:
-    if: github.event.action != 'closed'
-    runs-on: ubuntu-latest
+  e2e-test:
+    if: ${{ vars.TEST_URL != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with: { node-version: '22', cache: 'npm' }
-      - run: npm ci
-      - name: Encender base de test
+      - name: Esperar el deploy de test en Coolify
+        env:
+          TEST_URL: ${{ vars.TEST_URL }}
+          SHA: ${{ github.sha }}
         run: |
-          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
-            "$COOLIFY_URL/api/v1/databases/$TEST_DB_UUID/start"
-      - name: Esperar a que Postgres acepte conexiones
-        run: |
-          for i in $(seq 1 36); do
-            pg_isready -h "${{ secrets.TEST_DB_HOST }}" -p "${{ secrets.TEST_DB_PORT }}" && exit 0
-            sleep 5
+          deadline=$((SECONDS + 900))
+          primera=1
+          while [ $SECONDS -lt $deadline ]; do
+            cuerpo=$(curl -fsS --max-time 10 "$TEST_URL/api/health" 2>/dev/null || true)
+            estado=$(echo "$cuerpo" | jq -r '.status // empty' 2>/dev/null || true)
+            commit=$(echo "$cuerpo" | jq -r '.commit // empty' 2>/dev/null || true)
+            if [ "$estado" = "ok" ]; then
+              if [ -n "$commit" ]; then
+                [ "$commit" = "$SHA" ] && { echo "Test desplegado en $commit"; exit 0; }
+                echo "Test sirve $commit, esperando $SHA"
+              else
+                # Sin commit informado: margen para que Coolify termine de construir y reemplazar el contenedor.
+                if [ "$primera" = 1 ]; then echo "El health no informa commit: espero 4 min fijos"; sleep 240; primera=0; fi
+                echo "Test responde (version sin verificar)"; exit 0
+              fi
+            fi
+            sleep 15
           done
-          echo "La base de test no levanto"; exit 1
-      - name: Migraciones contra test
-        run: npx drizzle-kit migrate
-        env: { DATABASE_URL: "${{ secrets.TEST_DATABASE_URL }}" }
-      - name: E2E contra el preview de test
+          echo "::error::el deploy de test no llego a $SHA en 15 min"; exit 1
+      - run: npm ci
+      - name: E2E contra test
         run: |
           npx playwright install --with-deps chromium
           npx playwright test
-        env: { BASE_URL: "${{ secrets.TEST_URL }}" }
-
-  apagar-test:
-    if: github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Apagar base de test
-        run: |
-          curl -fsS -X POST -H "Authorization: Bearer $COOLIFY_TOKEN" \
-            "$COOLIFY_URL/api/v1/databases/$TEST_DB_UUID/stop" || true
+        env:
+          BASE_URL: ${{ vars.TEST_URL }}
+      - name: Guardar el reporte si fallo
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          if-no-files-found: ignore
+          retention-days: 7
