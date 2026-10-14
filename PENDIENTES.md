@@ -43,9 +43,14 @@ Ver `scripts/migracion/README.md`. Ensayo hecho; falta repetirlo contra `gc2-tes
 
 ## Corte (lo ejecuta Mateo)
 - [ ] Ventana de bajo trafico, aviso a la duena del sitio, `07` + `08 --real` (datos reales de leads) + `05 --yes` finales, modo mantenimiento.
+- [ ] Antes de apagar Vercel: copiar de su panel las variables que usa el sitio (`NEXT_PUBLIC_GA_ID` ya esta en test, `RESEND_*`, `COMPANY_EMAIL`, `NEXT_PUBLIC_SITE_URL`) a `gc2-prod`.
+- [ ] DNS: el `A` de la raiz (hoy `216.198.79.1`, Vercel) y el `CNAME` de `www` (hoy `*.vercel-dns-017.com`) pasan a la IP del VPS de Coolify; dejar intactos los `MX`/`TXT` de Resend, DMARC y Google. Agregar `www` al servicio `app` (redirect a la raiz).
+- [ ] Despues del corte (no antes): desconectar y borrar el proyecto de Vercel, y limpiar referencias: `.github/workflows/{entornos,produccion}.yml`, docs (`deployment-guide`, `maintenance-guide`, `technical-docs`), `AGENTS.md`, `.claude/CLAUDE.md`. `@vercel/og` es solo la libreria del export de Story, no requiere Vercel.
 - [ ] DNS al servicio de Coolify, smoke test (`/api/health`, home, blog, login, subida), Google Analytics y sitemap.
 - [ ] Supabase en solo lectura 1-2 semanas con fecha de baja anotada; despues dar de baja el proyecto y revocar el token.
 - [ ] Promover por PR: `dev` -> `test` -> `main`.
+
+- [ ] Al borrar un post o reemplazar su portada/video/PDF, los archivos quedan huerfanos en el volumen (igual que en Supabase). Limpiarlos en `posts.ts` o con un script periodico.
 
 ## Sin verificar
 - Despliegue en el Coolify real (solo se probo el mismo compose en Docker local).
