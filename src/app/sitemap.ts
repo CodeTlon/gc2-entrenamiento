@@ -3,7 +3,8 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { posts } from '@/db/schema'
 
-const BASE_URL = 'https://gc2entrenamientoderesistencia.com.ar'
+// Sale del entorno (test publica su propia URL); el valor por defecto es el dominio real.
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar').replace(/\/$/, '')
 
 // Dinámico: el build de Coolify no tiene base y congelaría el sitemap sin los posts publicados.
 export const dynamic = 'force-dynamic'
