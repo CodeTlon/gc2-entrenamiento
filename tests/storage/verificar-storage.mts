@@ -31,6 +31,14 @@ const raiz = await putObject('equipo.jpg', Buffer.from('r'))
 assert.equal(raiz, '/media/equipo.jpg'); assert.equal(keyFromUrl(raiz), 'equipo.jpg'); await deleteObject('equipo.jpg'); ok('acepta archivos en la raíz (migrados de Supabase)')
 assert.equal(TIPOS_POR_EXT.svg, undefined); assert.equal(TIPOS_POR_EXT.html, undefined); ok('SVG y HTML no son servibles')
 
+const { portadaParaStory } = await import('../../src/lib/story-cover')
+const sharp = (await import('sharp')).default
+const webp = await sharp({ create: { width: 40, height: 40, channels: 3, background: '#38BDF8' } }).webp().toBuffer()
+const urlWebp = await putObject('blog/22222222-2222-2222-2222-222222222222.webp', webp)
+assert.match((await portadaParaStory(urlWebp)) ?? '', /^data:image\/jpeg;base64,/); ok('portada propia (webp) se entrega embebida para el Story')
+assert.equal(await portadaParaStory('https://ajeno.com/a.jpg'), 'https://ajeno.com/a.jpg'); ok('portada externa pasa tal cual')
+assert.equal(await portadaParaStory('/media/blog/no-existe.webp'), null); assert.equal(await portadaParaStory(null), null); ok('portada inexistente o vacía da null')
+
 rmSync(process.env.STORAGE_DIR!, { recursive: true, force: true })
 assert.equal(existsSync(process.env.STORAGE_DIR!), false)
 console.log(`\n${n} verificaciones OK`)

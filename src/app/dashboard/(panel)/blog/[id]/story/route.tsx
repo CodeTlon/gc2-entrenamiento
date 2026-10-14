@@ -5,6 +5,7 @@ import { posts } from '@/db/schema'
 import { isUuid } from '@/db/queries'
 import { getUser } from '@/lib/session'
 import { parseFocal } from '@/lib/image-focal'
+import { portadaParaStory } from '@/lib/story-cover'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   if (!post) return new Response('No encontrado', { status: 404 })
 
-  const coverSrc = parseFocal(post.cover_image).src
+  const coverSrc = await portadaParaStory(parseFocal(post.cover_image).src)
   const titleSize = post.title.length > 50 ? 52 : post.title.length > 30 ? 60 : 68
 
   return new ImageResponse(
