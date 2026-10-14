@@ -7,6 +7,7 @@ import { and, eq, ne, ilike } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { errorMessage } from '@/lib/errors'
+import { liberarArchivos } from '@/lib/media-cleanup'
 import { coaches } from '@/db/schema'
 
 export type CoachState = { ok?: boolean; error?: string } | undefined
@@ -80,7 +81,9 @@ export async function updateCoachAction(
     const isDuplicate = await checkDuplicateCoachName(data.name, id)
     if (isDuplicate) return { error: 'Ya existe un entrenador con ese nombre.' }
 
+    const [antes] = await db.select({ photo_url: coaches.photo_url }).from(coaches).where(eq(coaches.id, id)).limit(1)
     await db.update(coaches).set({ ...data, updated_at: new Date().toISOString() }).where(eq(coaches.id, id))
+    await liberarArchivos(antes?.photo_url)
 
     revalidatePath('/')
   } catch (e) {
@@ -93,7 +96,9 @@ export async function deleteCoachAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   await requireUser()
+  const [antes] = await db.select({ photo_url: coaches.photo_url }).from(coaches).where(eq(coaches.id, id)).limit(1)
   await db.delete(coaches).where(eq(coaches.id, id))
+  await liberarArchivos(antes?.photo_url)
   revalidatePath('/', 'layout')
   redirect('/dashboard/entrenadores')
 }

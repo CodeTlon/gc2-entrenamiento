@@ -42,6 +42,7 @@ Ver `scripts/migracion/README.md`. Ensayo hecho; falta repetirlo contra `gc2-tes
 - [ ] Backup de la base nueva y simulacro de restauracion; anotar la fecha en `.claude/CLAUDE.md`.
 
 ## Corte (lo ejecuta Mateo)
+Paso a paso completo: `docs/produccion-coolify.md`.
 - [ ] Ventana de bajo trafico, aviso a la duena del sitio, `07` + `08 --real` (datos reales de leads) + `05 --yes` finales, modo mantenimiento.
 - [ ] Antes de apagar Vercel: copiar de su panel las variables que usa el sitio (`NEXT_PUBLIC_GA_ID` ya esta en test, `RESEND_*`, `COMPANY_EMAIL`, `NEXT_PUBLIC_SITE_URL`) a `gc2-prod`.
 - [ ] DNS: el `A` de la raiz (hoy `216.198.79.1`, Vercel) y el `CNAME` de `www` (hoy `*.vercel-dns-017.com`) pasan a la IP del VPS de Coolify; dejar intactos los `MX`/`TXT` de Resend, DMARC y Google. Agregar `www` al servicio `app` (redirect a la raiz).
@@ -50,7 +51,7 @@ Ver `scripts/migracion/README.md`. Ensayo hecho; falta repetirlo contra `gc2-tes
 - [ ] Supabase en solo lectura 1-2 semanas con fecha de baja anotada; despues dar de baja el proyecto y revocar el token.
 - [ ] Promover por PR: `dev` -> `test` -> `main`.
 
-- [ ] Al borrar un post o reemplazar su portada/video/PDF, los archivos quedan huerfanos en el volumen (igual que en Supabase). Limpiarlos en `posts.ts` o con un script periodico.
+- [x] Archivos huerfanos: `src/lib/media-cleanup.ts` (v2.1.4). Residual: lo que se sube y nunca se guarda en el formulario queda en el volumen.
 
 ## Sin verificar
 - Despliegue en el Coolify real (solo se probo el mismo compose en Docker local).

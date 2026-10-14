@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { errorMessage } from '@/lib/errors'
+import { liberarArchivos } from '@/lib/media-cleanup'
 import { posts, postCategories, postAuthors } from '@/db/schema'
 
 export type PostState = { ok?: boolean; error?: string } | undefined
@@ -100,7 +101,9 @@ export async function updatePostAction(
     const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
-    const [existing] = await db.select({ slug: posts.slug, title: posts.title }).from(posts).where(eq(posts.id, id)).limit(1)
+    const [existing] = await db
+      .select({ slug: posts.slug, title: posts.title, content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
+      .from(posts).where(eq(posts.id, id)).limit(1)
     if (!existing) return { error: 'El artículo no existe.' }
     let slug = existing.slug
     if (existing.title !== data.title) {
@@ -122,6 +125,7 @@ export async function updatePostAction(
       }
     })
 
+    await liberarArchivos(existing.content, existing.cover_image, existing.video_url, existing.attachment_url)
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
   } catch (e) {
@@ -134,7 +138,13 @@ export async function deletePostAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   await requireUser()
+  const [antes] = await db
+    .select({ content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1)
   await db.delete(posts).where(eq(posts.id, id))
+  if (antes) await liberarArchivos(antes.content, antes.cover_image, antes.video_url, antes.attachment_url)
   revalidatePath('/blog')
   redirect('/dashboard/blog')
 }

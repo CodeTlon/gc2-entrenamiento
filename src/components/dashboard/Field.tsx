@@ -118,7 +118,6 @@ export function ImageUpload({
     const fd = new FormData()
     fd.append('file', file)
     fd.append('folder', folder)
-    if (url) fd.append('oldUrl', url)
     const res = await uploadMediaAction(fd)
     setBusy(false)
     if (res.error) {

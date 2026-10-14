@@ -5,9 +5,11 @@ import sharp from 'sharp'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/session'
 import { errorMessage } from '@/lib/errors'
+import { eq } from 'drizzle-orm'
 import { siteSettings } from '@/db/schema'
-import { putObject, deleteObject, keyFromUrl, TIPOS_POR_EXT } from '@/lib/storage'
+import { putObject, TIPOS_POR_EXT } from '@/lib/storage'
 import { maxBytesForMime } from '@/lib/upload-limits'
+import { liberarArchivos } from '@/lib/media-cleanup'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
 
@@ -22,11 +24,13 @@ export async function saveSiteSettingAction(
   try {
     await requireUser()
     const updated_at = new Date().toISOString()
+    const [antes] = await db.select({ value: siteSettings.value }).from(siteSettings).where(eq(siteSettings.key, key)).limit(1)
     await db
       .insert(siteSettings)
       .values({ key, value, updated_at })
       .onConflictDoUpdate({ target: siteSettings.key, set: { value, updated_at } })
 
+    if (antes) await liberarArchivos(JSON.stringify(antes.value))
     for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
@@ -45,12 +49,6 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const rawFolder = String(formData.get('folder') ?? 'uploads')
     const folder = /^[a-z0-9_-]{1,40}(\/[a-z0-9_-]{1,40}){0,2}$/i.test(rawFolder) ? rawFolder : 'uploads'
 
-    // Borrar imagen anterior si es un archivo propio (/media/...)
-    const oldUrl = String(formData.get('oldUrl') ?? '')
-    if (oldUrl) {
-      const oldKey = keyFromUrl(oldUrl)
-      if (oldKey) await deleteObject(oldKey)
-    }
     const id = crypto.randomUUID()
     const original = Buffer.from(await file.arrayBuffer())
     const mime = file.type || ''

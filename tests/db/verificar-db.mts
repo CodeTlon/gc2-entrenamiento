@@ -18,6 +18,7 @@ process.env.DB_POOL_MAX = '1'
 process.env.BETTER_AUTH_SECRET = 'test_secret_test_secret_test_secret_123'
 process.env.BETTER_AUTH_URL = 'http://localhost:3000'
 process.env.APP_ENV = 'development'
+process.env.STORAGE_DIR = (await import('node:fs')).mkdtempSync((await import('node:path')).join((await import('node:os')).tmpdir(), 'gc2-db-storage-'))
 
 const { db } = await import('../../src/lib/db')
 const s = await import('../../src/db/schema')
@@ -139,6 +140,30 @@ await check('contacto: validacion rechaza datos invalidos', async () => {
   const r = await submitContact(null, form({ nombre: 'J', email: 'no', telefono: '1', mensaje: 'corto' }))
   assert.equal(r.success, false)
   assert.ok(r.fieldErrors?.email)
+})
+
+const { putObject, fileInfo } = await import('../../src/lib/storage')
+const { liberarArchivos } = await import('../../src/lib/media-cleanup')
+await check('archivos huerfanos: se borra lo que nadie usa y se conserva lo que otra fila referencia', async () => {
+  const portada = await putObject('blog/aaaaaaaa-0000-0000-0000-000000000001.webp', Buffer.from('p'))
+  const video = await putObject('blog/aaaaaaaa-0000-0000-0000-000000000002.mp4', Buffer.from('v'))
+  const foto = await putObject('coaches/aaaaaaaa-0000-0000-0000-000000000003.webp', Buffer.from('f'))
+  const banner = await putObject('banners/aaaaaaaa-0000-0000-0000-000000000004.webp', Buffer.from('b'))
+  const existe = async (u: string) => (await fileInfo(u.replace('/media/', ''))) !== null
+  await db.insert(s.coaches).values({ slug: 'c-huerfano', name: 'C Huerfano', specialty: 'x', photo_url: portada })
+  await db.insert(s.siteSettings).values({ key: 'page_banners', value: { home: banner }, updated_at: new Date().toISOString() })
+  const [post] = await db.insert(s.posts).values({ slug: 'p-huerfano', title: 'P', content: `<video src="${video}"></video>`, cover_image: portada, published: true }).returning({ id: s.posts.id })
+  // Se borra el post: el video ya no lo usa nadie; la portada la sigue usando el coach.
+  await db.delete(s.posts).where(eq(s.posts.id, post.id))
+  await liberarArchivos(`<video src="${video}"></video>`, portada)
+  assert.equal(await existe(video), false)
+  assert.equal(await existe(portada), true)
+  // Se borra el coach: la portada queda libre. La foto sin referencias y el banner de ajustes (referenciado) se distinguen.
+  await db.delete(s.coaches).where(eq(s.coaches.slug, 'c-huerfano'))
+  await liberarArchivos(portada, foto, banner)
+  assert.equal(await existe(portada), false)
+  assert.equal(await existe(foto), false)
+  assert.equal(await existe(banner), true)
 })
 
 console.log(`\n${ok} verificaciones OK${process.exitCode ? ' (hubo fallas)' : ''}`)
