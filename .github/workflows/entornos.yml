@@ -1,5 +1,7 @@
-# Verifica el test real: cada push a `test` lo despliega Coolify (recurso `gc2-test`, mismo compose que prod, base y archivos propios).
-# Este workflow espera a que ese deploy termine y corre los E2E contra la URL de test. No necesita token de Coolify ni acceso a la base.
+# Verifica el test real (recurso `gc2-test` de Coolify, mismo compose que prod, base y archivos propios).
+# Test se enciende solo cuando se quiere probar algo: si al hacer push a `test` esta apagado, el workflow lo avisa y termina sin fallar.
+# Si esta encendido, espera a que Coolify termine el deploy de ese push y corre los E2E contra la URL de test.
+# No necesita token de Coolify ni acceso a la base.
 #
 # Configuracion (la hace el usuario):
 #   Variable del repo: TEST_URL (por ejemplo https://test.gc2entrenamientoderesistencia.com.ar). Sin ella el workflow no hace nada.
@@ -26,12 +28,23 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
         with: { node-version: '22', cache: 'npm' }
-      - name: Esperar el deploy de test en Coolify
+      - name: Esperar el deploy de test (si esta encendido)
+        id: espera
         env:
           TEST_URL: ${{ vars.TEST_URL }}
           EVENTO: ${{ github.event_name }}
         run: |
           inicio=$(date +%s)
+          # Test apagado: no es un error, simplemente no hay nada que probar.
+          for _ in 1 2 3; do
+            curl -fsS --max-time 10 "$TEST_URL/api/health" > /dev/null 2>&1 && encendido=1 && break
+            sleep 10
+          done
+          if [ -z "${encendido:-}" ]; then
+            echo "::notice::gc2-test esta apagado: se omiten los E2E"
+            echo "omitir=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           deadline=$((SECONDS + 900))
           while [ $SECONDS -lt $deadline ]; do
             cuerpo=$(curl -fsS --max-time 10 "$TEST_URL/api/health" 2>/dev/null || true)
@@ -46,8 +59,10 @@ jobs:
             sleep 15
           done
           echo "::error::no hubo un deploy nuevo de test en 15 min"; exit 1
-      - run: npm ci
+      - if: steps.espera.outputs.omitir != 'true'
+        run: npm ci
       - name: E2E contra test
+        if: steps.espera.outputs.omitir != 'true'
         run: |
           npx playwright install --with-deps chromium
           npx playwright test

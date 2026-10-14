@@ -12,7 +12,7 @@ Variables y recursos de referencia: `docs/environments.md`. Scripts de migració
 
 ## 1. Código en `main` (lo promueve Mateo)
 1. PR `dev` -> `test` -> `main` (ver `PENDIENTES.md`). `main` recién se toca cuando todo lo de arriba esté verde.
-2. CI de `main` en verde (lint, tsc, `test:db`, `test:storage`, build, audit).
+2. Ojo: `gc2-prod` tiene auto-deploy, asi que el merge a `main` despliega solo. CI de `main` en verde (lint, tsc, `test:db`, `test:storage`, build, audit).
 
 ## 2. Crear `gc2-prod` en Coolify
 1. Proyecto `gc2`, entorno `production`, **New Resource -> Docker Compose** desde el repo privado `CodeTlon/gc2-entrenamiento`, rama `main`.
@@ -68,7 +68,7 @@ En el proveedor de DNS:
 ## 8. Después del corte
 - Supabase en solo lectura **1 a 2 semanas** con fecha de baja anotada; después darlo de baja y revocar el token `sbp_`.
 - Desconectar y borrar el proyecto de Vercel; limpiar sus referencias en `.github/workflows/{entornos,produccion}.yml`, docs y `AGENTS.md` (`@vercel/og` es solo la librería del Story).
-- Workflows (adaptados). Ya configurado en GitHub (2026-10-14): variable del repo `TEST_URL`; Environment `prod-coolify` (solo rama `main`, aprobador Mateo) con las variables `PROD_URL`, `BACKUP_BUCKET=backups-codetlon` y `BACKUP_PROJECT=gc2`. **Falta, cuando exista `gc2-prod`:** desactivar su auto-deploy en Coolify; en `prod-coolify` cargar la variable `PROD_APP_UUID` y los secrets `COOLIFY_URL`, `COOLIFY_TOKEN` (token de API con permiso de deploy y nada mas; Allowed IPs vacio porque los runners de GitHub usan rangos amplios), `B2_READ_KEY_ID` y `B2_READ_APP_KEY` (clave B2 de solo lectura). Recien al final la variable del repo `PRODUCCION_HABILITADA=true` (hoy no existe: el workflow de produccion no hace nada).
+- Workflows: `gc2-prod` queda con el auto-deploy **encendido** (cada push a `main` despliega solo). Ya configurado en GitHub: variable `TEST_URL` y Environment `prod-coolify` (vars `PROD_URL`, `BACKUP_BUCKET=backups-codetlon`, `BACKUP_PROJECT=gc2`). **Falta cuando exista el backup de prod:** secrets `B2_READ_KEY_ID` y `B2_READ_APP_KEY` en `prod-coolify` y, al final, la variable del repo `PRODUCCION_HABILITADA=true` (hoy no existe: `produccion.yml` y `backup-check.yml` no hacen nada).
 - Proteger `dev`, `test` y `main` en GitHub.
 
 ## Marcha atrás

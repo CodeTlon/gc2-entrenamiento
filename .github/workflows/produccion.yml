@@ -1,15 +1,11 @@
-# Release a produccion: push a `main`. Gate manual (Environment `prod-coolify` con required reviewers) + backup reciente
-# verificado en B2 + deploy de Coolify por su API + espera del deploy + smoke test.
-#
-# El recurso `gc2-prod` de Coolify tiene que tener el auto-deploy DESACTIVADO: si no, Coolify desplegaria al hacer push, antes de la
-# aprobacion. Las migraciones las corre la app al arrancar (fail-closed) porque la base no tiene puerto publico: deben ser compatibles
-# hacia atras (agregar antes de usar; drop/rename en dos releases).
+# Verificacion de produccion: `gc2-prod` tiene el auto-deploy de Coolify encendido, asi que cada push a `main` se despliega solo.
+# Este workflow espera a ese deploy y hace un smoke test; si algo falla, la corrida queda en rojo y GitHub avisa por mail.
+# No dispara el deploy ni necesita token de Coolify. Las migraciones las corre la app al arrancar (fail-closed) porque la base
+# no tiene puerto publico: deben ser compatibles hacia atras (agregar antes de usar; drop/rename en dos releases).
 #
 # Configuracion (la hace el usuario):
 #   Variable de repo:         PRODUCCION_HABILITADA=true (llave: mientras no sea 'true' el workflow no hace nada)
-#   Environment `prod-coolify`: required reviewers
-#                             + vars PROD_URL, PROD_APP_UUID, BACKUP_BUCKET, BACKUP_PROJECT
-#                             + secrets COOLIFY_URL, COOLIFY_TOKEN (token con permiso de deploy y nada mas), B2_READ_KEY_ID, B2_READ_APP_KEY (clave de solo lectura)
+#   Environment `prod-coolify`: variable PROD_URL (sin reviewers: no hay aprobacion manual)
 name: Produccion
 on:
   push:
@@ -24,51 +20,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
+  verificar:
     if: ${{ vars.PRODUCCION_HABILITADA == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     environment: prod-coolify
     steps:
-      - name: Instalar rclone
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone
-      - name: Verificar backup reciente de la base de produccion en B2
-        env:
-          RCLONE_CONFIG_B2_TYPE: b2
-          RCLONE_CONFIG_B2_ACCOUNT: ${{ secrets.B2_READ_KEY_ID }}
-          RCLONE_CONFIG_B2_KEY: ${{ secrets.B2_READ_APP_KEY }}
-        run: |
-          ruta="b2:${{ vars.BACKUP_BUCKET }}/prod/${{ vars.BACKUP_PROJECT }}/postgres"
-          recientes=$(rclone lsjson "$ruta" --recursive --files-only --max-age 24h)
-          dumps=$(echo "$recientes" | jq '[.[] | select(.Name | endswith(".dump"))] | length')
-          sums=$(echo "$recientes" | jq '[.[] | select(.Name | endswith(".dump.sha256"))] | length')
-          [ "$dumps" -ge 1 ] || { echo "::error::no hay un .dump de las ultimas 24 h en $ruta"; exit 1; }
-          [ "$sums" -ge 1 ] || { echo "::error::el backup reciente no tiene su .sha256"; exit 1; }
-      - name: Pedir el deploy a Coolify
-        env:
-          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
-          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
-          PROD_APP_UUID: ${{ vars.PROD_APP_UUID }}
-        run: |
-          date +%s > "$RUNNER_TEMP/deploy_pedido"
-          curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" "$COOLIFY_URL/api/v1/deploy?uuid=$PROD_APP_UUID" > /dev/null
-          echo "Deploy pedido para $PROD_APP_UUID"
-      - name: Esperar el deploy
+      - name: Esperar el deploy de produccion
         env:
           PROD_URL: ${{ vars.PROD_URL }}
+          EVENTO: ${{ github.event_name }}
         run: |
+          inicio=$(date +%s)
           deadline=$((SECONDS + 1500))
           while [ $SECONDS -lt $deadline ]; do
             cuerpo=$(curl -fsS --max-time 10 "$PROD_URL/api/health" 2>/dev/null || true)
             estado=$(echo "$cuerpo" | jq -r '.status // empty' 2>/dev/null || true)
             arranque=$(echo "$cuerpo" | jq -r '.started_at // empty' 2>/dev/null || true)
-            if [ "$estado" = "ok" ] && [ -n "$arranque" ] && [ "$(date -d "$arranque" +%s)" -ge "$(cat "$RUNNER_TEMP/deploy_pedido")" ]; then
-              echo "Produccion desplegada (arranque $arranque)"; exit 0
+            if [ "$estado" = "ok" ]; then
+              [ "$EVENTO" = "workflow_dispatch" ] && { echo "Produccion responde"; exit 0; }
+              if [ -n "$arranque" ] && [ "$(date -d "$arranque" +%s)" -ge "$inicio" ]; then echo "Produccion desplegada (arranque $arranque)"; exit 0; fi
+              echo "Produccion sigue con el contenedor anterior (arranque ${arranque:-desconocido})"
+            else
+              echo "Produccion no responde (deploy en curso o caida)"
             fi
-            echo "Produccion sigue con el contenedor anterior o no responde"
             sleep 15
           done
-          echo "::error::el deploy de produccion no termino en 25 min"; exit 1
+          echo "::error::no hubo un deploy nuevo de produccion en 25 min"; exit 1
       - name: Smoke test
         env:
           PROD_URL: ${{ vars.PROD_URL }}

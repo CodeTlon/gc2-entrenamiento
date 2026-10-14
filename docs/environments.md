@@ -30,10 +30,13 @@ Ver `.env.example` (desarrollo local). En Coolify las carga el compose; `DATABAS
 ## CI
 Los workflows viven en `.github/workflows/`. El keep-alive de Supabase ya se eliminó.
 - PR a `test` y `main`: `ci.yml` (lint, tsc, `test:db`, `test:storage`, build, audit). Corrida real verificada.
-- Push a `test`: Coolify despliega `gc2-test` solo y `entornos.yml` espera ese deploy y corre los E2E contra la URL de test. Necesita la **variable** del repo `TEST_URL` (sin ella no hace nada) y ningun secret.
-- Push a `main`: `produccion.yml` (aprobacion manual con Environment `prod-coolify`, backup reciente en B2, deploy de `gc2-prod` por la API de Coolify, espera del deploy y smoke test). Requiere que `gc2-prod` tenga el **auto-deploy desactivado** (si no, Coolify despliega antes de la aprobacion), el token de Coolify con permiso de deploy y nada mas, y `PRODUCCION_HABILITADA=true`. Las migraciones las corre la app al arrancar, no el CI.
-- `/api/health` informa `started_at` (arranque del proceso). Coolify no le pasa `SOURCE_COMMIT` al compose (verificado en `gc2-test`: llegaba vacio), asi que los workflows detectan el deploy esperando un contenedor que haya arrancado despues de que empezo el job (test) o de que se pidio el deploy (produccion).
-El Environment se llama `prod-coolify` (no `production`: ese nombre ya lo usa la integracion de Vercel y GitHub no distingue mayusculas). Los workflows `entornos.yml` y `produccion.yml` estan validados con `actionlint` y la logica de espera se probo contra un servidor local, pero **no se corrieron en GitHub**: validar con una corrida real.
+- **dev** es local (`docker compose`), sin deploy ni CI. **test** (`gc2-test`) se enciende solo cuando se quiere probar algo; **prod** (`gc2-prod`) tiene siempre el auto-deploy de Coolify.
+- Push a `test`: si `gc2-test` esta encendido, Coolify despliega y `entornos.yml` espera ese deploy y corre los E2E contra `TEST_URL` (sin secrets). Si esta apagado, avisa y termina sin fallar. Para que un push no lo encienda, desactivar el auto-deploy de `gc2-test`.
+- Push a `main`: Coolify despliega `gc2-prod` solo; `produccion.yml` espera el deploy y hace un smoke test (rojo = GitHub avisa por mail). No pide aprobacion ni usa token de Coolify. Se activa con `PRODUCCION_HABILITADA=true`.
+- `backup-check.yml`: una vez por dia verifica en B2 que haya un dump de las ultimas 24 h con su `.sha256` (alarma por si el cron del VPS deja de correr). Misma llave `PRODUCCION_HABILITADA`.
+- `/api/health` informa `started_at` (arranque del proceso). Coolify no le pasa `SOURCE_COMMIT` al compose (verificado en `gc2-test`), asi que los workflows detectan el deploy esperando un contenedor que haya arrancado despues de que empezo el job.
+- Variable del repo `TEST_URL`; Environment `prod-coolify` (solo rama `main`, sin aprobadores; el nombre evita pisar el `Production` de Vercel: GitHub no distingue mayusculas) con `PROD_URL`, `BACKUP_BUCKET` y `BACKUP_PROJECT`, y secrets `B2_READ_KEY_ID`/`B2_READ_APP_KEY` (clave de solo lectura).
+Los workflows `entornos.yml`, `produccion.yml` y `backup-check.yml` estan validados con `actionlint`; `entornos.yml` ya corrio en GitHub con exito; los de produccion no (faltan `gc2-prod` y la habilitacion).
 
 ## Migraciones
 `npx drizzle-kit generate` crea el SQL (se commitea en `drizzle/`). Las aplica la app al arrancar (`scripts/migrate.mts`, idempotente, fail-closed); en local `npx drizzle-kit migrate`. `drizzle-kit push` solo en dev local. Migraciones compatibles hacia atrás (drop/rename en dos releases).

@@ -26,10 +26,10 @@ Rama: `feature/dev2-coolify`. Estado al 2026-10-13. Todo corre en Coolify (regla
 - [ ] Backup de prod: cron en el VPS con `scripts/backup/backup-coolify.sh` (`FILES_MODE=volume`, `PROJECT=gc2`, `ENV_FILE=/etc/backup/gc2.env` copiado del de recoveryparts), y un simulacro con `restore-test.sh`. Probar antes la v2 del script: no esta validada contra la v1 que ya corre para recoveryparts.
 - [ ] Rotar las claves que pasaron por el chat: Resend de pruebas, la clave de B2 `backups` (ademas tiene permisos de mas: `deleteFiles`, `writeBuckets`) y el token `sbp_` de Supabase (revocar al terminar).
 - [ ] Resend: remitente del dominio verificado para prod; en test `APP_ENV=test` + `MAIL_SANDBOX_TO`.
-- [ ] GitHub: proteger `dev` y `test`; secrets de Coolify (`COOLIFY_URL`, `COOLIFY_TOKEN` con minimos permisos, UUIDs) cuando se adapten los workflows.
+- [ ] GitHub: proteger `dev`, `test` y `main` (decide Mateo; ojo: la proteccion bloquea los pushes directos). Ya no hacen falta secrets de Coolify.
 
 ## Por hacer en el codigo
-- [x] `entornos.yml` y `produccion.yml` adaptados a todo-en-Coolify (v2.1.5): validados con `actionlint`, sin correr en GitHub. Configurado en GitHub: `TEST_URL` y el Environment `prod-coolify` (vars `PROD_URL`, `BACKUP_*`). Falta cuando exista `gc2-prod`: desactivar su auto-deploy, `PROD_APP_UUID`, secrets `COOLIFY_URL`/`COOLIFY_TOKEN`/`B2_READ_*` y al final `PRODUCCION_HABILITADA=true` (ver `docs/produccion-coolify.md`).
+- [x] Workflows adaptados (v2.1.6): `entornos.yml` (ya corrio en GitHub; test encendido a demanda), `produccion.yml` (verifica el auto-deploy de `main`) y `backup-check.yml` (alarma diaria). Configurado en GitHub: `TEST_URL` y el Environment `prod-coolify`. Falta cuando exista prod: programar el cron de backup de gc2 en el VPS, secrets `B2_READ_*` en `prod-coolify` y al final `PRODUCCION_HABILITADA=true` (ver `docs/produccion-coolify.md`).
 - [ ] `posts.author_id` queda sin FK ni valor en posts nuevos (ids de Better Auth son texto): eliminar la columna o migrarla a `text`.
 - [ ] Honeypot/rate limit del formulario de contacto.
 - [ ] Imagenes originales sin optimizar en la raiz del bucket (hasta 4,7 MB, p. ej. `Mica.jpg`): `next/image` ya las sirve optimizadas; opcional pasarlas por sharp al migrar.
@@ -57,4 +57,4 @@ Paso a paso completo: `docs/produccion-coolify.md`.
 - Despliegue en el Coolify real (solo se probo el mismo compose en Docker local).
 - Pico de RAM del build y RAM libre del VPS.
 - El dashboard con los datos reales migrados (solo se vio el sitio publico); el export de Story con una portada real migrada.
-- `entornos.yml` y `produccion.yml` (faltan secrets de Coolify y adaptarlos).
+- `produccion.yml` y `backup-check.yml` (solo `actionlint`; faltan `gc2-prod`, el cron de backup y `PRODUCCION_HABILITADA`). `entornos.yml` ya corrio en GitHub.
