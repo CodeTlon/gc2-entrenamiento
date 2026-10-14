@@ -1,4 +1,4 @@
-# Release a produccion: push a `main`. Gate manual (Environment `production` con required reviewers) + backup reciente
+# Release a produccion: push a `main`. Gate manual (Environment `prod-coolify` con required reviewers) + backup reciente
 # verificado en B2 + deploy de Coolify por su API + espera del deploy + smoke test.
 #
 # El recurso `gc2-prod` de Coolify tiene que tener el auto-deploy DESACTIVADO: si no, Coolify desplegaria al hacer push, antes de la
@@ -7,7 +7,7 @@
 #
 # Configuracion (la hace el usuario):
 #   Variable de repo:         PRODUCCION_HABILITADA=true (llave: mientras no sea 'true' el workflow no hace nada)
-#   Environment `production`: required reviewers
+#   Environment `prod-coolify`: required reviewers
 #                             + vars PROD_URL, PROD_APP_UUID, BACKUP_BUCKET, BACKUP_PROJECT
 #                             + secrets COOLIFY_URL, COOLIFY_TOKEN (token con permiso de deploy y nada mas), B2_READ_KEY_ID, B2_READ_APP_KEY (clave de solo lectura)
 name: Produccion
@@ -28,7 +28,7 @@ jobs:
     if: ${{ vars.PRODUCCION_HABILITADA == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
-    environment: production
+    environment: prod-coolify
     steps:
       - name: Instalar rclone
         run: sudo apt-get update -qq && sudo apt-get install -y -qq rclone
