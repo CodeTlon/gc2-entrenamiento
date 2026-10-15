@@ -46,7 +46,7 @@ npm run test:e2e:ui    # Playwright UI
 - **Server Actions** (`src/actions/*.ts`), firma estándar `(prevState, formData) => Promise<State>`, usadas con `useFormState`/`useFormStatus`. Toda acción que muta datos del dashboard llama `requireUser()`/`getUser()` porque ya no hay RLS: ese chequeo es la autorización (no lo quites).
 - **Fallback de contenido obligatorio**: `src/lib/content.ts` siempre debe devolver datos, cayendo a `FALLBACK_*` (`src/lib/constants.ts`) si la base no responde. No rompas esta cadena.
 - **Sin RLS**: la autorización vive en el servidor (`requireUser()` en `src/lib/session.ts`). `contact_leads` se inserta solo desde `submitContact`. Si agregás una tabla escrita desde el dashboard, toda acción que la muta debe llamar `requireUser()`.
-- **Uploads grandes** (PDF/video en posts) van por `uploadDirectToStorage` → `POST /api/upload` (cuerpo crudo en streaming al volumen, bypass del Server Action, que limita el body a 20MB) — no muevas ese código a un Server Action.
+- **Uploads grandes** (PDF/video en posts) van por `uploadDirectToStorage` → `POST /api/upload` (cuerpo crudo en streaming al volumen, bypass del Server Action, que limita el body a 20MB) — no muevas ese código a un Server Action. Los videos se recomprimen ahí mismo con el servicio global (`src/lib/transcode.ts`, `TRANSCODE_API_KEY` solo en Coolify): siempre con soft-fail, el original nunca se pierde.
 - **i18n**: todo en español (es_AR). Mantenelo así.
 - **Comentarios**: en español, sólo cuando aportan — no comentarios obvios.
 - `src/proxy.ts` (no `middleware.ts`, renombrado por Next 16) es el auth gate de `/dashboard/**`.

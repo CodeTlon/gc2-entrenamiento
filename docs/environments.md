@@ -50,3 +50,6 @@ Local: `npx tsx --env-file=.env.development.local scripts/crear-usuario.mts <ema
 
 ## Archivos subidos
 Se guardan en el volumen `storage` y se sirven por `/media/<ruta>`. No hay bucket ni CORS que configurar: la subida es un POST del navegador al mismo dominio. Los archivos entran en el backup con `FILES_MODE=volume` (`docs/BACKUPS.md`). Para mover archivos entre servidores: `tar -C <origen> -cf - . | docker exec -i <app> tar -C /data/storage -xf -`.
+
+## Video (opcional)
+`TRANSCODE_API_KEY` (y `TRANSCODE_SERVICE_URL`, que tiene valor por defecto) activan la compresion de videos subidos con el servicio global de CodeTlon. Se cargan solo en las variables del recurso de Coolify; sin ellas el sitio guarda el video original. Ver `docker-compose.coolify.yml`.

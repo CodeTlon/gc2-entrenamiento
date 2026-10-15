@@ -43,3 +43,6 @@ Decisiones de diseño reales, con motivo, reconstruidas de código/comentarios/c
 
 - Por qué Barlow/Barlow Condensed como tipografías (probablemente heredado 1:1 del sitio PHP+SCSS legacy, según nota de "migración fiel" en `.claude/CLAUDE.md`, pero no hay una decisión explícita registrada).
 - Por qué Zod específicamente (y no otra lib de validación) — no hay rationale registrado, es simplemente el estándar del ecosistema Next/TS.
+
+## Video: servicio global de compresion, no ffmpeg en la app (2026-10-15)
+**Contexto:** el blog acepta video propio de hasta 60 MB sin compresion. **Decision:** `/api/upload` pasa los videos por el servicio global de CodeTlon (`codetlon-cloud/.claude/modules/video-transcode.md`), preset `web`, server-to-server. **Soft-fail obligatorio:** sin `TRANSCODE_API_KEY`, con error o con resultado mas pesado, se conserva el original. Una sola key para toda la flota, solo en variables de Coolify. **Descartado:** ffmpeg dentro de la app (peso de imagen y RAM) y compresion en el navegador (depende del navegador, tope de duracion).

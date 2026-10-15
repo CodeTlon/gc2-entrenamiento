@@ -7,7 +7,7 @@ Mapa para mantenimiento. **No releas el repo entero**: buscá tu tipo de cambio 
 
 ## Route Groups
 - `src/app/(public)/` — público (home, planes, blog + `[slug]`, contacto, privacidad, terminos)
-- `src/app/api/auth/[...all]/` — handler de Better Auth; `src/app/api/upload/` — URL firmada para subida directa a S3 (solo autenticados); `src/app/api/health/` — healthcheck con `select 1`
+- `src/app/api/auth/[...all]/` — handler de Better Auth; `src/app/api/upload/` — subida en streaming al volumen (sesión + origen + tipo + tamaño real); los videos pasan por el servicio global de compresión (`src/lib/transcode.ts`, soft-fail); `src/app/api/health/` — healthcheck con `select 1`
 - `src/app/auth/confirm/` — verifica `token_hash` vía `verifyOtp` (invites del panel y cualquier link sin code_verifier en el browser)
 - `src/app/dashboard/(auth)/login/` — login
 - `src/app/dashboard/(auth)/forgot-password/` — solicitud de reset de contraseña

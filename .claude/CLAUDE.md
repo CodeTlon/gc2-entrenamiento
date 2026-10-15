@@ -91,6 +91,7 @@ src/
     constants.ts             # Datos hardcodeados de fallback (coaches, planes, contacto, imágenes)
     youtube.ts               # Helper para embeds de YouTube en posts
     upload-limits.ts         # Límites de tamaño por mime (imagen/PDF/video) — uploadMediaAction y FileUpload
+    transcode.ts             # Cliente del servicio global de compresion de video (soft-fail)
     client-upload.ts         # uploadDirectToStorage: POST /api/upload desde el browser, bypass del Server Action
     utils.ts
 db/schema.ts                 # (en src/) schema Drizzle; drizzle/ = migraciones SQL; src/db/queries.ts = consultas compartidas
@@ -143,6 +144,7 @@ Definidas en `.env.development.local` / `.env.test.local` / `.env.production.loc
 | `COMPANY_EMAIL` | Destino de leads |
 | `NEXT_PUBLIC_GA_ID` | Google Analytics (opcional) |
 | `NEXT_PUBLIC_SITE_URL` | Base URL para metadata (opcional) |
+| `TRANSCODE_API_KEY` / `TRANSCODE_SERVICE_URL` | Servicio global de compresion de video (opcional; sin key se guarda el original). Solo en Coolify, nunca en el repo. La URL tiene valor por defecto |
 
 Si falta `DATABASE_URL` o la base no responde, `content.ts` cae a fallbacks y el sitio sigue funcionando (sin persistir leads ni mandar emails).
 
@@ -165,6 +167,7 @@ Si falta `DATABASE_URL` o la base no responde, `content.ts` cae a fallbacks y el
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-10-15 | dev/test | v2.2.0 — Video transcode: `src/lib/transcode.ts` + `/api/upload` comprime videos con el servicio global (soft-fail, `TRANSCODE_API_KEY` solo en Coolify). `npm run test:transcode`. `dev`=`test`. Pendiente: cargar la key en `gc2-test`/`gc2-prod` y probar con un video real. |
 | 2026-10-13 | feature/dev2-usuarios-bcrypt | v2.1.1 — **Usuarios con su contraseña actual** y paridad verificable con el sitio vivo. `src/lib/auth.ts`: `password.verify` acepta hashes bcrypt de Supabase (`bcryptjs`) además de scrypt; 2 tests en `test:db`. Migración: `09-exportar-usuarios` (mismo id y hash), `snapshot-completo.sh` (copia completa a `~/migracion-gc2/<fecha>`, 700, con manifiesto sha256), `10-verificar-paridad` y `11-comparar-sitio`. Fix: layout público dinámico (`/privacidad` y `/terminos` quedaban con WhatsApp y mail de relleno). Verificado con datos reales: paridad OK en tablas, usuarios y archivos, y 6 páginas públicas idénticas. |
 | 2026-10-13 | feature/dev2-coolify | **Todo en Coolify** (regla CodeTlon: solo sitios sin base van a Vercel). Archivos en volumen del servidor: `src/lib/storage.ts` pasa de S3 a disco (`STORAGE_DIR`), nueva ruta pública `/media/[...ruta]` (tipo por extensión, `nosniff`, Range para video, sin listado) y `/api/upload` recibe el archivo crudo en streaming (sesión + origen + tipo + tamaño real); se quitan `@aws-sdk/*`. Empaquetado: `Dockerfile` (standalone, node 22), `docker-entrypoint.sh` (migra al arrancar y falla cerrado), `docker-compose.coolify.yml` (app + Postgres internos, sin puerto público), `.dockerignore`; `scripts/migrate.mts` y `crear-usuario.mts` se empaquetan con esbuild para `docker exec`. Fix: páginas públicas y sitemap pasan a dinámicos (el build de Coolify no tiene base y congelaba el contenido de respaldo hasta una hora). Fix: `/api/upload` rechazaba carpetas con `/` (`blog/adjuntos`). Fix: `/media` y `storage` aceptan archivos en la raíz (migrados de Supabase). Migración de datos: `scripts/migracion/` ahora lee de Supabase solo por la Management API read-only (`07-exportar-datos`, `08-generar-import` con leads anonimizados, `05-copiar-storage` a disco con reescritura de URLs por objeto). Nuevo `npm run test:storage` (11) en CI. Verificado: imagen Docker real, ensayo de migración en limpio (conteos idénticos, 0 referencias a Supabase, 15/15 URLs 200). |
 | 2026-10-13 | feature/dev2-backend-propio | v2.0.0 — **Salida de Supabase** a Postgres (Coolify) + Drizzle + Better Auth + S3/R2; front sigue en Vercel. Ramas `dev` y `test` creadas como espejo de `main`; CI para test y main; `scripts/migracion/` para revisar schema/backup/storage. Detalle en README (Changelog) y `docs/environments.md`. Build + 45/45 E2E sin base; **sin verificar contra base real ni corte de producción**. |

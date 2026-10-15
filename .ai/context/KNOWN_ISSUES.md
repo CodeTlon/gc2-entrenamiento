@@ -76,3 +76,6 @@ Severidad explícita. Generado 2026-09-18 por auditoría de evidencia real (no s
 ## ✅ Verificado sin hallazgos — autorización server-side
 
 Auditoría completa de `proxy.ts`, las 8 familias de server actions, todos los route handlers y las policies RLS de las 9 tablas: **no se encontró ningún caso de "chequeo sólo en cliente sin enforcement de servidor."** Toda acción mutante llama `requireUser()`/`getUser()` además de depender de RLS. El bug histórico de `post_authors` (RLS sólo para `service_role`) está confirmado arreglado por la migración `010`. El open-redirect histórico en `next` param de `/auth/callback`/`/auth/confirm` está confirmado arreglado y sigue arreglado hoy.
+
+## Dependencias (auditoria 2026-10-15)
+`npm audit --omit=dev --audit-level=high` pasa. Quedan 2 moderadas solo de herramientas: `esbuild` (via `drizzle-kit`, dev) y `fflate` (via `@vercel/og`). Sin parche estable sin cambio mayor; se documentan, no traban. Revisar en la proxima subida de `drizzle-kit`/`@vercel/og`.

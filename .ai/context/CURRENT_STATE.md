@@ -28,3 +28,8 @@ Esto contradice lo que afirma el changelog de `.claude/CLAUDE.md` (v1.1.4, "audi
 ## Deuda de documentación conocida (no arreglada en esta auditoría, ver `KNOWN_ISSUES.md`)
 
 `docs/*.md` desactualizados (Next 14, schema viejo), `.claude/CLAUDE.md` con auto-contradicciones menores, referencia a un `TASKS.md` inexistente.
+
+## Actualizacion 2026-10-15 (video transcode y estado de ramas)
+- **Hecho y verificado:** `src/lib/transcode.ts` + integracion en `/api/upload` (video -> servicio global de compresion, preset `web`, soft-fail). `npm run test:transcode` 7/7, `tsc`, `lint` (0 errores), `test:db` 16/16, `test:storage` 14/14. `dev` y `test` apuntan al mismo commit.
+- **Sin verificar:** compresion real de un video contra el servicio (solo se comprobo que la key autentica con un archivo que no es video).
+- **Pendiente (del usuario):** cargar `TRANSCODE_API_KEY` en `gc2-test` y `gc2-prod`; cron de backup a B2 y `backup-check.yml` activos al subir `gc2-prod`.
