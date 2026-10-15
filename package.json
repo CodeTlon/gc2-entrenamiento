@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "test:db": "node --import tsx tests/db/verificar-db.mts",
     "test:storage": "node --import tsx tests/storage/verificar-storage.mts",
+    "test:transcode": "node --import tsx tests/storage/verificar-transcode.mts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },
