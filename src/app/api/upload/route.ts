@@ -1,10 +1,11 @@
 import { createWriteStream } from 'node:fs'
-import { rm } from 'node:fs/promises'
+import { readFile, rm } from 'node:fs/promises'
 import { Readable, Transform } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getUser } from '@/lib/session'
-import { publicUrl, reservePath } from '@/lib/storage'
+import { deleteObject, publicUrl, putObject, reservePath } from '@/lib/storage'
+import { transcodeWithService } from '@/lib/transcode'
 import { maxBytesForMime } from '@/lib/upload-limits'
 
 // Subida de archivos del dashboard al volumen del servidor. Solo usuarios autenticados. El cuerpo es el archivo crudo;
@@ -57,5 +58,25 @@ export async function POST(request: NextRequest) {
     console.error('[upload]', e instanceof Error ? e.message : e)
     return NextResponse.json({ error: 'No se pudo guardar el archivo.' }, { status: 500 })
   }
+  if (contentType.startsWith('video/')) {
+    const comprimido = await comprimirGuardado(key, folder, abs)
+    if (comprimido) return NextResponse.json({ url: publicUrl(comprimido) })
+  }
   return NextResponse.json({ url: publicUrl(key) })
+}
+
+// Pasa el video ya guardado por el servicio global de compresión. Si mejora el tamaño, deja el MP4 nuevo y borra el original;
+// si el servicio no está o falla, devuelve null y queda el original (una subida nunca falla por culpa del compresor).
+async function comprimirGuardado(key: string, folder: string, abs: string): Promise<string | null> {
+  const salida = await transcodeWithService(await readFile(abs), 'web')
+  if (!salida) return null
+  const nueva = `${folder}/${crypto.randomUUID()}.mp4`
+  try {
+    await putObject(nueva, salida)
+  } catch (e) {
+    console.error('[upload] no se pudo guardar el video comprimido; queda el original:', e instanceof Error ? e.message : e)
+    return null
+  }
+  await deleteObject(key)
+  return nueva
 }
