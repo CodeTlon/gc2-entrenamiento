@@ -10,7 +10,7 @@ Sitio web oficial de **GC² Entrenamiento de la Resistencia**, un equipo de entr
 ## Para quién (FACT, inferido del dominio y contenido)
 
 - **Público del sitio**: corredores/duatletas/triatletas de Córdoba buscando planes de entrenamiento o información del equipo — leen el blog, ven planes, dejan datos de contacto (`contact_leads`).
-- **Usuarios del dashboard**: staff/coaches de GC² con cuenta en Supabase Auth — editan contenido, gestionan leads, publican posts.
+- **Usuarios del dashboard**: staff/coaches de GC² con cuenta en Better Auth (en `main`, hasta el corte, Supabase Auth) — editan contenido, gestionan leads, publican posts.
 
 ## Qué problema resuelve (FACT)
 
@@ -20,7 +20,7 @@ Antes de este proyecto, el sitio era PHP+SCSS estático sin forma de editar cont
 
 - **En producción**, sirviendo tráfico real. Dominio: `gc2entrenamientoderesistencia.com.ar`.
 - Desplegado en Vercel con auto-deploy on push a `main` (ver `ARCHITECTURE.md` para la cadena de deploy verificada).
-- Hay datos reales en Supabase: leads de contacto reales, coaches reales, posts de blog reales.
+- Hay datos reales en el Supabase de producción (se migran a Postgres propio en el corte): leads de contacto reales, coaches reales, posts de blog reales.
 
 ## Alcance de negocio explícito (FACT, de `public/llms.txt`)
 

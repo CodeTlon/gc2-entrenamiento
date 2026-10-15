@@ -1,6 +1,6 @@
 # DOMAIN — modelo de datos y reglas de negocio
 
-## Tablas y relaciones (FACT, de `supabase/migrations/*.sql`)
+## Tablas y relaciones (FACT, de `src/db/schema.ts` y `drizzle/`; en `main` vienen de `supabase/migrations/*.sql`)
 
 - **`contact_leads`** — leads del formulario público. Única tabla con lectura restringida (sólo `service_role`); insert abierto a cualquiera (`with check (true)`).
 - **`posts`** — artículos de blog: `title`, `slug`, `excerpt`, `content`, `cover_image`, `youtube_url`, `video_url` (video propio, alternativa a YouTube), `attachment_url` (PDF), `published`, `author_id`, `coach_id` (FK→`coaches`), `category_id` (FK→`categories`, **legacy**, no se actualiza desde el form actual).
@@ -15,7 +15,7 @@
 
 ## Regla de negocio no-negociable: fallback de contenido
 
-**FACT** (`src/lib/content.ts`, `src/lib/constants.ts`): el sitio público **tiene que renderizar aunque Supabase no responda o las env vars sean placeholder**. `content.ts` siempre devuelve datos — cae a `FALLBACK_*` si la query falla o las credenciales no son reales. Cualquier cambio a `content.ts` tiene que preservar esta cadena; romperla tira el sitio público entero abajo si Supabase tiene un blip.
+**FACT** (`src/lib/content.ts`, `src/lib/constants.ts`): el sitio público **tiene que renderizar aunque la base no responda o las env vars sean placeholder**. `content.ts` siempre devuelve datos — cae a `FALLBACK_*` si la query falla o las credenciales no son reales. Cualquier cambio a `content.ts` tiene que preservar esta cadena; romperla tira el sitio público entero abajo si la base tiene un blip.
 
 ## RLS por tabla (FACT, ver auditoría completa en `KNOWN_ISSUES.md` → nota positiva)
 

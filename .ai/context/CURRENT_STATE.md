@@ -1,5 +1,22 @@
 # CURRENT_STATE
 
+Estado al **2026-10-15** (verificado en `dev`, commit `c56ca9a`).
+
+## Ramas
+- `dev` = `test`: backend propio (Postgres + Drizzle + Better Auth, archivos en el volumen `/media`), Next 16, v2.2.0. Sin Supabase en el código.
+- `main`: **producción actual, todavía en Vercel + Supabase** (38 commits atrás de `dev`). El corte a Coolify no se hizo.
+- Ramas `feature/dev2-*` (backend-propio, coolify, usuarios-bcrypt, video-transcode, workflows, workflows-coolify): ya integradas en `dev`.
+
+## Verificado hoy en `dev`
+`npx tsc --noEmit` limpio · `npm run lint` 0 errores y 5 avisos previos · `test:db` 16/16 · `test:storage` 14/14 · `npm audit --omit=dev --audit-level=high` sin altas ni críticas. Workflows `ci`, `entornos`, `produccion` y `backup-check` presentes.
+
+## Pendiente (detalle en `PENDIENTES.md`)
+Crear los recursos `gc2-test` y `gc2-prod` en Coolify, configurar `NEXT_PUBLIC_GA_ID` y las variables que hoy están en Vercel, cargar los datos reales (ensayo de migración ya verificado) y cortar `main`. Sin verificar: compresión de video contra el servicio real y los workflows de producción (solo validados con `actionlint`).
+
+---
+# Histórico (snapshot 2026-09-18, era Vercel + Supabase)
+Lo de abajo describe `main` antes de la migración. No usar como estado actual.
+
 > **2026-10-13:** en curso `feature/dev2-backend-propio` (PR #1 a `dev`): migración de Supabase a Postgres/Drizzle/Better Auth/S3 con entornos dev > test > main. Los workflows de CI viven en `.github/workflows/` (rama `feature/dev2-workflows`, ver `PENDIENTES.md`). Sin Docker en la sesion del 2026-10-13: test:db (PGlite), tsc, lint, build y E2E 45/45 verdes. Falta: verificar contra una base real (Docker), dump/restauración de prod, copia del bucket, usuarios, recursos en Coolify/R2/Vercel, corte.
 
 
