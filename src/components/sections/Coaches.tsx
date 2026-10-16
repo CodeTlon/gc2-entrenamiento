@@ -42,7 +42,7 @@ export default function Coaches({ coaches }: { coaches: Coach[] }) {
                 }}
                 aria-label={`Ver perfil de ${coach.name}`}
               >
-                <div className="relative overflow-hidden flex-shrink-0" style={{ height: '320px' }}>
+                <div className="relative overflow-hidden shrink-0" style={{ height: '320px' }}>
                   {coach.photo_url && (() => {
                     const fp = focalImageProps(coach.photo_url)
                     return (

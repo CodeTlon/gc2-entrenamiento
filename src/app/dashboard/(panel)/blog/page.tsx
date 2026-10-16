@@ -56,7 +56,7 @@ export default async function BlogListPage() {
               style={{ background: '#0D2247', border: '1px solid #102E66' }}
             >
               <div
-                className="relative w-32 flex-shrink-0 hidden sm:block"
+                className="relative w-32 shrink-0 hidden sm:block"
                 style={{ background: '#102E66' }}
               >
                 {p.cover_image ? (

@@ -37,14 +37,14 @@ function ArticleCard({ post }: { post: PostSummary }) {
     <Link
       href={`/blog/${post.slug}`}
       // Mobile: apilado vertical. sm+: fila horizontal de altura fija
-      className="group flex flex-col sm:flex-row sm:min-h-[11rem] rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      className="group flex flex-col sm:flex-row sm:min-h-44 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
       style={{ background: '#0D2247', border: '1px solid rgba(255,255,255,0.07)' }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.2)' }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
     >
       {/* Imagen */}
       {/* Mobile: ancho completo 16/9. Desktop: ancho fijo, altura = altura de la card */}
-      <div className="relative w-full aspect-video sm:aspect-auto sm:w-72 sm:self-stretch flex-shrink-0 overflow-hidden">
+      <div className="relative w-full aspect-video sm:aspect-auto sm:w-72 sm:self-stretch shrink-0 overflow-hidden">
         {thumb ? (() => {
           const fp = focalImageProps(thumb)
           return (
@@ -119,7 +119,7 @@ function ArticleCard({ post }: { post: PostSummary }) {
                 {firstAuthor.photo_url && (() => {
                   const fp = focalImageProps(firstAuthor.photo_url!)
                   return (
-                    <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                    <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0">
                       <Image src={fp.src} alt={firstAuthor.name} fill sizes="20px" style={fp.style} className="object-cover" />
                     </div>
                   )
@@ -131,7 +131,7 @@ function ArticleCard({ post }: { post: PostSummary }) {
               </div>
             ) : <span />
           })()}
-          <span className="text-accent text-xs font-body font-bold uppercase tracking-widest group-hover:tracking-[3px] transition-all duration-300 flex-shrink-0">
+          <span className="text-accent text-xs font-body font-bold uppercase tracking-widest group-hover:tracking-[3px] transition-all duration-300 shrink-0">
             Leer →
           </span>
         </div>
@@ -226,7 +226,7 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
                 {post.cover_image && (() => {
                   const fp = focalImageProps(post.cover_image)
                   return (
-                    <div className="relative flex-shrink-0 w-14 h-14 rounded overflow-hidden">
+                    <div className="relative shrink-0 w-14 h-14 rounded overflow-hidden">
                       <Image
                         src={fp.src}
                         alt={post.title}
@@ -313,7 +313,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setActiveCategory('')}
-                className="flex-shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+                className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
                 style={{
                   background: !activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                   border: `1px solid ${!activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -328,7 +328,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(active ? '' : cat.slug)}
-                    className="flex-shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+                    className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
                     style={{
                       background: active ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                       border: `1px solid ${active ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -379,7 +379,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
       </div>
 
       {/* Sidebar desktop */}
-      <div className="hidden lg:block w-72 flex-shrink-0">
+      <div className="hidden lg:block w-72 shrink-0">
         <div className="sticky top-24">
           <Sidebar
             posts={posts}

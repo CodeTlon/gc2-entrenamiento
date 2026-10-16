@@ -1,6 +1,6 @@
 # Entornos: dev, test y main
 
-Flujo de ramas: `feature/*` -> PR a `dev` -> `test` -> `main`. Promover entre ramas lo hace Mateo.
+Flujo de ramas: `feature/*` -> `dev` -> `test` (merge directo, sin PR) -> PR a `main`. A `main` solo se llega con PR y CI verde, con OK de Mateo (despliega produccion).
 
 **Regla de plataforma (CodeTlon):** solo los sitios sin base de datos van a Vercel. GC2 tiene base, así que corre completo en Coolify: app, Postgres y archivos.
 

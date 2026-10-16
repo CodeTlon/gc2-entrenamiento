@@ -1,5 +1,11 @@
 # KNOWN_ISSUES
 
+## Vigente (2026-10-16)
+- **`npm audit` completo conserva 5 altas de herramientas de desarrollo**, todas de una cadena: `braces` <= 3.0.3 via `eslint-config-next` -> `@next/eslint-plugin-next` -> `fast-glob` -> `micromatch`. No hay version corregida publicada; no entra a la imagen ni al runtime (`npm audit --omit=dev` = 0). No usar `npm audit fix --force` (baja Next). Reevaluar al subir `eslint-config-next`.
+- **5 avisos de lint** `react-hooks/set-state-in-effect` (patrones de hidratacion). Deuda, no error.
+- **Sin recursos de Coolify ni backup B2 todavia**: ver `docs/produccion-coolify.md`.
+- Las secciones de abajo son anteriores a la migracion a backend propio (Supabase/Vercel). Las que hablan de `.env.local` con Supabase y de credenciales de Supabase ya no aplican al codigo de `dev`.
+
 > **2026-10-13:** el hallazgo CRÍTICO (`.env.local` apuntando a producción) queda cerrado por diseño en `feature/dev2-backend-propio`: dev usa Postgres local en Docker (`docker compose`), test y prod son bases separadas en Coolify y no hay credenciales de Supabase en el flujo de desarrollo. Hasta mergear y cortar, el `main` actual sigue con Supabase y el riesgo aplica.
 
 > **2026-10-13 (npm audit):** en la rama de migracion se actualizaron Next (16.4.0, cerraba un RCE critico en `next/og` y SSRF/cache poisoning), TipTap 3.32, sharp 0.35.5 y @vercel/og 1.0.3. `main` sigue con las versiones vulnerables hasta que se promueva.

@@ -166,7 +166,7 @@ function LeadCard({ lead }: { lead: Lead }) {
 function InfoRow({ icon: Icon, text, href }: { icon: React.ElementType; text: string; href?: string }) {
   const content = (
     <span className="inline-flex items-center gap-2 text-sm text-white/65">
-      <Icon size={13} className="text-accent flex-shrink-0" />
+      <Icon size={13} className="text-accent shrink-0" />
       {text}
     </span>
   )
