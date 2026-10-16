@@ -129,7 +129,7 @@ export default function Navbar({ contact }: Props) {
 
       {/* Mobile Menu */}
       <div
-        className={`fixed inset-0 z-[100] flex flex-col justify-center items-center gap-8
+        className={`fixed inset-0 z-100 flex flex-col justify-center items-center gap-8
           bg-blue-900/98 backdrop-blur-xl transition-transform duration-500
           ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
         id="mobileMenu"

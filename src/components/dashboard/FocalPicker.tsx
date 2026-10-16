@@ -69,7 +69,7 @@ export default function FocalPicker({
             setDragging(false)
           }}
           onPointerCancel={() => setDragging(false)}
-          className="relative rounded-md overflow-hidden cursor-crosshair select-none flex-shrink-0"
+          className="relative rounded-md overflow-hidden cursor-crosshair select-none shrink-0"
           style={{
             width: '100%',
             maxWidth: `${previewWidth}px`,

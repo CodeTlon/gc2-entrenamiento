@@ -41,12 +41,12 @@ export default async function PlanCategoriasPage() {
               className="flex items-center gap-3 px-4 py-3 rounded-xl hover:-translate-y-0.5 transition-all"
               style={{ background: '#0D2247', border: '1px solid #102E66' }}
             >
-              <Tag size={14} className="text-accent flex-shrink-0" />
+              <Tag size={14} className="text-accent shrink-0" />
               <div className="min-w-0">
                 <p className="text-white font-body font-semibold text-sm truncate">{cat.name}</p>
                 <p className="text-white/35 text-xs mt-0.5">/{cat.slug}</p>
               </div>
-              <span className="ml-auto text-white/25 text-xs flex-shrink-0">#{cat.display_order}</span>
+              <span className="ml-auto text-white/25 text-xs shrink-0">#{cat.display_order}</span>
             </Link>
           ))}
         </div>

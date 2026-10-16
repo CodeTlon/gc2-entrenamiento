@@ -1,54 +1,24 @@
 # ARCHITECTURE — GC² Entrenamiento
 
-> **Actualización 2026-10-13 (feature/dev2-backend-propio, aún sin mergear a main):** Supabase fue reemplazado por Postgres (Drizzle) + Better Auth + S3/R2. Donde este archivo mencione Supabase, RLS, `supabase-server.ts`, `/auth/callback` o `/auth/confirm`, ver `ARCHITECTURE.md` (raíz) y `docs/environments.md`. Producción sigue en Supabase hasta el corte.
-
+Estado vigente al 2026-10-16. Mapa de cambios por tipo de tarea: `ARCHITECTURE.md` (raiz). Este archivo es la vista estable para agentes.
 
 ## Capas
+- **Next.js 16.4.2** (App Router, RSC por defecto, Turbopack), React 19.3.1, TypeScript 6 estricto (`@/* -> src/*`). Tailwind 4.3.3 con tokens en `@theme` (`src/app/globals.css`).
+- **Server-first**: paginas y secciones son Server Components salvo estado o efectos (Navbar, Hero parallax, ScrollProgress, ScrollReveal, ContactForm, CoachModal, DashboardShell, formularios del panel).
+- **Server Actions** (`src/actions/*.ts`) para todas las mutaciones, firma `(prevState, formData) => Promise<State>`. La autorizacion es `requireUser()` (`src/lib/session.ts`) en cada accion; no hay RLS.
+- **Datos**: PostgreSQL + Drizzle (`src/db/schema.ts`, `src/db/queries.ts`, migraciones SQL en `drizzle/`, se aplican al arrancar con `scripts/migrate.mjs` y fallan cerrado).
+- **Auth**: Better Auth (`src/lib/auth.ts`, handler `src/app/api/auth/[...all]/`). Hashes bcrypt importados de Supabase valen tal cual; los nuevos usan scrypt. No hay registro publico: los usuarios los crea `scripts/crear-usuario.mts`.
+- **Archivos**: volumen del servidor (`STORAGE_DIR`, `/data/storage` en el contenedor), servidos por `/media/[...ruta]`; subida por `POST /api/upload` en streaming (sesion + origen + tipo + tamano). Videos: servicio global de compresion (`src/lib/transcode.ts`, soft-fail).
+- **Mail**: Resend por `src/lib/mail.ts`, con sandbox obligatorio fuera de produccion (`APP_ENV`, `MAIL_SANDBOX_TO`).
+- **`@vercel/og`** (Satori) genera el PNG 1080x1920 del Story de Instagram, en un route handler del servidor. Es solo una libreria: la app **no** corre en Vercel.
+- **Auth gate**: `src/proxy.ts` (Next 16, antes `middleware.ts`) hace el redirect optimista de `/dashboard/:path*`; la validacion real esta en el layout del panel y en cada accion.
 
-- **Next.js 16 App Router**, RSC por defecto, Turbopack. React 19. TypeScript estricto (`@/* → src/*`).
-- **Server-first**: páginas/secciones son Server Components salvo estado/efectos (Navbar, Hero parallax, ScrollProgress, ScrollReveal, ContactForm, CoachModal, DashboardShell, formularios del panel).
-- **Server Actions** (`src/actions/*.ts`) para todas las mutaciones — firma `(prevState, formData) => Promise<State>`.
-- **Supabase**: Postgres (contenido + leads), Auth (sesión del dashboard), Storage (bucket `media`).
-- **Resend**: envío de emails (contacto, recovery de contraseña).
-- **`@vercel/og`** (Satori): genera PNG 1080x1920 para export a Instagram Story, corre server-side (route handler) para evitar CORS con `*.supabase.co`.
-- **Auth gate**: `src/proxy.ts` (antes `middleware.ts`, renombrado por Next 16) protege `/dashboard/:path*` — matchea toda la rama incluidos los route groups `(panel)`/`(auth)` porque no aparecen en la URL.
+## Despliegue
+Todo en Coolify con `docker-compose.coolify.yml`: servicios `app` (imagen Docker, Next standalone, puerto 3000) y `db` (Postgres, sin puerto publicado), volumenes `db_data` y `storage`. Un recurso por entorno (`gc2-test`, `gc2-prod`). Detalle: `ENVIRONMENTS.md` y `docs/environments.md`.
+`main` sigue desplegando la version anterior en Vercel + Supabase hasta el corte (`docs/produccion-coolify.md`); es una situacion de transicion, no la arquitectura objetivo.
 
-## Cadena de deploy real (Fase 0 — verificada, no asumida)
-
-**FACT** — Evidencia recolectada directamente de config/archivos locales:
-
-- `.vercel/project.json` existe y está linkeado a un proyecto Vercel real (`projectName: "gc2-entrenamiento"`), gitignoreado.
-- No existe `vercel.json` en el repo (sin overrides de build/rutas).
-- (Histórico, previo a la migración) el único workflow era `supabase-keepalive.yml`, ya eliminado. Tras la migración, `.github/workflows/` tiene `ci.yml` (PR a `test`/`main`: lint, tsc, build, audit), `entornos.yml` (base de test según PR abierto a `main`) y `produccion.yml`; ver `docs/environments.md`. El deploy de la app sigue siendo la integración Git de Vercel.
-- `package.json` no tiene ningún script de deploy (`dev`/`build`/`start`/`lint`/`test:e2e` únicamente).
-- `git remote -v` → `origin` es `github.com/CodeTlon/gc2-entrenamiento.git`.
-- `docs/deployment-guide.md` y `docs/maintenance-guide.md` describen explícitamente "Import from GitHub" en Vercel + "commit y push → Vercel re-deploya automáticamente".
-
-**Conclusión (confianza alta)**: el deploy es **automático vía la integración Git nativa de Vercel** al pushear a `main` — no es un `vercel deploy` manual ni un pipeline de CI/CD propio.
-
-**Límite explícito de esta verificación**: los archivos locales NO pueden confirmar que el toggle de "Git Integration" siga activo en el dashboard de Vercel hoy, ni que la rama de producción configurada ahí siga siendo `main`, ni que nadie haya pausado el auto-deploy después. Esa configuración vive sólo en el dashboard/API de Vercel — queda como **UNKNOWN**, verificable únicamente ahí (no re-verificar contra prod sin necesidad real).
-
-## Entornos (Fase 0 — verificado)
-
-**FACT** — archivos `.env*` que existen hoy en disco:
-
-| Archivo | Trackeado en git | Contenido |
-|---|---|---|
-| `.env.example` | Sí | placeholders vacíos |
-| `.env.local.example` | Sí | placeholders (`YOUR-PROJECT`, etc.) |
-| `.env.local` | No (gitignoreado, `.env*.local`) | valores reales de producción (Supabase, Resend, dominio real) |
-| `.env.supabase.local` | No (gitignoreado) | credenciales de un proyecto Supabase **dev** distinto + token de Management API |
-
-No existen `.env.production`, `.env.development` ni `.env.staging` en disco. No hay branching por ambiente en `next.config.mjs` (el único condicional por `NODE_ENV` en todo `src/` es `cookieOptions.secure`).
-
-**FACT — split dev/prod diseñado pero no activo en `main`**: existe `scripts/db-sync-dev.mjs` (trackeado, con guard de seguridad que rechaza correr si el proyecto Supabase destino no termina en `-dev`) y `docs/environments.md`, que describe un diseño completo de dos ambientes (`main`→Vercel Production→Supabase prod; `dev`→Vercel Preview→Supabase dev). **Ese archivo sólo existe en la rama `dev` de GitHub** (`origin/dev`, commit `1b8d645`, 2026-06-14), **nunca mergeada a `main`** (`git merge-base --is-ancestor origin/dev origin/main` → not merged) y con ~3 meses de atraso respecto a `main`. Ningún doc en `main` (`ARCHITECTURE.md` raíz, `.claude/CLAUDE.md`, `docs/*.md`) menciona este split.
-
-**Ver `KNOWN_ISSUES.md` (severidad CRÍTICA)** para el hallazgo de que `.env.local` de este workstation aparenta apuntar al proyecto de producción en vez de al ref dev dedicado que sí existe en `.env.supabase.local`.
-
-## Modelo de datos (resumen — detalle de reglas en `DOMAIN.md`)
-
-Tablas: `contact_leads`, `posts`, `categories`, `post_categories` (N:N), `post_authors` (N:N), `site_settings`, `coaches`, `plans`, `plan_categories`. RLS: lectura pública en contenido, escritura sólo `authenticated`, excepto `contact_leads` (service-role). Storage: bucket `media`.
+## Modelo de datos (resumen; reglas en `DOMAIN.md`)
+`contact_leads`, `posts`, `categories`, `post_categories` (N:N, fuente de verdad del filtro de blog), `post_authors` (N:N), `site_settings` (JSONB por seccion del home), `coaches`, `plans`, `plan_categories`, mas las tablas de Better Auth.
 
 ## Integraciones externas
-
-Supabase (DB/Auth/Storage), Resend (email), Google Analytics (opcional, gated por Consent Mode v2 + banner de cookies), Vercel (hosting + `@vercel/og`).
+Resend (mail), Google Analytics opcional (Consent Mode v2 + banner de cookies), servicio global de transcode de video, Backblaze B2 (backup del VPS; `docs/BACKUPS.md`).

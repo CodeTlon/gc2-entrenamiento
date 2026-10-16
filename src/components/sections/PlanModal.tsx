@@ -39,7 +39,7 @@ export default function PlanModal({ plan, onClose }: Props) {
               {plan.features.map((feat, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span
-                    className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
+                    className="shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
                     style={{ background: '#38BDF8' }}
                   >
                     ✓

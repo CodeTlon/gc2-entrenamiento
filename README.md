@@ -5,7 +5,7 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 ## Stack
 
 - **Next.js 16** (App Router, RSC, Turbopack) + React 19 + **TypeScript** (strict)
-- **Tailwind CSS 3** (Barlow + Barlow Condensed)
+- **Tailwind CSS 4** (tokens en `@theme` dentro de `globals.css`; Barlow + Barlow Condensed)
 - **PostgreSQL** (Coolify) + **Drizzle ORM** · **Better Auth** (login del dashboard) · **archivos en volumen del servidor** (`/media`)
 - **Resend** (formulario de contacto) · **Zod** + Server Actions
 - **Playwright** (E2E) · Deploy en **Coolify** (Docker: app + Postgres)
@@ -14,7 +14,7 @@ Sitio web del equipo **GC² Entrenamiento** (coaching en running, duatlón y tri
 
 ```bash
 npm install
-cp .env.example .env.development.local   # completar BETTER_AUTH_SECRET, S3 y Resend
+cp .env.example .env.development.local   # completar BETTER_AUTH_SECRET y Resend
 docker compose up -d && npx drizzle-kit migrate   # Postgres local (127.0.0.1:42432)
 npx tsx --env-file=.env.development.local scripts/crear-usuario.mts <email> <nombre> admin
 npm run dev                  # http://localhost:3000
@@ -60,6 +60,7 @@ Contexto de proyecto en `.claude/CLAUDE.md` + `ARCHITECTURE.md`.
 
 | Versión | Fecha | Cambio |
 |---------|-------|--------|
+| v2.3.0 | 2026-10-16 | **Estandar de versiones de la flota** (`codetlon-cloud/.claude/modules/stack-versions.md`). Next 16.4.2, React 19.3.1, Tailwind 4.3.3 (config a `@theme`, PostCSS oficial, sin autoprefixer), TypeScript 6.0.3, ESLint 10.13.0, Zod 4.6.7, Better Auth 1.7.10, Playwright 1.64.1, `@types/node` 22, `lucide-react` 0.577 (la 1.x elimino los iconos de marca). Overrides de `esbuild` (drizzle-kit) y `fflate` (@vercel/og). `npm audit --omit=dev` en 0; el audit completo conserva solo `braces` (linter, sin parche publicado). Las clases `delay-1..4` pasan a `reveal-delay-1..4` (Tailwind 4 trae `delay-<ms>` y las pisaba) y `TeamGallery` separa `aspect-square` de la interpolacion (v4 no la detectaba). Verificado: 45 E2E en 3 viewports, 16+14+7 verificaciones, imagen Docker Alpine real y comparacion visual contra la version anterior (identica salvo 2 a 5 px de espaciado en el login del panel). |
 | v2.2.2 | 2026-10-15 | **Fuentes autoalojadas.** `next/font/google` reemplazado por `next/font/local` con los `woff2` (subset latin) dentro del repo: el build ya no baja fuentes de Google, que fallaba de forma intermitente en el CI y en el build de la imagen Docker. Mismas variables CSS, sin cambios visuales esperados. Detalle, origen y licencia (OFL) en `FONTS.md`. Verificado: `tsc` y build locales. **Sin verificar:** comparación visual en navegador. |
 | v2.2.1 | 2026-10-15 | **Documentación al día.** `CURRENT_STATE.md` reescrito con el estado real de las ramas y las verificaciones de hoy (el snapshot de septiembre queda como histórico), y `CLAUDE.md`/`DOMAIN.md`/`PROJECT.md` ya no dicen que el contenido depende de que "Supabase responda". Sin cambios de código. Verificado en `dev`: tsc limpio, lint 0 errores (5 avisos previos), `test:db` 16/16, `test:storage` 14/14, audit sin altas. **Pendiente:** corte de `main` (sigue en Vercel + Supabase); `docs/*.md` viejos siguen marcados como obsoletos. |
 | v2.2.0 | 2026-10-15 | **Compresion de video con el servicio global de CodeTlon** (`codetlon-cloud/templates/video-transcode`). `src/lib/transcode.ts` (cliente server-to-server, preset `web`, URL por defecto del servicio) + `/api/upload`: tras guardar un video lo recomprime y deja el MP4 nuevo solo si pesa menos; si el servicio no esta, falla o devuelve algo mas grande, queda el original (soft-fail). Variable `TRANSCODE_API_KEY` (solo en Coolify, nunca en el repo; `TRANSCODE_SERVICE_URL` opcional) en `docker-compose.coolify.yml`. `npm run test:transcode` (7 verificaciones con servidor falso). tsc, lint (0 errores), `test:db` 16/16 y `test:storage` 14/14 en verde. `dev` y `test` al dia. **Sin verificar**: la compresion contra el servicio real con un video (solo se comprobo que la key autentica). |

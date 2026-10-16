@@ -15,10 +15,10 @@ Producto desplegado en Coolify (app + Postgres + volumen de archivos). Dominio: 
 
 ## Stack
 
-- **Next.js 16** (App Router, RSC por defecto, Turbopack) — `next` ^16.2.1
+- **Next.js 16** (App Router, RSC por defecto, Turbopack) — `next` 16.4.2 exacto (estandar de la flota: `codetlon-cloud/.claude/modules/stack-versions.md`)
 - **React 19** — `react` ^19.2.4
 - **TypeScript** estricto, alias `@/* → src/*`
-- **Tailwind CSS 3** — escala de colores y tokens definidos en `tailwind.config.ts`
+- **Tailwind CSS 4** — escala de colores y tokens en el `@theme` de `src/app/globals.css` (ya no hay `tailwind.config.ts`)
 - **PostgreSQL** (Coolify) + **Drizzle ORM** (`src/db/schema.ts`, migraciones en `drizzle/`) · **Better Auth** (login/recovery del dashboard) · **archivos en el volumen del servidor** (`src/lib/storage.ts`, servidos por `/media`). Supabase ya no se usa
 - **Resend** — envío de emails (leads y recuperación) vía `src/lib/mail.ts`, con sandbox por entorno
 - **Zod** — validación de inputs en server actions
@@ -167,6 +167,7 @@ Si falta `DATABASE_URL` o la base no responde, `content.ts` cae a fallbacks y el
 ## Historial de Cambios
 | Fecha | Rama | Cambio |
 |-------|------|--------|
+| 2026-10-16 | feature/dev2-estandar-2026 | v2.3.0 — estandar de versiones de la flota: Next 16.4.2, React 19.3.1, Tailwind 4.3.3, TS 6.0.3, ESLint 10, Zod 4. `reveal-delay-N` (antes `delay-N`), `aspect-square` separado de la interpolacion en `TeamGallery`. 45 E2E, audit de runtime en 0, imagen Docker verificada. Detalle en README (changelog) y `.ai/context/DECISIONS.md`. |
 | 2026-10-15 | dev/test | v2.2.0 — Video transcode: `src/lib/transcode.ts` + `/api/upload` comprime videos con el servicio global (soft-fail, `TRANSCODE_API_KEY` solo en Coolify). `npm run test:transcode`. `dev`=`test`. Pendiente: cargar la key en `gc2-test`/`gc2-prod` y probar con un video real. |
 | 2026-10-13 | feature/dev2-usuarios-bcrypt | v2.1.1 — **Usuarios con su contraseña actual** y paridad verificable con el sitio vivo. `src/lib/auth.ts`: `password.verify` acepta hashes bcrypt de Supabase (`bcryptjs`) además de scrypt; 2 tests en `test:db`. Migración: `09-exportar-usuarios` (mismo id y hash), `snapshot-completo.sh` (copia completa a `~/migracion-gc2/<fecha>`, 700, con manifiesto sha256), `10-verificar-paridad` y `11-comparar-sitio`. Fix: layout público dinámico (`/privacidad` y `/terminos` quedaban con WhatsApp y mail de relleno). Verificado con datos reales: paridad OK en tablas, usuarios y archivos, y 6 páginas públicas idénticas. |
 | 2026-10-13 | feature/dev2-coolify | **Todo en Coolify** (regla CodeTlon: solo sitios sin base van a Vercel). Archivos en volumen del servidor: `src/lib/storage.ts` pasa de S3 a disco (`STORAGE_DIR`), nueva ruta pública `/media/[...ruta]` (tipo por extensión, `nosniff`, Range para video, sin listado) y `/api/upload` recibe el archivo crudo en streaming (sesión + origen + tipo + tamaño real); se quitan `@aws-sdk/*`. Empaquetado: `Dockerfile` (standalone, node 22), `docker-entrypoint.sh` (migra al arrancar y falla cerrado), `docker-compose.coolify.yml` (app + Postgres internos, sin puerto público), `.dockerignore`; `scripts/migrate.mts` y `crear-usuario.mts` se empaquetan con esbuild para `docker exec`. Fix: páginas públicas y sitemap pasan a dinámicos (el build de Coolify no tiene base y congelaba el contenido de respaldo hasta una hora). Fix: `/api/upload` rechazaba carpetas con `/` (`blog/adjuntos`). Fix: `/media` y `storage` aceptan archivos en la raíz (migrados de Supabase). Migración de datos: `scripts/migracion/` ahora lee de Supabase solo por la Management API read-only (`07-exportar-datos`, `08-generar-import` con leads anonimizados, `05-copiar-storage` a disco con reescritura de URLs por objeto). Nuevo `npm run test:storage` (11) en CI. Verificado: imagen Docker real, ensayo de migración en limpio (conteos idénticos, 0 referencias a Supabase, 15/15 URLs 200). |

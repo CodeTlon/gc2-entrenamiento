@@ -20,7 +20,7 @@ export default function AuthorCard({ coach }: { coach: Coach }) {
         {coach.photo_url && (() => {
           const fp = focalImageProps(coach.photo_url)
           return (
-            <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0"
+            <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0"
               style={{ border: '2px solid rgba(56,189,248,0.3)' }}>
               <Image
                 src={fp.src}
@@ -39,7 +39,7 @@ export default function AuthorCard({ coach }: { coach: Coach }) {
           </p>
           <p className="text-white/50 text-xs mt-0.5">{coach.specialty}</p>
         </div>
-        <span className="text-accent text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+        <span className="text-accent text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           Ver perfil
         </span>
       </button>
