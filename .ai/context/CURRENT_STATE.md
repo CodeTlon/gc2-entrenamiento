@@ -1,6 +1,12 @@
 # CURRENT_STATE
 
-Estado al **2026-10-15** (verificado en `dev`, commit `c56ca9a`).
+Estado al **2026-10-16** (rama `feature/dev2-estandar-2026`, integrada en `dev` y `test` al cerrar la sesion). El detalle del 2026-10-15 sigue abajo.
+
+## Alineacion de versiones (2026-10-16)
+Next 16.4.2, React 19.3.1, Tailwind 4.3.3, TypeScript 6.0.3, ESLint 10.13.0, Zod 4.6.7, Better Auth 1.7.10, Playwright 1.64.1, `@types/node` 22, `lucide-react` 0.577. Verificado: `tsc` limpio, lint 0 errores (5 avisos previos), `test:db` 16/16, `test:storage` 14/14, `test:transcode` 7/7, 45 E2E (3 viewports) contra el servidor con base, `npm audit --omit=dev` en 0, imagen Docker Alpine construida, capturas iguales a la version anterior salvo 2 a 5 px de espaciado en el login del panel. No verificado: despliegue en Coolify (los recursos no existen todavia).
+
+---
+Snapshot del 2026-10-15:
 
 ## Ramas
 - `dev` = `test`: backend propio (Postgres + Drizzle + Better Auth, archivos en el volumen `/media`), Next 16, v2.2.0. Sin Supabase en el código.

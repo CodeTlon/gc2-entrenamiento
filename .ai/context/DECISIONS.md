@@ -46,3 +46,8 @@ Decisiones de diseño reales, con motivo, reconstruidas de código/comentarios/c
 
 ## Video: servicio global de compresion, no ffmpeg en la app (2026-10-15)
 **Contexto:** el blog acepta video propio de hasta 60 MB sin compresion. **Decision:** `/api/upload` pasa los videos por el servicio global de CodeTlon (`codetlon-cloud/.claude/modules/video-transcode.md`), preset `web`, server-to-server. **Soft-fail obligatorio:** sin `TRANSCODE_API_KEY`, con error o con resultado mas pesado, se conserva el original. Una sola key para toda la flota, solo en variables de Coolify. **Descartado:** ffmpeg dentro de la app (peso de imagen y RAM) y compresion en el navegador (depende del navegador, tope de duracion).
+
+## Estandar de versiones de la flota: Tailwind 4, React 19, ESLint 10 (2026-10-16)
+**Decision**: el proyecto sigue el conjunto de `codetlon-cloud/.claude/modules/stack-versions.md`, con versiones exactas.
+**Por que**: reducir vulnerabilidades. Con Tailwind 3 el `npm audit` completo arrastraba una alta (`chokidar`/`braces`/`micromatch`) y moderadas de PostCSS; ESLint 9 ya no tiene soporte. Tailwind 4 y los overrides de `esbuild`/`fflate` las eliminan.
+**Consecuencias**: `tailwind.config.ts` desaparece (tokens en `@theme`); `delay-N` pasa a `reveal-delay-N`; `lucide-react` queda en la ultima 0.x porque la 1.x quito los iconos de marca; el braces de lint queda como excepcion documentada.
