@@ -40,7 +40,7 @@ export default function Modal({ open, onClose, children, label, maxWidth = 720 }
       role="dialog"
       aria-modal="true"
       aria-label={label}
-      className="modal-backdrop fixed inset-0 z-[10000] overflow-y-auto"
+      className="modal-backdrop fixed inset-0 z-10000 overflow-y-auto"
       style={{
         background: 'rgba(10,22,40,0.78)',
         backdropFilter: 'blur(8px)',

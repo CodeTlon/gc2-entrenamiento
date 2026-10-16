@@ -39,20 +39,24 @@
     "@electric-sql/pglite": "0.5.9",
     "@electric-sql/pglite-socket": "0.2.12",
     "@playwright/test": "1.64.1",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.20.5",
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "autoprefixer": "^10.4.21",
     "drizzle-kit": "0.31.11",
     "eslint": "10.13.0",
     "eslint-config-next": "16.4.2",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "4.3.3",
     "tsx": "4.23.15",
     "typescript": "6.0.3"
   },
   "overrides": {
-    "glob": "10.5.0"
+    "glob": "10.5.0",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "^0.25.12"
+    },
+    "fflate": "^0.8.2"
   }
 }

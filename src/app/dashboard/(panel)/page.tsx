@@ -92,7 +92,7 @@ export default async function DashboardHome() {
             style={{ background: '#0D2247', border: '1px solid #102E66' }}
           >
             <span
-              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-accent"
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-accent"
               style={{ background: '#102E66' }}
             >
               <Icon size={16} />
@@ -103,7 +103,7 @@ export default async function DashboardHome() {
               </p>
               <p className="text-white/40 text-xs leading-snug truncate">{desc}</p>
             </div>
-            <ArrowRight size={15} className="text-white/20 group-hover:text-accent transition-colors flex-shrink-0" />
+            <ArrowRight size={15} className="text-white/20 group-hover:text-accent transition-colors shrink-0" />
           </Link>
         ))}
       </div>

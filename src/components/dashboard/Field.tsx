@@ -134,7 +134,7 @@ export function ImageUpload({
       <input type="hidden" name={name} value={url} />
       <div className="flex flex-col sm:flex-row gap-3 items-stretch">
         <div
-          className="flex-shrink-0 w-full sm:w-32 h-24 rounded-md flex items-center justify-center overflow-hidden"
+          className="shrink-0 w-full sm:w-32 h-24 rounded-md flex items-center justify-center overflow-hidden"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
         >
           {url ? (

@@ -100,7 +100,7 @@ function PlanRow({ plan }: { plan: Plan }) {
           </p>
           {plan.badge && (
             <span
-              className="flex-shrink-0 px-2 py-0.5 rounded text-[10px] font-body font-bold uppercase tracking-wider text-blue-900"
+              className="shrink-0 px-2 py-0.5 rounded text-[10px] font-body font-bold uppercase tracking-wider text-blue-900"
               style={{ background: '#38BDF8' }}
             >
               {plan.badge}

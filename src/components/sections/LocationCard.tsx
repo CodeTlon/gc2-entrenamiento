@@ -24,7 +24,7 @@ export default function LocationCard({ loc }: { loc: LocationItem }) {
       {/* Info */}
       <div className="p-5 flex flex-col flex-1 gap-3">
         <div className="flex items-start gap-2.5 flex-1">
-          <MapPin size={15} className="text-accent mt-0.5 flex-shrink-0" />
+          <MapPin size={15} className="text-accent mt-0.5 shrink-0" />
           <div>
             <h3 className="font-heading font-bold text-white text-base uppercase tracking-wide leading-tight">
               {loc.name}

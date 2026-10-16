@@ -1,195 +1,275 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-/* =============================================
-   GC² Entrenamiento — Estilos Globales
-   Migración fiel de PHP+SASS → Next.js 14
-   ============================================= */
+@theme {
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #93c5fd;
+  --color-blue-300: #60a5fa;
+  --color-blue-400: #3b82f6;
+  --color-blue-500: #2563eb;
+  --color-blue-600: #1a4494;
+  --color-blue-700: #102e66;
+  --color-blue-800: #0d2247;
+  --color-blue-900: #0a1628;
 
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
+  --color-accent: #38bdf8;
+  --color-success: #25d366;
+  --color-danger: #ef4444;
 
-  body {
-    @apply bg-blue-900 text-white font-body antialiased;
-  }
+  --font-heading: var(--font-barlow-condensed), sans-serif;
+  --font-body: var(--font-barlow), sans-serif;
 
-  img {
-    @apply max-w-full;
-  }
+  --container-container: 1200px;
 
-  a {
-    @apply no-underline;
-  }
+  --spacing-section: 120px;
+  --spacing-gap-sm: 12px;
+  --spacing-gap-md: 20px;
+  --spacing-gap-lg: 40px;
+  --spacing-gap-xl: 64px;
 
-  /* Scrollbar personalizado */
-  ::-webkit-scrollbar {
-    width: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-blue-900;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: #1A4494;
-    border-radius: 3px;
-  }
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 100px;
 
-  /* Selection */
-  ::selection {
-    @apply bg-blue-500 text-white;
+  --shadow-sm: 0 1px 3px rgba(10, 22, 40, 0.1);
+  --shadow-md: 0 4px 16px rgba(10, 22, 40, 0.15);
+  --shadow-lg: 0 12px 40px rgba(10, 22, 40, 0.25);
+  --shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.5);
+  --shadow-accent: 0 12px 40px rgba(37, 99, 235, 0.4);
+  --shadow-wa: 0 4px 20px rgba(37, 211, 102, 0.4);
+
+  --ease-ease-out-custom: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --background-image-gradient-primary: linear-gradient(
+    135deg,
+    #2563eb,
+    #38bdf8
+  );
+  --background-image-gradient-hero: linear-gradient(
+    to bottom,
+    rgba(10, 22, 40, 0.5) 0%,
+    rgba(10, 22, 40, 0.8) 100%
+  );
+  --background-image-gradient-card: linear-gradient(135deg, #1a4494, #2563eb);
+  --background-image-gradient-ig: linear-gradient(
+    135deg,
+    #833ab4,
+    #e1306c,
+    #f77737
+  );
+
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 3s linear infinite;
+  --animate-pulse-ring: pulseRing 2s ease-out infinite;
+  --animate-rotate-slow: rotateSlow 20s linear infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  @keyframes pulseRing {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+  @keyframes rotateSlow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 }
 
-@layer components {
+@utility container {
   /* Container */
-  .container {
-    @apply max-w-container mx-auto px-5;
-  }
+  @apply max-w-container mx-auto px-5;
+}
 
+@utility gradient-text {
   /* Gradient text */
-  .gradient-text {
-    background: linear-gradient(135deg, #60A5FA, #38BDF8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  background: linear-gradient(135deg, #60a5fa, #38bdf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
+@utility scroll-progress {
   /* Scroll progress bar */
-  .scroll-progress {
-    @apply fixed top-0 left-0 right-0 h-[3px] z-[9999] origin-left;
-    background: linear-gradient(90deg, #2563EB, #38BDF8);
-    transform: scaleX(0);
-  }
+  @apply fixed top-0 left-0 right-0 h-[3px] z-9999 origin-left;
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+  transform: scaleX(0);
+}
 
+@utility section-label {
   /* Section label */
-  .section-label {
-    @apply text-sm font-body font-semibold tracking-widest text-accent uppercase mb-3;
-  }
+  @apply text-sm font-body font-semibold tracking-widest text-accent uppercase mb-3;
+}
 
+@utility section-title {
   /* Section title */
-  .section-title {
-    @apply font-heading font-bold uppercase leading-tight;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-  }
+  @apply font-heading font-bold uppercase leading-tight;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
 
+@utility btn {
   /* Buttons */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2 font-body font-semibold no-underline
+  @apply inline-flex items-center justify-center gap-2 font-body font-semibold no-underline
            transition-all duration-300 cursor-pointer border-0;
-    padding: 10px 20px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    letter-spacing: 0.03em;
-    @screen sm {
-      padding: 14px 32px;
-      font-size: 0.95rem;
-    }
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  @media (width >= theme(--breakpoint-sm)) {
+    padding: 14px 32px;
+    font-size: 0.95rem;
   }
+}
 
-  .btn--primary {
-    background: linear-gradient(90deg, #2563EB, #38BDF8, #2563EB);
-    background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
-    @apply text-white;
-    &:hover {
-      @apply shadow-accent -translate-y-0.5;
-    }
+@utility btn--primary {
+  background: linear-gradient(90deg, #2563eb, #38bdf8, #2563eb);
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
+  @apply text-white;
+  &:hover {
+    @apply shadow-accent -translate-y-0.5;
   }
+}
 
-  .btn--outline {
-    @apply text-white bg-transparent;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    &:hover {
-      @apply text-accent;
-      border-color: #38BDF8;
-    }
+@utility btn--outline {
+  @apply text-white bg-transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  &:hover {
+    @apply text-accent;
+    border-color: #38bdf8;
   }
+}
 
-  .btn--outline-accent {
-    @apply text-white border border-white/30 bg-transparent;
-    &:hover {
-      @apply bg-white/10 border-white/50;
-    }
+@utility btn--outline-accent {
+  @apply text-white border border-white/30 bg-transparent;
+  &:hover {
+    @apply bg-white/10 border-white/50;
   }
+}
 
-  .btn--wa {
-    @apply text-white;
-    background: #25D366;
-    box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
-    &:hover {
-      @apply -translate-y-0.5;
-      box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
-    }
+@utility btn--wa {
+  @apply text-white;
+  background: #25d366;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+  &:hover {
+    @apply -translate-y-0.5;
+    box-shadow: 0 8px 30px rgba(37, 211, 102, 0.5);
   }
+}
 
+@utility plan-card {
   /* Plan card */
-  .plan-card {
-    @apply flex flex-col relative rounded-xl p-7;
-    background: #0D2247;
-    border: 1px solid rgba(255,255,255,0.07);
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                border-color 0.3s ease;
-    &:hover {
-      @apply -translate-y-1;
-      border-color: rgba(56,189,248,0.25);
-      box-shadow: 0 12px 40px rgba(10,22,40,0.35);
-    }
+  @apply flex flex-col relative rounded-xl p-7;
+  background: #0d2247;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition:
+    transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease;
+  &:hover {
+    @apply -translate-y-1;
+    border-color: rgba(56, 189, 248, 0.25);
+    box-shadow: 0 12px 40px rgba(10, 22, 40, 0.35);
   }
+}
 
-  .plan-card--featured {
-    background:
-      linear-gradient(160deg, #0F2A58, #0D2247) padding-box,
-      linear-gradient(135deg, #60A5FA, #38BDF8) border-box;
-    border: 2px solid transparent;
-    box-shadow: 0 8px 40px rgba(56,189,248,0.1);
-    &:hover {
-      @apply -translate-y-1;
-      border-color: transparent;
-      box-shadow: 0 16px 50px rgba(56,189,248,0.2);
-    }
+@utility plan-card--featured {
+  background:
+    linear-gradient(160deg, #0f2a58, #0d2247) padding-box,
+    linear-gradient(135deg, #60a5fa, #38bdf8) border-box;
+  border: 2px solid transparent;
+  box-shadow: 0 8px 40px rgba(56, 189, 248, 0.1);
+  &:hover {
+    @apply -translate-y-1;
+    border-color: transparent;
+    box-shadow: 0 16px 50px rgba(56, 189, 248, 0.2);
   }
+}
 
+@utility reveal {
   /* Reveal animation */
-  .reveal {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-                transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 
-  .reveal.visible {
+  &.visible {
     opacity: 1;
     transform: translateY(0);
   }
+}
 
-  .delay-1 { transition-delay: 0.1s; }
-  .delay-2 { transition-delay: 0.2s; }
-  .delay-3 { transition-delay: 0.3s; }
-  .delay-4 { transition-delay: 0.4s; }
+@utility visible {
+  &.reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+@utility reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+@utility reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+@utility reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+@utility reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
+@utility field-label {
   /* Form fields (dashboard + contact) */
-  .field-label {
-    @apply block text-xs font-body font-semibold tracking-widest uppercase text-white/60 mb-2;
-  }
-  .field-input {
-    @apply w-full px-4 py-3 rounded-md text-white placeholder-white/30 outline-none transition-colors;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-  }
-  .field-input:focus {
-    border-color: #38BDF8;
+  @apply block text-xs font-body font-semibold tracking-widest uppercase text-white/60 mb-2;
+}
+
+@utility field-input {
+  @apply w-full px-4 py-3 rounded-md text-white placeholder-white/30 outline-hidden transition-colors;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  &:focus {
+    border-color: #38bdf8;
     background: rgba(255, 255, 255, 0.06);
   }
-  textarea.field-input { @apply min-h-[120px] resize-y; }
+  &textarea {
+    @apply min-h-section resize-y;
+  }
 
-  select.field-input {
+  &select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-color: #0D2247;
+    background-color: #0d2247;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%2338BDF8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
@@ -197,30 +277,41 @@
     padding-right: 36px;
     cursor: pointer;
   }
-  select.field-input:focus { background-color: #102E66; }
-
-  /* Dashboard toast */
-  @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateX(60px); }
-    to { opacity: 1; transform: translateX(0); }
+  &select:focus {
+    background-color: #102e66;
   }
+}
+
+@utility modal-backdrop {
+  /* Dashboard toast */
 
   /* Modal */
-  @keyframes modal-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  @keyframes modal-pop-in {
-    from { opacity: 0; transform: translateY(20px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-  .modal-backdrop {
-    animation: modal-fade-in 0.2s ease-out;
-  }
-  .modal-panel {
-    animation: modal-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
+  animation: modal-fade-in 0.2s ease-out;
+}
 
+@utility modal-panel {
+  animation: modal-pop-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer components {
   /* Rich text editor (TipTap) — dashboard */
   .rich-editor .ProseMirror {
     min-height: 260px;
@@ -267,5 +358,60 @@
     padding-left: 1rem;
     color: rgba(255,255,255,0.55);
     margin: 0.75rem 0;
+  }
+}
+
+/* =============================================
+   GC² Entrenamiento — Estilos Globales
+   Migración fiel de PHP+SASS → Next.js 14
+   ============================================= */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-blue-900 text-white font-body antialiased;
+  }
+
+  img {
+    @apply max-w-full;
+  }
+
+  a {
+    @apply no-underline;
+  }
+
+  /* Scrollbar personalizado */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-blue-900;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1A4494;
+    border-radius: 3px;
+  }
+
+  /* Selection */
+  ::selection {
+    @apply bg-blue-500 text-white;
+  }
+}
+
+@layer components {
+  @keyframes toastSlideIn {
+    from { opacity: 0; transform: translateX(60px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes modal-pop-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
 }
