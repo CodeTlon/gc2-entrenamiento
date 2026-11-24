@@ -16,6 +16,7 @@ export async function uploadDirectToStorage(
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookieOptions: { secure: process.env.NODE_ENV === 'production' } },
   )
   const id = crypto.randomUUID()
   const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'

@@ -77,7 +77,8 @@
   /* Buttons */
   .btn {
     @apply inline-flex items-center justify-center gap-2 font-body font-semibold no-underline
-           transition-all duration-300 cursor-pointer border-0;
+           transition-all duration-300 cursor-pointer border-0 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-900;
     padding: 10px 20px;
     border-radius: 6px;
     font-size: 0.8rem;

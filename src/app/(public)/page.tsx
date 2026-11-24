@@ -6,6 +6,7 @@ import GroupClasses from '@/components/sections/GroupClasses'
 import Locations from '@/components/sections/Locations'
 import Coaches from '@/components/sections/Coaches'
 import TeamGallery from '@/components/sections/TeamGallery'
+import ShareButton from '@/components/ui/ShareButton'
 import { getCoaches, getSiteSettings } from '@/lib/content'
 
 export const revalidate = 3600
@@ -28,6 +29,15 @@ export default async function HomePage() {
       <Locations data={settings.locations} />
       <Coaches coaches={coaches} />
       <TeamGallery data={settings.team_gallery} />
+
+      {/* Compartir */}
+      <div className="bg-blue-700 py-8 flex justify-center">
+        <ShareButton
+          title="GC² Entrenamiento de la Resistencia"
+          text="Equipo de entrenamiento para corredores, duatletas y triatletas en Córdoba."
+          label="Compartir GC²"
+        />
+      </div>
     </>
   )
 }

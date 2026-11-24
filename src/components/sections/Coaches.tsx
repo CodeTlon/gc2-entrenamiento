@@ -34,7 +34,7 @@ export default function Coaches({ coaches }: { coaches: Coach[] }) {
               <button
                 type="button"
                 onClick={() => setSelected(coach)}
-                className="group flex flex-col w-full h-full text-left rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent/60"
+                className="group flex flex-col w-full h-full text-left rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-2 active:scale-[0.98] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 style={{
                   background: '#0D2247',
                   border: '1px solid #102E66',

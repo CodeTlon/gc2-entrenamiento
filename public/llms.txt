@@ -1,0 +1,34 @@
+# GC² Entrenamiento de la Resistencia
+
+> Equipo de entrenamiento en Córdoba, Argentina, para corredores, duatletas y triatletas: planificación individualizada y grupal, presencial y a distancia, con evaluación funcional y testeos periódicos.
+
+GC² Entrenamiento de la Resistencia es un equipo de coaches especializados en deportes de resistencia (running, duatlón y triatlón) con sede en Córdoba, Argentina. Trabaja con atletas de todos los niveles, desde quienes corren sus primeros kilómetros hasta quienes compiten en distancias largas. Ofrece planes de entrenamiento individuales (a medida, con seguimiento personalizado de un coach) y planes grupales (clases presenciales en el parque, martes/jueves/viernes a las 19:30hs), en modalidad presencial o a distancia, y planes de gimnasio complementarios. Todos los planes incluyen evaluación funcional inicial y testeos periódicos de rendimiento.
+
+## Páginas principales
+
+- [Home](https://gc2entrenamientoderesistencia.com.ar/): presentación del equipo, disciplinas (running, duatlón, triatlón), clases grupales, sedes de entrenamiento y equipo de coaches.
+- [Planes](https://gc2entrenamientoderesistencia.com.ar/planes): planes de entrenamiento por categoría (corredores, triatletas, grupales), con detalle de features y preguntas frecuentes sobre modalidad, seguimiento y evaluación funcional.
+- [Blog](https://gc2entrenamientoderesistencia.com.ar/blog): artículos sobre técnica de carrera, planificación de cargas, nutrición deportiva y prevención de lesiones, escritos por los coaches del equipo.
+- [Contacto](https://gc2entrenamientoderesistencia.com.ar/contacto): formulario de contacto, WhatsApp, Instagram y email para consultas y asesoramiento sobre qué plan elegir.
+
+## Servicios
+
+- Entrenamiento individual para corredores (running) de todos los niveles y distancias.
+- Entrenamiento individual para triatletas.
+- Entrenamiento grupal presencial en el parque (Córdoba), 3 días por semana.
+- Planes a distancia con seguimiento digital.
+- Plan de gimnasio complementario.
+- Evaluación funcional y testeos de rendimiento periódicos.
+
+## Contacto
+
+- Email: gc2entrenamiento@gmail.com
+- Instagram: https://www.instagram.com/gc2entrenamientoderesistencia
+- WhatsApp: enlace disponible en la página de [Contacto](https://gc2entrenamientoderesistencia.com.ar/contacto)
+- Ciudad: Córdoba, Argentina
+
+## Notas para agentes de IA
+
+- Todo el contenido del sitio está en español (es-AR).
+- Los precios de los planes no están publicados online; se cotizan por consulta directa (WhatsApp, email o formulario de contacto) según el plan y el objetivo del atleta.
+- Este archivo describe un sitio informativo/de contacto (no e-commerce): no hay checkout ni pricing.md, la conversión objetivo es el contacto (WhatsApp o formulario).

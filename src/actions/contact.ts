@@ -1,17 +1,50 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { z } from 'zod'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { Resend } from 'resend'
 
+// Rate limiting simple en memoria por IP, sin dependencias nuevas (mismo patrón que
+// codetlon-site/src/app/actions/contact.ts). No es distribuido (cada instancia/lambda
+// tiene su propio Map), pero corta el caso común de un script/bot golpeando el form
+// repetidas veces y agotando la cuota de envíos de Resend. Ventana fija: 5 envíos
+// cada 10 minutos por IP.
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+
+async function isRateLimited(): Promise<boolean> {
+  const headersList = await headers()
+  const ip =
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    'unknown'
+
+  const now = Date.now()
+  const entry = rateLimitStore.get(ip)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true
+  }
+
+  entry.count += 1
+  return false
+}
+
 const contactSchema = z.object({
-  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  telefono: z.string().min(8, 'Teléfono inválido'),
+  nombre: z.string().min(2, 'Ingresá tu nombre completo (mínimo 2 caracteres)'),
+  email: z.string().email('Ingresá un email válido, ej: nombre@ejemplo.com'),
+  telefono: z.string().min(8, 'Ingresá un teléfono válido con código de área (mínimo 8 dígitos)'),
   ciudad: z.string().optional(),
   servicio: z.string().optional(),
   objetivo: z.string().optional(),
-  mensaje: z.string().min(10, 'El mensaje debe tener al menos 10 caracteres'),
+  mensaje: z.string().min(10, 'Contanos un poco más: el mensaje debe tener al menos 10 caracteres'),
 })
 
 export type ContactState = {
@@ -24,6 +57,13 @@ export async function submitContact(
   prevState: unknown,
   formData: FormData
 ): Promise<ContactState> {
+  if (await isRateLimited()) {
+    return {
+      success: false,
+      error: 'Hiciste demasiados envíos en poco tiempo. Probá de nuevo en unos minutos.',
+    }
+  }
+
   const coach = (formData.get('coach') as string) || null
 
   const raw = {
@@ -50,6 +90,14 @@ export async function submitContact(
 
   function esc(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  }
+
+  // El subject del email interpola nombre/servicio/coach tal cual los mandó el
+  // usuario del form público — sin esto, un \r\n dentro de esos campos podría
+  // inyectar headers de email si la API de Resend no los sanitiza internamente
+  // (defensa en profundidad, header injection).
+  function stripHeaderInjection(s: string): string {
+    return s.replace(/[\r\n]+/g, ' ').trim()
   }
 
   // Save to Supabase
@@ -85,7 +133,7 @@ export async function submitContact(
       from: `${fromName} <${fromEmail}>`,
       to: [toEmail],
       replyTo: data.email,
-      subject: `Nueva Consulta${coach ? ` — ${coach}` : ''}: ${data.servicio || 'Consulta General'} — ${data.nombre}`,
+      subject: `Nueva Consulta${coach ? ` — ${stripHeaderInjection(coach)}` : ''}: ${stripHeaderInjection(data.servicio || 'Consulta General')} — ${stripHeaderInjection(data.nombre)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f8fafc;">
           <div style="background: #0A1628; padding: 24px; border-radius: 12px; margin-bottom: 24px;">

@@ -9,6 +9,8 @@ import { youtubeEmbedUrl } from '@/lib/youtube'
 import type { Coach } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
 import { sanitizeHtml } from '@/lib/sanitize'
+import TLDRBox from '@/components/ui/TLDRBox'
+import ShareButton from '@/components/ui/ShareButton'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
@@ -28,6 +30,12 @@ interface Post {
   post_authors: { coaches: Coach | null }[]
 }
 
+interface RelatedPost {
+  title: string
+  slug: string
+  cover_image: string | null
+}
+
 async function getPost(slug: string): Promise<Post | null> {
   const supabase = createSupabaseClient()
   const { data, error } = await supabase
@@ -39,6 +47,20 @@ async function getPost(slug: string): Promise<Post | null> {
 
   if (error) return null
   return data as unknown as Post
+}
+
+async function getRelatedPosts(currentSlug: string): Promise<RelatedPost[]> {
+  const supabase = createSupabaseClient()
+  const { data, error } = await supabase
+    .from('posts')
+    .select('title, slug, cover_image')
+    .eq('published', true)
+    .neq('slug', currentSlug)
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  if (error || !data) return []
+  return data as RelatedPost[]
 }
 
 async function getAllSlugs(): Promise<{ slug: string }[]> {
@@ -90,6 +112,7 @@ export default async function BlogPostPage({
   if (!post) notFound()
 
   const ytEmbed = youtubeEmbedUrl(post.youtube_url)
+  const related = await getRelatedPosts(post.slug)
   const authors = post.post_authors.map((pa) => pa.coaches).filter((c): c is Coach => c !== null)
 
   return (
@@ -137,10 +160,28 @@ export default async function BlogPostPage({
           )}
 
           {post.excerpt && (
-            <p className="text-white/70 text-xl leading-relaxed mb-10 border-l-4 border-accent pl-6">
-              {post.excerpt}
-            </p>
+            <TLDRBox className="mb-8">
+              <p>{post.excerpt}</p>
+            </TLDRBox>
           )}
+
+          {/* CTA justo después de la intro */}
+          <div
+            className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-10 rounded-xl p-5"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+          >
+            <p className="text-white/70 text-sm text-center sm:text-left">
+              ¿Querés un plan de entrenamiento hecho a tu medida?
+            </p>
+            <div className="flex gap-2 flex-shrink-0">
+              <Link href="/planes" className="btn btn--primary text-xs uppercase tracking-widest font-extrabold">
+                Ver Planes
+              </Link>
+              <Link href="/contacto" className="btn btn--outline text-xs uppercase tracking-widest font-extrabold">
+                Contacto
+              </Link>
+            </div>
+          </div>
 
           {ytEmbed ? (
             <div
@@ -178,7 +219,7 @@ export default async function BlogPostPage({
               href={post.attachment_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 mt-8 px-4 py-3 rounded-md text-sm font-semibold text-accent transition-all hover:-translate-y-0.5"
+              className="inline-flex items-center gap-2.5 mt-8 px-4 py-3 rounded-md text-sm font-semibold text-accent transition-all hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
               style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.3)' }}
             >
               <FileText size={18} />
@@ -199,15 +240,61 @@ export default async function BlogPostPage({
             </div>
           )}
 
-          <div className="mt-10 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <div
+            className="mt-10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+            style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+          >
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-accent hover:text-white transition-colors font-semibold"
+              className="inline-flex items-center gap-2 text-accent hover:text-white active:scale-[0.98] transition-all font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
             >
               <ArrowLeft size={18} />
               Volver al Blog
             </Link>
+            <ShareButton title={post.title} text={post.excerpt ?? undefined} />
           </div>
+
+          {/* Posts relacionados */}
+          {related.length > 0 && (
+            <div className="mt-14 pt-10" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[2.5px] mb-5">
+                Te puede interesar también
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {related.map((r) => (
+                  <Link
+                    key={r.slug}
+                    href={`/blog/${r.slug}`}
+                    className="group rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+                    style={{ background: '#0D2247', border: '1px solid rgba(255,255,255,0.07)' }}
+                  >
+                    <div className="relative w-full aspect-video overflow-hidden">
+                      {r.cover_image ? (() => {
+                        const fp = focalImageProps(r.cover_image)
+                        return (
+                          <Image
+                            src={fp.src}
+                            alt={r.title}
+                            fill
+                            sizes="(max-width: 640px) 100vw, 33vw"
+                            style={fp.style}
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        )
+                      })() : (
+                        <div className="w-full h-full flex items-center justify-center" style={{ background: '#0A1628' }}>
+                          <span className="text-white/10 text-2xl font-heading font-black">GC²</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="p-4 text-sm font-heading font-bold text-white uppercase leading-tight line-clamp-2 group-hover:text-accent transition-colors">
+                      {r.title}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </>

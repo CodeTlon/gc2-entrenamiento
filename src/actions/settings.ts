@@ -20,6 +20,20 @@ const SETTING_PATHS: Record<string, string[]> = {
   page_banners: ['/', '/planes', '/blog'],
 }
 
+// Whitelist de carpetas del bucket `media` — coincide con los `folder` hardcodeados
+// que pasan los forms del dashboard (ImageUpload/FileUpload, ver src/components/dashboard/Field.tsx
+// y ContentEditor en PostForm.tsx). El `folder` llega como FormData de un Server Action:
+// sin esto, un `folder` con `../` armado a mano escribiría fuera de la carpeta esperada
+// dentro del mismo bucket.
+const ALLOWED_UPLOAD_FOLDERS = new Set([
+  'uploads', 'gallery', 'about', 'banners', 'blog', 'blog/video',
+  'blog/adjuntos', 'blog/content', 'disciplines', 'hero', 'group', 'coaches',
+])
+
+function sanitizeFolder(raw: string): string {
+  return ALLOWED_UPLOAD_FOLDERS.has(raw) ? raw : 'uploads'
+}
+
 export async function saveSiteSettingAction(
   key: string,
   value: unknown,
@@ -53,7 +67,7 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const maxBytes = maxBytesForMime(file.type || '')
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
-    const folder = String(formData.get('folder') ?? 'uploads')
+    const folder = sanitizeFolder(String(formData.get('folder') ?? 'uploads'))
 
     // Borrar imagen anterior si viene del mismo bucket
     const oldUrl = String(formData.get('oldUrl') ?? '')

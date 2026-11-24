@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ChevronDown } from 'lucide-react'
 import type { HeroSettings } from '@/lib/content'
 import { parseFocal } from '@/lib/image-focal'
+import { sanitizeBasicHtml } from '@/lib/sanitize'
 
 const CHEVRONS = [0, 1, 2, 3]
 
@@ -145,7 +146,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
         <p
           className="hidden sm:block text-white/55 text-base md:text-lg max-w-[480px] mb-8 reveal delay-2 font-light"
           style={{ lineHeight: 1.7 }}
-          dangerouslySetInnerHTML={{ __html: data.subtitle }}
+          dangerouslySetInnerHTML={{ __html: sanitizeBasicHtml(data.subtitle) }}
         />
 
         <div className="flex flex-wrap gap-3 md:gap-4 mb-8 sm:mb-10 md:mb-14 reveal delay-3">
@@ -189,7 +190,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       <button
         onClick={scrollToAbout}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 hover:text-white
-          transition-colors animate-float"
+          active:scale-[0.98] transition-colors animate-float focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-full"
         aria-label="Scroll hacia abajo"
       >
         <ChevronDown size={32} />

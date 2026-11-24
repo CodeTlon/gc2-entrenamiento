@@ -19,6 +19,7 @@ export default function SetPasswordPage() {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookieOptions: { secure: process.env.NODE_ENV === 'production' } },
     )
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) setReady(true)
@@ -56,6 +57,7 @@ export default function SetPasswordPage() {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookieOptions: { secure: process.env.NODE_ENV === 'production' } },
     )
     const { error: updateError } = await supabase.auth.updateUser({ password })
 
