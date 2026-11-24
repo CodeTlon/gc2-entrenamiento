@@ -38,42 +38,44 @@ async function isRateLimited(): Promise<boolean> {
 }
 
 const contactSchema = z.object({
-  nombre: z.string().min(2, 'Ingresá tu nombre completo (mínimo 2 caracteres)'),
-  email: z.string().email('Ingresá un email válido, ej: nombre@ejemplo.com'),
-  telefono: z.string().min(8, 'Ingresá un teléfono válido con código de área (mínimo 8 dígitos)'),
-  ciudad: z.string().optional(),
-  servicio: z.string().optional(),
-  objetivo: z.string().optional(),
-  mensaje: z.string().min(10, 'Contanos un poco más: el mensaje debe tener al menos 10 caracteres'),
+  nombre: z.string().trim().min(2, 'Ingresá tu nombre completo (mínimo 2 caracteres)').max(120, 'Nombre demasiado largo'),
+  email: z.string().trim().email('Ingresá un email válido, ej: nombre@ejemplo.com').max(200),
+  telefono: z.string().trim().min(8, 'Ingresá un teléfono válido con código de área (mínimo 8 dígitos)').max(40, 'Teléfono demasiado largo'),
+  ciudad: z.string().max(120).optional(),
+  servicio: z.string().max(120).optional(),
+  objetivo: z.string().max(300).optional(),
+  coach: z.string().max(120).optional(),
+  mensaje: z.string().trim().min(10, 'Contanos un poco más: el mensaje debe tener al menos 10 caracteres').max(5000, 'El mensaje es demasiado largo (máximo 5000 caracteres)'),
 })
+
+const FIELDS = ['nombre', 'email', 'telefono', 'ciudad', 'servicio', 'objetivo', 'coach', 'mensaje'] as const
 
 export type ContactState = {
   success: boolean
   error: string | null
   fieldErrors?: Record<string, string[]>
+  // Se devuelven al form para repoblarlo si falla (React 19 resetea el form tras la action).
+  values?: Record<string, string>
 }
 
 export async function submitContact(
   prevState: unknown,
   formData: FormData
 ): Promise<ContactState> {
+  // Honeypot: un humano nunca ve ni completa este campo. Respondemos éxito para no darle señal al bot.
+  if (String(formData.get('website') ?? '').trim() !== '') {
+    return { success: true, error: null }
+  }
+
+  const raw: Record<string, string> = {}
+  for (const k of FIELDS) raw[k] = String(formData.get(k) ?? '').slice(0, 6000)
+
   if (await isRateLimited()) {
     return {
       success: false,
       error: 'Hiciste demasiados envíos en poco tiempo. Probá de nuevo en unos minutos.',
+      values: raw,
     }
-  }
-
-  const coach = (formData.get('coach') as string) || null
-
-  const raw = {
-    nombre: formData.get('nombre') as string,
-    email: formData.get('email') as string,
-    telefono: formData.get('telefono') as string,
-    ciudad: formData.get('ciudad') as string,
-    servicio: formData.get('servicio') as string,
-    objetivo: formData.get('objetivo') as string,
-    mensaje: formData.get('mensaje') as string,
   }
 
   const parsed = contactSchema.safeParse(raw)
@@ -83,10 +85,14 @@ export async function submitContact(
       success: false,
       error: 'Por favor completá los campos obligatorios.',
       fieldErrors: parsed.error.flatten().fieldErrors,
+      values: raw,
     }
   }
 
   const data = parsed.data
+  const coach = data.coach || null
+  let savedToDb = false
+  let emailSent = false
 
   function esc(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -116,7 +122,9 @@ export async function submitContact(
 
     if (dbError) {
       console.error('Supabase insert error:', dbError)
-      // Don't fail — try to send email anyway
+      // No cortamos: intentamos igual el email.
+    } else {
+      savedToDb = true
     }
   } catch (err) {
     console.error('DB error:', err)
@@ -129,7 +137,7 @@ export async function submitContact(
     const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
     const toEmail = process.env.COMPANY_EMAIL || 'gc2entrenamiento@gmail.com'
 
-    await resend.emails.send({
+    const { error: mailError } = await resend.emails.send({
       from: `${fromName} <${fromEmail}>`,
       to: [toEmail],
       replyTo: data.email,
@@ -155,9 +163,20 @@ export async function submitContact(
         </div>
       `,
     })
+    // Resend no tira excepción ante errores de la API: los devuelve en `error`.
+    if (mailError) console.error('Resend error:', mailError)
+    else emailSent = true
   } catch (err) {
     console.error('Resend error:', err)
-    // Email failed but DB may have saved — still return success
+  }
+
+  // Si no se guardó ni se envió, el lead se perdería sin que nadie se entere: avisamos al usuario.
+  if (!savedToDb && !emailSent) {
+    return {
+      success: false,
+      error: 'No pudimos enviar tu consulta. Probá de nuevo en unos minutos o escribinos por WhatsApp.',
+      values: raw,
+    }
   }
 
   return { success: true, error: null }

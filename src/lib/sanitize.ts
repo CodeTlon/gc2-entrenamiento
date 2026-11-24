@@ -40,7 +40,7 @@ const ALLOWED_SRC_HOSTS = [
   /^https:\/\/[a-z0-9-]+\.supabase\.co\//i,
   /^https:\/\/images\.unsplash\.com\//i,
   /^https:\/\/(img|i)\.ytimg\.com\//i,
-  /^\//, // rutas relativas (/images/...)
+  /^\/(?!\/)/, // rutas relativas (/images/...) — excluye `//host` (protocol-relative)
 ]
 
 function isAllowedSrc(value: string): boolean {
@@ -60,6 +60,17 @@ DOMPurify.addHook('uponSanitizeElement', (node, data) => {
 DOMPurify.addHook('uponSanitizeAttribute', (_node, data) => {
   if (data.attrName === 'src' && data.attrValue && !isAllowedSrc(data.attrValue)) {
     data.keepAttr = false
+  }
+})
+
+// Imágenes y videos del cuerpo del post: lazy para no competir con el LCP.
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+  const el = node as unknown as Element
+  if (el.tagName === 'IMG' || el.tagName === 'IFRAME') {
+    el.setAttribute('loading', 'lazy')
+    if (el.tagName === 'IMG') el.setAttribute('decoding', 'async')
+  } else if (el.tagName === 'VIDEO') {
+    el.setAttribute('preload', 'metadata')
   }
 })
 

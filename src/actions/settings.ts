@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { maxBytesForMime } from '@/lib/upload-limits'
+import { extForPassthroughMime, maxBytesForMime } from '@/lib/upload-limits'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
 
@@ -46,7 +46,9 @@ export async function saveSiteSettingAction(
 
     if (error) return { error: error.message }
 
-    for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
+    // `contact` alimenta Navbar/Footer/CTAs de WhatsApp en todas las páginas públicas.
+    if (key === 'contact') revalidatePath('/', 'layout')
+    else for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
@@ -73,7 +75,9 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const oldUrl = String(formData.get('oldUrl') ?? '')
     if (oldUrl) {
       const oldPath = extractStoragePath(oldUrl)
-      if (oldPath) {
+      // Solo se borra dentro de carpetas conocidas: oldUrl viene del cliente.
+      const oldFolder = oldPath ? oldPath.slice(0, oldPath.lastIndexOf('/')) : ''
+      if (oldPath && !oldPath.includes('..') && ALLOWED_UPLOAD_FOLDERS.has(oldFolder)) {
         await supabase.storage.from('media').remove([oldPath])
       }
     }
@@ -99,9 +103,11 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
       ext = 'webp'
       contentType = 'image/webp'
     } else {
+      const safeExt = extForPassthroughMime(mime)
+      if (!safeExt) return { error: 'Tipo de archivo no permitido.' }
       buf = original
-      ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-      contentType = mime || 'application/octet-stream'
+      ext = safeExt
+      contentType = mime
     }
 
     const path = `${folder}/${id}.${ext}`
