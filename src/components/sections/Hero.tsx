@@ -136,7 +136,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       {/* Content */}
       <div className="container relative z-10 pt-28 sm:pt-32 lg:pt-36 pb-16">
         <h1
-          className="font-heading font-black uppercase leading-[1.05] mb-5 reveal delay-1"
+          className="font-heading font-black uppercase leading-[1.05] mb-5 hero-in"
           style={{ fontSize: 'clamp(4.5rem, 14vw, 9rem)', letterSpacing: '-2px' }}
         >
           <span className="block text-white">{data.title_line_1}</span>
@@ -149,7 +149,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
           dangerouslySetInnerHTML={{ __html: sanitizeBasicHtml(data.subtitle) }}
         />
 
-        <div className="flex flex-wrap gap-3 md:gap-4 mb-8 sm:mb-10 md:mb-14 reveal delay-3">
+        <div className="flex flex-wrap gap-3 md:gap-4 mb-8 sm:mb-10 md:mb-14 hero-in">
           <Link
             href={data.cta_primary_href}
             className="btn btn--primary uppercase tracking-widest text-sm font-extrabold"

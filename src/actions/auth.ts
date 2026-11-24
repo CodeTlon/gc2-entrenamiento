@@ -68,7 +68,7 @@ export async function forgotPasswordAction(
 
   if (!email) return { error: 'Ingresá tu email.' }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar'
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.gc2entrenamientoderesistencia.com.ar'
 
   // Generamos el link con la Admin API (service role) y lo mandamos por Resend
   // en vez de supabase.auth.resetPasswordForEmail: el envío de emails de auth

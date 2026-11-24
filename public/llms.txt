@@ -6,10 +6,10 @@ GC² Entrenamiento de la Resistencia es un equipo de coaches especializados en d
 
 ## Páginas principales
 
-- [Home](https://gc2entrenamientoderesistencia.com.ar/): presentación del equipo, disciplinas (running, duatlón, triatlón), clases grupales, sedes de entrenamiento y equipo de coaches.
-- [Planes](https://gc2entrenamientoderesistencia.com.ar/planes): planes de entrenamiento por categoría (corredores, triatletas, grupales), con detalle de features y preguntas frecuentes sobre modalidad, seguimiento y evaluación funcional.
-- [Blog](https://gc2entrenamientoderesistencia.com.ar/blog): artículos sobre técnica de carrera, planificación de cargas, nutrición deportiva y prevención de lesiones, escritos por los coaches del equipo.
-- [Contacto](https://gc2entrenamientoderesistencia.com.ar/contacto): formulario de contacto, WhatsApp, Instagram y email para consultas y asesoramiento sobre qué plan elegir.
+- [Home](https://www.gc2entrenamientoderesistencia.com.ar/): presentación del equipo, disciplinas (running, duatlón, triatlón), clases grupales, sedes de entrenamiento y equipo de coaches.
+- [Planes](https://www.gc2entrenamientoderesistencia.com.ar/planes): planes de entrenamiento por categoría (corredores, triatletas, grupales), con detalle de features y preguntas frecuentes sobre modalidad, seguimiento y evaluación funcional.
+- [Blog](https://www.gc2entrenamientoderesistencia.com.ar/blog): artículos sobre técnica de carrera, planificación de cargas, nutrición deportiva y prevención de lesiones, escritos por los coaches del equipo.
+- [Contacto](https://www.gc2entrenamientoderesistencia.com.ar/contacto): formulario de contacto, WhatsApp, Instagram y email para consultas y asesoramiento sobre qué plan elegir.
 
 ## Servicios
 
@@ -24,7 +24,7 @@ GC² Entrenamiento de la Resistencia es un equipo de coaches especializados en d
 
 - Email: gc2entrenamiento@gmail.com
 - Instagram: https://www.instagram.com/gc2entrenamientoderesistencia
-- WhatsApp: enlace disponible en la página de [Contacto](https://gc2entrenamientoderesistencia.com.ar/contacto)
+- WhatsApp: enlace disponible en la página de [Contacto](https://www.gc2entrenamientoderesistencia.com.ar/contacto)
 - Ciudad: Córdoba, Argentina
 
 ## Notas para agentes de IA

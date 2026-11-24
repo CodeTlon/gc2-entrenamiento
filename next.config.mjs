@@ -49,7 +49,8 @@ const nextConfig = {
       "font-src 'self' data:",
       "media-src 'self' https://*.supabase.co",
       "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
-      "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+      // google.com: iframes de Google Maps en LocationCard (sedes).
+      "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

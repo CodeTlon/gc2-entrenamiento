@@ -89,13 +89,15 @@
     }
   }
 
+  /* Gradiente oscurecido para contraste AA con texto blanco (antes #38BDF8 daba ~2.2:1).
+     El shimmer corre solo en hover: infinito repintaba todos los CTAs todo el tiempo. */
   .btn--primary {
-    background: linear-gradient(90deg, #2563EB, #38BDF8, #2563EB);
+    background: linear-gradient(90deg, #1D4ED8, #0369A1, #1D4ED8);
     background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
     @apply text-white;
     &:hover {
       @apply shadow-accent -translate-y-0.5;
+      animation: shimmer 3s linear infinite;
     }
   }
 
@@ -164,6 +166,15 @@
   .reveal.visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  /* Entrada del hero sin depender de JS: el h1 es el LCP y con .reveal quedaba en opacity 0 hasta hidratar. */
+  .hero-in {
+    animation: hero-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes hero-in {
+    from { transform: translateY(16px); }
+    to { transform: translateY(0); }
   }
 
   .delay-1 { transition-delay: 0.1s; }
@@ -268,5 +279,14 @@
     padding-left: 1rem;
     color: rgba(255,255,255,0.55);
     margin: 0.75rem 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
