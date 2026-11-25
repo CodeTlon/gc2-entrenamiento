@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { extForPassthroughMime, maxBytesForMime } from '@/lib/upload-limits'
 
 /**
  * Sube un archivo directo al bucket `media` desde el navegador, sin pasar
@@ -13,17 +14,21 @@ export async function uploadDirectToStorage(
   file: File,
   folder: string,
 ): Promise<{ url?: string; error?: string }> {
+  const ext = extForPassthroughMime(file.type)
+  if (!ext) return { error: 'Tipo de archivo no permitido.' }
+  const maxBytes = maxBytesForMime(file.type)
+  if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { cookieOptions: { secure: process.env.NODE_ENV === 'production' } },
   )
-  const id = crypto.randomUUID()
-  const ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-  const path = `${folder}/${id}.${ext}`
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`
 
   const { error } = await supabase.storage
     .from('media')
-    .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false })
+    .upload(path, file, { contentType: file.type, upsert: false })
   if (error) return { error: error.message }
 
   const { data } = supabase.storage.from('media').getPublicUrl(path)

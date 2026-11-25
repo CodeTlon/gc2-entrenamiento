@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/dashboard/',
     },
-    sitemap: 'https://gc2entrenamientoderesistencia.com.ar/sitemap.xml',
+    sitemap: 'https://www.gc2entrenamientoderesistencia.com.ar/sitemap.xml',
   }
 }

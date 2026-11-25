@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { maxBytesForMime } from '@/lib/upload-limits'
+import { extForPassthroughMime, maxBytesForMime } from '@/lib/upload-limits'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
 
@@ -20,6 +20,20 @@ const SETTING_PATHS: Record<string, string[]> = {
   page_banners: ['/', '/planes', '/blog'],
 }
 
+// Whitelist de carpetas del bucket `media` — coincide con los `folder` hardcodeados
+// que pasan los forms del dashboard (ImageUpload/FileUpload, ver src/components/dashboard/Field.tsx
+// y ContentEditor en PostForm.tsx). El `folder` llega como FormData de un Server Action:
+// sin esto, un `folder` con `../` armado a mano escribiría fuera de la carpeta esperada
+// dentro del mismo bucket.
+const ALLOWED_UPLOAD_FOLDERS = new Set([
+  'uploads', 'gallery', 'about', 'banners', 'blog', 'blog/video',
+  'blog/adjuntos', 'blog/content', 'disciplines', 'hero', 'group', 'coaches',
+])
+
+function sanitizeFolder(raw: string): string {
+  return ALLOWED_UPLOAD_FOLDERS.has(raw) ? raw : 'uploads'
+}
+
 export async function saveSiteSettingAction(
   key: string,
   value: unknown,
@@ -32,7 +46,9 @@ export async function saveSiteSettingAction(
 
     if (error) return { error: error.message }
 
-    for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
+    // `contact` alimenta Navbar/Footer/CTAs de WhatsApp en todas las páginas públicas.
+    if (key === 'contact') revalidatePath('/', 'layout')
+    else for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
@@ -53,13 +69,15 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const maxBytes = maxBytesForMime(file.type || '')
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
-    const folder = String(formData.get('folder') ?? 'uploads')
+    const folder = sanitizeFolder(String(formData.get('folder') ?? 'uploads'))
 
     // Borrar imagen anterior si viene del mismo bucket
     const oldUrl = String(formData.get('oldUrl') ?? '')
     if (oldUrl) {
       const oldPath = extractStoragePath(oldUrl)
-      if (oldPath) {
+      // Solo se borra dentro de carpetas conocidas: oldUrl viene del cliente.
+      const oldFolder = oldPath ? oldPath.slice(0, oldPath.lastIndexOf('/')) : ''
+      if (oldPath && !oldPath.includes('..') && ALLOWED_UPLOAD_FOLDERS.has(oldFolder)) {
         await supabase.storage.from('media').remove([oldPath])
       }
     }
@@ -85,9 +103,11 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
       ext = 'webp'
       contentType = 'image/webp'
     } else {
+      const safeExt = extForPassthroughMime(mime)
+      if (!safeExt) return { error: 'Tipo de archivo no permitido.' }
       buf = original
-      ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
-      contentType = mime || 'application/octet-stream'
+      ext = safeExt
+      contentType = mime
     }
 
     const path = `${folder}/${id}.${ext}`

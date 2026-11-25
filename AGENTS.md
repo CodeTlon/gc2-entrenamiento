@@ -28,7 +28,7 @@ Sitio web + CMS de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equi
 
 ## Stack
 
-Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 3 · Supabase (`@supabase/ssr` + Postgres + Auth + Storage) · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: Vercel, auto-deploy on push a `main` vía integración Git nativa (verificado — ver `.ai/context/ARCHITECTURE.md`).
+Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 3 · Supabase (`@supabase/ssr` + Postgres + Auth + Storage) · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: **Coolify** (`codetlon-vps`, app `gc2-web`, Dockerfile standalone) desde 2026-11-24 — antes Vercel. Ver `.ai/context/ARCHITECTURE.md`.
 
 ## Comandos básicos
 

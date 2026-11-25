@@ -10,7 +10,18 @@
 - **`@vercel/og`** (Satori): genera PNG 1080x1920 para export a Instagram Story, corre server-side (route handler) para evitar CORS con `*.supabase.co`.
 - **Auth gate**: `src/proxy.ts` (antes `middleware.ts`, renombrado por Next 16) protege `/dashboard/:path*` — matchea toda la rama incluidos los route groups `(panel)`/`(auth)` porque no aparecen en la URL.
 
-## Cadena de deploy real (Fase 0 — verificada, no asumida)
+## Deploy actual — Coolify (desde 2026-11-24)
+
+- **Hosting**: Coolify en `codetlon-vps` (51.91.253.54), proyecto **GC2**, app **`gc2-web`** (uuid `wzo8jhfbhcvc8yfc0daeu39u`). Build pack `dockerfile` (`Dockerfile` en la raíz, Next `output: 'standalone'`, Node 22 alpine). Fuente: GitHub App `codetlon-git-hub-app` → `CodeTlon/gc2-entrenamiento`; auto-deploy por webhook al pushear a la rama configurada en la app.
+- **Rama**: hoy `feat/auditoria-seo-a11y-seguridad` (corte inicial). Al mergear a `main`, cambiar la rama de la app a `main`.
+- **Dominios**: `https://www.gc2entrenamientoderesistencia.com.ar` (principal) + apex con redirect a `www` (setting `redirect: www` de Coolify) + `http://gc2.51.91.253.54.sslip.io` (acceso directo de prueba). TLS por Let's Encrypt (Traefik de Coolify).
+- **DNS**: Cloudflare (DNS only, nube gris). `A @ → 51.91.253.54`, `CNAME www → @`. MX/TXT de Resend/SES intactos. Rollback: volver `A @` a `216.198.79.1` y `CNAME www` a `218a7b14934d06b4.vercel-dns-017.com` (Vercel).
+- **Env vars**: en Coolify (las `NEXT_PUBLIC_*` como build + runtime, porque se incrustan en el bundle y el build prerenderiza ISR leyendo Supabase). Supabase usa las keys nuevas `sb_publishable_…`/`sb_secret_…`.
+- **Sin el límite de ~4.5MB de body de Vercel**: `uploadDirectToStorage` sigue siendo válido (no carga el server), pero ya no es obligatorio por plataforma.
+- **ISR**: cache en el filesystem del contenedor; se pierde en cada redeploy (se regenera sola).
+- Vercel queda como rollback (proyecto `gc2-entrenamiento`), sin dominio activo vía DNS.
+
+## Cadena de deploy anterior — Vercel (histórico, hasta 2026-11-24)
 
 **FACT** — Evidencia recolectada directamente de config/archivos locales:
 

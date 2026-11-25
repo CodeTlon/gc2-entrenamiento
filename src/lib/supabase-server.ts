@@ -9,6 +9,11 @@ const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? 'placeholder'
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(URL, ANON, {
+    // Fuerza Secure en prod (Vercel solo sirve por HTTPS) — @supabase/ssr no lo
+    // setea por default. httpOnly queda en su default (false): el dashboard usa
+    // createBrowserClient (src/lib/client-upload.ts) para subir archivos grandes
+    // directo a Storage, y necesita leer la cookie de sesión desde el browser.
+    cookieOptions: { secure: process.env.NODE_ENV === 'production' },
     cookies: {
       getAll() {
         return cookieStore.getAll()

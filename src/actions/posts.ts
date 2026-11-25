@@ -61,6 +61,35 @@ async function uniqueSlug(supabase: Awaited<ReturnType<typeof requireUser>>['sup
   }
 }
 
+// Antes los errores de estas tablas se ignoraban (así quedó oculto el bug de RLS de post_authors).
+async function syncRelations(
+  supabase: Awaited<ReturnType<typeof requireUser>>['supabase'],
+  postId: string,
+  categoryIds: string[],
+  coachIds: string[],
+  replace = false,
+): Promise<string | null> {
+  if (replace) {
+    const del1 = await supabase.from('post_categories').delete().eq('post_id', postId)
+    if (del1.error) return del1.error.message
+    const del2 = await supabase.from('post_authors').delete().eq('post_id', postId)
+    if (del2.error) return del2.error.message
+  }
+  if (categoryIds.length > 0) {
+    const { error } = await supabase
+      .from('post_categories')
+      .insert(categoryIds.map((cid) => ({ post_id: postId, category_id: cid })))
+    if (error) return error.message
+  }
+  if (coachIds.length > 0) {
+    const { error } = await supabase
+      .from('post_authors')
+      .insert(coachIds.map((cid) => ({ post_id: postId, coach_id: cid })))
+    if (error) return error.message
+  }
+  return null
+}
+
 export async function createPostAction(_prev: PostState, formData: FormData): Promise<PostState> {
   try {
     const { supabase, user } = await requireUser()
@@ -77,20 +106,12 @@ export async function createPostAction(_prev: PostState, formData: FormData): Pr
       .single()
     if (error) return { error: error.message }
 
-    if (category_ids.length > 0) {
-      await supabase.from('post_categories').insert(
-        category_ids.map((cid) => ({ post_id: inserted.id, category_id: cid }))
-      )
-    }
-
-    if (coach_ids.length > 0) {
-      await supabase.from('post_authors').insert(
-        coach_ids.map((cid) => ({ post_id: inserted.id, coach_id: cid }))
-      )
-    }
+    const relErr = await syncRelations(supabase, inserted.id, category_ids, coach_ids)
+    if (relErr) return { error: `Post creado, pero falló guardar categorías/autores: ${relErr}` }
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
+    revalidatePath('/sitemap.xml')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
@@ -107,9 +128,10 @@ export async function updatePostAction(
     const { category_ids, coach_ids, ...data } = parseForm(formData)
     if (!data.title) return { error: 'El título es obligatorio.' }
 
-    const { data: existing } = await supabase.from('posts').select('slug, title').eq('id', id).single()
+    const { data: existing } = await supabase.from('posts').select('slug, title, published').eq('id', id).single()
     let slug = existing?.slug
-    if (existing && existing.title !== data.title) {
+    // Una vez publicado el slug queda fijo: cambiarlo rompía la URL vieja (404, backlinks, indexación).
+    if (existing && !existing.published && existing.title !== data.title) {
       const baseSlug = slugify(data.title, { lower: true, strict: true })
       slug = await uniqueSlug(supabase, baseSlug, id)
     }
@@ -120,22 +142,13 @@ export async function updatePostAction(
       .eq('id', id)
     if (error) return { error: error.message }
 
-    await supabase.from('post_categories').delete().eq('post_id', id)
-    if (category_ids.length > 0) {
-      await supabase.from('post_categories').insert(
-        category_ids.map((cid) => ({ post_id: id, category_id: cid }))
-      )
-    }
-
-    await supabase.from('post_authors').delete().eq('post_id', id)
-    if (coach_ids.length > 0) {
-      await supabase.from('post_authors').insert(
-        coach_ids.map((cid) => ({ post_id: id, coach_id: cid }))
-      )
-    }
+    const relErr = await syncRelations(supabase, id, category_ids, coach_ids, true)
+    if (relErr) return { error: `Post guardado, pero falló guardar categorías/autores: ${relErr}` }
 
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
+    if (existing?.slug && existing.slug !== slug) revalidatePath(`/blog/${existing.slug}`)
+    revalidatePath('/sitemap.xml')
   } catch (e) {
     return { error: e instanceof Error ? e.message : 'Error desconocido' }
   }
@@ -146,8 +159,11 @@ export async function deletePostAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const { supabase } = await requireUser()
+  const { data: existing } = await supabase.from('posts').select('slug').eq('id', id).single()
   const { error } = await supabase.from('posts').delete().eq('id', id)
   if (error) throw new Error(error.message)
   revalidatePath('/blog')
+  if (existing?.slug) revalidatePath(`/blog/${existing.slug}`)
+  revalidatePath('/sitemap.xml')
   redirect('/dashboard/blog')
 }

@@ -50,3 +50,4 @@ gc2-site/
 # Misc
 .cache/
 .turbo/
+.vercel

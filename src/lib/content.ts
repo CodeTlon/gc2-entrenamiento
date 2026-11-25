@@ -177,7 +177,7 @@ const FALLBACK_HERO: HeroSettings = {
   title_line_1: 'SUPERÁ',
   title_line_2: 'TUS LÍMITES',
   subtitle:
-    'Equipo de entrenamiento para <strong>corredores, duatletas y triatletas</strong>. Planificación individualizada y grupal, presencial y a distancia.',
+    'Planes de entrenamiento en <strong>Córdoba</strong> para corredores, duatletas y triatletas: planificación individualizada y grupal, presencial y a distancia, con evaluación funcional incluida.',
   cta_primary_label: 'Ver Planes',
   cta_primary_href: '/planes',
   cta_secondary_label: '¡Contactános!',
@@ -196,7 +196,7 @@ const FALLBACK_ABOUT: AboutSettings = {
   title_line_1: 'EQUIPO DE ENTRENAMIENTO DE',
   title_line_2: 'DEPORTES DE RESISTENCIA',
   paragraphs: [
-    'Somos un equipo dedicado a la planificación y entrenamiento de deportes de resistencia para <strong>corredores, duatletas y triatletas</strong> de todos los niveles y distancias.',
+    'Si buscás un <strong>equipo de entrenamiento en Córdoba</strong> para correr mejor, mejorar tus tiempos o prepararte para un duatlón o triatlón, somos un equipo dedicado a la planificación y entrenamiento de deportes de resistencia para corredores, duatletas y triatletas de todos los niveles y distancias.',
     'Ofrecemos entrenamiento <strong>individual y grupal</strong>, tanto <strong>presencial como a distancia</strong>, con evaluación funcional, testeos y planes de gimnasio personalizados.',
   ],
   features: [

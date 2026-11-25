@@ -6,6 +6,8 @@ import { submitContact, ContactState } from '@/actions/contact'
 
 const initialState: ContactState = { success: false, error: null }
 
+const v = (state: ContactState, k: string) => state.values?.[k] ?? ''
+
 interface Coach {
   id: string
   name: string
@@ -44,6 +46,7 @@ export default function ContactForm({
   if (state.success) {
     return (
       <div
+        role="status"
         className="p-8 rounded-xl text-center"
         style={{
           background: 'rgba(37,211,102,0.08)',
@@ -71,6 +74,7 @@ export default function ContactForm({
 
       {state.error && (
         <div
+          role="alert"
           className="mb-6 p-4 rounded-lg text-danger text-sm"
           style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}
         >
@@ -78,26 +82,29 @@ export default function ContactForm({
         </div>
       )}
 
-      <form action={formAction} className="space-y-5">
+      {/* key: remonta con los valores devueltos para no perder lo tipeado si falla la validación (React 19 resetea el form). */}
+      <form key={JSON.stringify(state.values ?? {})} action={formAction} className="space-y-5">
+        {/* Honeypot anti-bots: invisible para humanos, los bots lo completan. */}
+        <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 opacity-0" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <FormGroup label="Nombre completo *" error={state.fieldErrors?.nombre?.[0]}>
-            <input type="text" name="nombre" className="form-input" placeholder="Tu nombre" required />
+            <input type="text" name="nombre" autoComplete="name" maxLength={120} defaultValue={v(state, 'nombre')} className="form-input" placeholder="Tu nombre" required />
           </FormGroup>
 
           <FormGroup label="Email *" error={state.fieldErrors?.email?.[0]}>
-            <input type="email" name="email" className="form-input" placeholder="tu@email.com" required />
+            <input type="email" name="email" autoComplete="email" maxLength={200} defaultValue={v(state, 'email')} className="form-input" placeholder="tu@email.com" required />
           </FormGroup>
 
           <FormGroup label="Teléfono / WhatsApp *" error={state.fieldErrors?.telefono?.[0]}>
-            <input type="tel" name="telefono" className="form-input" placeholder="+54 9..." required />
+            <input type="tel" name="telefono" autoComplete="tel" maxLength={40} defaultValue={v(state, 'telefono')} className="form-input" placeholder="+54 9..." required />
           </FormGroup>
 
           <FormGroup label="Ciudad / Localidad">
-            <input type="text" name="ciudad" className="form-input" placeholder="¿Dónde vivís?" />
+            <input type="text" name="ciudad" autoComplete="address-level2" maxLength={120} defaultValue={v(state, 'ciudad')} className="form-input" placeholder="¿Dónde vivís?" />
           </FormGroup>
 
           <FormGroup label="Disciplina de interés">
-            <select name="servicio" className="form-input">
+            <select name="servicio" defaultValue={v(state, 'servicio')} className="form-input">
               <option value="">Seleccionar...</option>
               {disciplines.map((d) => (
                 <option key={d.id} value={d.name}>{d.name}</option>
@@ -107,13 +114,13 @@ export default function ContactForm({
           </FormGroup>
 
           <FormGroup label="Tu principal objetivo">
-            <input type="text" name="objetivo" className="form-input" placeholder="Ej: Correr mis primeros 21k" />
+            <input type="text" name="objetivo" maxLength={300} defaultValue={v(state, 'objetivo')} className="form-input" placeholder="Ej: Correr mis primeros 21k" />
           </FormGroup>
         </div>
 
         {coaches.length > 0 && (
           <FormGroup label="Entrenador de preferencia">
-            <select name="coach" defaultValue={preselectedCoachName ?? ''} className="form-input">
+            <select name="coach" defaultValue={state.values?.coach ?? preselectedCoachName ?? ''} className="form-input">
               <option value="">Sin preferencia</option>
               {coaches.map((c) => (
                 <option key={c.id} value={c.name}>
@@ -125,7 +132,7 @@ export default function ContactForm({
         )}
 
         <FormGroup label="Mensaje o dudas adicionales *" error={state.fieldErrors?.mensaje?.[0]}>
-          <textarea name="mensaje" className="form-input" rows={4} required placeholder="Contanos más sobre vos..." />
+          <textarea name="mensaje" maxLength={5000} defaultValue={v(state, 'mensaje')} className="form-input" rows={4} required placeholder="Contanos más sobre vos..." />
         </FormGroup>
 
         <SubmitButton />
@@ -144,8 +151,9 @@ function FormGroup({
   error?: string
 }) {
   return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-body font-semibold tracking-wider uppercase text-white/55">{label}</label>
+    // El label envuelve al control: asociación implícita para lectores de pantalla.
+    <label className="block space-y-1.5">
+      <span className="block text-xs font-body font-semibold tracking-wider uppercase text-white/55">{label}</span>
       <style jsx global>{`
         .form-input {
           width: 100%;
@@ -179,7 +187,7 @@ function FormGroup({
         }
       `}</style>
       {children}
-      {error && <p className="text-danger text-xs mt-1">{error}</p>}
-    </div>
+      {error && <span role="alert" className="block text-danger text-xs mt-1">{error}</span>}
+    </label>
   )
 }

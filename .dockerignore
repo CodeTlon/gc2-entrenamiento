@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+.github
+.env*
+.vercel
+test-results
+playwright-report
+tests
+docs
+supabase
+*.log
+.claude
+.ai

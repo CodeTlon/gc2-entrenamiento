@@ -118,7 +118,7 @@ export default function Navbar({ contact }: Props) {
 
           {/* Mobile toggle */}
           <button
-            className="md:hidden text-white p-2"
+            className="md:hidden text-white p-2 rounded-md transition-colors active:scale-[0.98] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             onClick={openMenu}
             aria-label="Abrir menú"
           >
@@ -135,7 +135,7 @@ export default function Navbar({ contact }: Props) {
         id="mobileMenu"
       >
         <button
-          className="absolute top-5 right-5 text-white p-2"
+          className="absolute top-5 right-5 text-white p-2 rounded-md transition-colors active:scale-[0.98] hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
           onClick={closeMenu}
           aria-label="Cerrar menú"
         >
@@ -145,32 +145,32 @@ export default function Navbar({ contact }: Props) {
         <Link
           href="/"
           onClick={closeMenu}
-          className={`font-heading font-bold text-4xl uppercase tracking-wider
-            ${isActive('/') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
+          className={`font-heading font-bold text-4xl uppercase tracking-wider transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded
+            ${isActive('/') ? 'gradient-text' : 'text-white hover:text-accent'}`}
         >
           Inicio
         </Link>
         <Link
           href="/planes"
           onClick={closeMenu}
-          className={`font-heading font-bold text-4xl uppercase tracking-wider
-            ${isActive('/planes') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
+          className={`font-heading font-bold text-4xl uppercase tracking-wider transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded
+            ${isActive('/planes') ? 'gradient-text' : 'text-white hover:text-accent'}`}
         >
           Planes
         </Link>
         <Link
           href="/blog"
           onClick={closeMenu}
-          className={`font-heading font-bold text-4xl uppercase tracking-wider
-            ${isActive('/blog') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
+          className={`font-heading font-bold text-4xl uppercase tracking-wider transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded
+            ${isActive('/blog') ? 'gradient-text' : 'text-white hover:text-accent'}`}
         >
           Blog
         </Link>
         <Link
           href="/contacto"
           onClick={closeMenu}
-          className={`font-heading font-bold text-4xl uppercase tracking-wider
-            ${isActive('/contacto') ? 'gradient-text' : 'text-white hover:text-accent'} transition-colors`}
+          className={`font-heading font-bold text-4xl uppercase tracking-wider transition-colors active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded
+            ${isActive('/contacto') ? 'gradient-text' : 'text-white hover:text-accent'}`}
         >
           Contacto
         </Link>
@@ -181,8 +181,8 @@ export default function Navbar({ contact }: Props) {
             href={contact.instagram_link}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Instagram"
-            className="text-white/70 hover:text-accent transition-colors"
+            aria-label="Instagram de GC² Entrenamiento"
+            className="text-white/70 hover:text-accent active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
           >
             <Instagram size={24} />
           </a>
@@ -190,15 +190,15 @@ export default function Navbar({ contact }: Props) {
             href={contact.whatsapp_link}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="WhatsApp"
-            className="text-white/70 hover:text-success transition-colors"
+            aria-label="WhatsApp de GC² Entrenamiento"
+            className="text-white/70 hover:text-success active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/60 rounded"
           >
             <WhatsAppIcon size={24} />
           </a>
           <a
             href={`mailto:${contact.email}`}
-            aria-label="Email"
-            className="text-white/70 hover:text-accent transition-colors"
+            aria-label="Enviar email a GC² Entrenamiento"
+            className="text-white/70 hover:text-accent active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
           >
             <Mail size={24} />
           </a>
