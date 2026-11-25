@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import type { Viewport } from 'next'
 import { Barlow, Barlow_Condensed } from 'next/font/google'
 import './globals.css'
-import GoogleAnalytics from '@/components/ui/GoogleAnalytics'
-import CookieConsent from '@/components/ui/CookieConsent'
 
 const barlow = Barlow({
   subsets: ['latin'],
@@ -124,11 +122,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-blue-900 text-white font-body">
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-        )}
         {children}
-        <CookieConsent />
       </body>
     </html>
   )
