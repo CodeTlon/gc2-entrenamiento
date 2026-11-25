@@ -11,7 +11,7 @@
 
 Sitio web oficial de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equipo de entrenamiento para corredores, duatletas y triatletas. Incluye un sitio público y un dashboard administrativo (CMS interno) para editar todo el contenido sin tocar código.
 
-Producto desplegado en Vercel. Dominio: `gc2entrenamientoderesistencia.com.ar`.
+Producto desplegado en **Coolify** (`codetlon-vps`, app `gc2-web`, `Dockerfile` standalone) desde 2026-11-24; antes Vercel (queda como rollback). Dominio: `www.gc2entrenamientoderesistencia.com.ar` (DNS en Cloudflare). Detalle en `.ai/context/ARCHITECTURE.md`.
 
 ## Stack
 
