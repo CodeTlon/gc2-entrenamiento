@@ -5,6 +5,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Build autocontenido para el contenedor de Coolify (Dockerfile). Vercel lo ignora.
+  output: 'standalone',
   experimental: {
     serverActions: {
       bodySizeLimit: '20mb',
