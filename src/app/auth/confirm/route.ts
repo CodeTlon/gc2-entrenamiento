@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextResponse, type NextRequest } from 'next/server'
+import { publicOrigin } from '@/lib/public-origin'
 
 // Verifica el token_hash de los links de email (invite, recovery, signup…) vía
 // verifyOtp. A diferencia de /auth/callback (flujo PKCE con ?code), esto funciona
@@ -15,7 +16,8 @@ function safeNext(next: string | null, fallback: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = publicOrigin(request)
   const tokenHash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
   const next = safeNext(searchParams.get('next'), '/dashboard/set-password')

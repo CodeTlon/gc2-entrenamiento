@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { NextResponse, type NextRequest } from 'next/server'
+import { publicOrigin } from '@/lib/public-origin'
 
 // Allowlist: solo redirects internos a /dashboard. `next` viene de un query param que
 // cualquiera puede armar a mano — sin validarlo, `next=@evil.com/x` concatenado en
@@ -13,7 +14,8 @@ function safeNext(next: string | null, fallback: string): string {
 // Intercambia el código PKCE que Supabase incluye en el link del email
 // por una sesión real guardada en cookies, y redirige al destino.
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
+  const origin = publicOrigin(request)
   const code = searchParams.get('code')
   const next = safeNext(searchParams.get('next'), '/dashboard/set-password')
 
