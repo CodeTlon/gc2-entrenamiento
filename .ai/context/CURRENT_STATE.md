@@ -1,5 +1,7 @@
 # CURRENT_STATE
 
+**Actualizacion 2026-11-26:** Next 16.4.2 → 16.4.6 por advisories de seguridad (rama `feature/dev1-next-16-4-6`, promovida a `dev` y `test`; `main` sin tocar). Verificado: tsc, lint (5 avisos, los mismos que en `dev`), `test:db` (16 verificaciones) y build; `npm audit --omit=dev` en 0. E2E en la CI de `test`.
+
 Estado al **2026-10-16** (rama `feature/dev2-estandar-2026`, integrada en `dev` y `test` al cerrar la sesion). El detalle del 2026-10-15 sigue abajo.
 
 ## Alineacion de versiones (2026-10-16)

@@ -3,7 +3,7 @@
 Estado vigente al 2026-10-16. Mapa de cambios por tipo de tarea: `ARCHITECTURE.md` (raiz). Este archivo es la vista estable para agentes.
 
 ## Capas
-- **Next.js 16.4.2** (App Router, RSC por defecto, Turbopack), React 19.3.1, TypeScript 6 estricto (`@/* -> src/*`). Tailwind 4.3.3 con tokens en `@theme` (`src/app/globals.css`).
+- **Next.js 16.4.6** (App Router, RSC por defecto, Turbopack), React 19.3.1, TypeScript 6 estricto (`@/* -> src/*`). Tailwind 4.3.3 con tokens en `@theme` (`src/app/globals.css`).
 - **Server-first**: paginas y secciones son Server Components salvo estado o efectos (Navbar, Hero parallax, ScrollProgress, ScrollReveal, ContactForm, CoachModal, DashboardShell, formularios del panel).
 - **Server Actions** (`src/actions/*.ts`) para todas las mutaciones, firma `(prevState, formData) => Promise<State>`. La autorizacion es `requireUser()` (`src/lib/session.ts`) en cada accion; no hay RLS.
 - **Datos**: PostgreSQL + Drizzle (`src/db/schema.ts`, `src/db/queries.ts`, migraciones SQL en `drizzle/`, se aplican al arrancar con `scripts/migrate.mjs` y fallan cerrado).
