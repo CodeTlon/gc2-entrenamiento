@@ -1,5 +1,7 @@
 # CURRENT_STATE
 
+**Actualización 2026-11-26 (v1.5.2):** hotfix de seguridad directo sobre `main` (Next 16.4.6, tiptap 3.31.3, Zod 4, override de fflate; `npm audit --omit=dev` en 0). Producción sigue con Supabase en Coolify; la migración a backend propio está en `dev`/`test` y el PR #10 (test → main) queda abierto hasta el corte.
+
 Snapshot al 2026-09-18. Esto envejece rápido — si parece desactualizado, confiá en `git log`/`git status` reales antes que en este archivo.
 
 ## Git
