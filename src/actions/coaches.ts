@@ -3,30 +3,25 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import slugify from 'slugify'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { and, eq, ne, ilike } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
+import { liberarArchivos } from '@/lib/media-cleanup'
+import { coaches } from '@/db/schema'
 
 export type CoachState = { ok?: boolean; error?: string } | undefined
 
-type SupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>
+// Escapa % y _ para que ilike compare el nombre literal.
+const likeLiteral = (v: string) => v.replace(/[\%_]/g, '\$&')
 
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return supabase
-}
-
-async function checkDuplicateCoachName(
-  supabase: SupabaseClient,
-  name: string,
-  excludeId?: string,
-): Promise<boolean> {
-  let query = supabase.from('coaches').select('id').ilike('name', name)
-  if (excludeId) query = query.neq('id', excludeId)
-  const { data } = await query
-  return (data?.length ?? 0) > 0
+async function checkDuplicateCoachName(name: string, excludeId?: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: coaches.id })
+    .from(coaches)
+    .where(and(ilike(coaches.name, likeLiteral(name)), excludeId ? ne(coaches.id, excludeId) : undefined))
+    .limit(1)
+  return rows.length > 0
 }
 
 function safeJsonArray(raw: string | null, fallback: string[] = []): string[] {
@@ -56,20 +51,19 @@ function parseFormData(formData: FormData) {
 
 export async function createCoachAction(_prev: CoachState, formData: FormData): Promise<CoachState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
 
-    const isDuplicate = await checkDuplicateCoachName(supabase, data.name)
+    const isDuplicate = await checkDuplicateCoachName(data.name)
     if (isDuplicate) return { error: 'Ya existe un entrenador con ese nombre.' }
 
     const slug = slugify(data.name, { lower: true, strict: true })
-    const { error } = await supabase.from('coaches').insert({ ...data, slug })
-    if (error) return { error: error.message }
+    await db.insert(coaches).values({ ...data, slug })
 
     revalidatePath('/', 'layout')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/entrenadores?saved=1')
 }
@@ -80,22 +74,20 @@ export async function updateCoachAction(
   formData: FormData,
 ): Promise<CoachState> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const data = parseFormData(formData)
     if (!data.name) return { error: 'El nombre es obligatorio.' }
 
-    const isDuplicate = await checkDuplicateCoachName(supabase, data.name, id)
+    const isDuplicate = await checkDuplicateCoachName(data.name, id)
     if (isDuplicate) return { error: 'Ya existe un entrenador con ese nombre.' }
 
-    const { error } = await supabase
-      .from('coaches')
-      .update({ ...data, updated_at: new Date().toISOString() })
-      .eq('id', id)
-    if (error) return { error: error.message }
+    const [antes] = await db.select({ photo_url: coaches.photo_url }).from(coaches).where(eq(coaches.id, id)).limit(1)
+    await db.update(coaches).set({ ...data, updated_at: new Date().toISOString() }).where(eq(coaches.id, id))
+    await liberarArchivos(antes?.photo_url)
 
     revalidatePath('/', 'layout')
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
   redirect('/dashboard/entrenadores?saved=1')
 }
@@ -103,9 +95,10 @@ export async function updateCoachAction(
 export async function deleteCoachAction(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return
-  const supabase = await requireUser()
-  const { error } = await supabase.from('coaches').delete().eq('id', id)
-  if (error) throw new Error(error.message)
+  await requireUser()
+  const [antes] = await db.select({ photo_url: coaches.photo_url }).from(coaches).where(eq(coaches.id, id)).limit(1)
+  await db.delete(coaches).where(eq(coaches.id, id))
+  await liberarArchivos(antes?.photo_url)
   revalidatePath('/', 'layout')
   redirect('/dashboard/entrenadores')
 }

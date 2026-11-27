@@ -1,10 +1,13 @@
 import type { MetadataRoute } from 'next'
-import { createSupabaseClient } from '@/lib/supabase'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts } from '@/db/schema'
 
-const BASE_URL = 'https://www.gc2entrenamientoderesistencia.com.ar'
+// Sale del entorno (test publica su propia URL); el valor por defecto es el dominio real.
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar').replace(/\/$/, '')
 
-// Sin esto el sitemap se genera una sola vez en build y los posts nuevos no aparecen hasta el próximo deploy.
-export const revalidate = 3600
+// Dinámico: el build de Coolify no tiene base y congelaría el sitemap sin los posts publicados.
+export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -32,23 +35,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/terminos`, changeFrequency: 'yearly', priority: 0.2 },
   ]
 
-  // Blog posts from Supabase
+  // Posts publicados del blog
   let blogRoutes: MetadataRoute.Sitemap = []
   try {
-    const supabase = createSupabaseClient()
-    const { data } = await supabase
-      .from('posts')
-      .select('slug, created_at, updated_at')
-      .eq('published', true)
+    const data = await db
+      .select({ slug: posts.slug, created_at: posts.created_at, updated_at: posts.updated_at })
+      .from(posts)
+      .where(eq(posts.published, true))
 
-    if (data) {
-      blogRoutes = data.map((post) => ({
-        url: `${BASE_URL}/blog/${post.slug}`,
-        lastModified: new Date(post.updated_at ?? post.created_at),
-        changeFrequency: 'monthly' as const,
-        priority: 0.5,
-      }))
-    }
+    blogRoutes = data.map((post) => ({
+      url: `${BASE_URL}/blog/${post.slug}`,
+      lastModified: new Date(post.updated_at ?? post.created_at),
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }))
   } catch (err) {
     console.error('Sitemap blog fetch error:', err)
   }

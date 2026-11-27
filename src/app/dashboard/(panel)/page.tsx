@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { Users, ListChecks, FileText, Tag, Settings, ArrowRight, LayoutGrid, Inbox } from 'lucide-react'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { count } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { coaches, plans, posts, contactLeads } from '@/db/schema'
 
 const SECTIONS = [
   {
@@ -48,21 +50,13 @@ const SECTIONS = [
 ]
 
 export default async function DashboardHome() {
-  const supabase = await createSupabaseServerClient()
-
-  const serviceSupabase = (await import('@/lib/supabase')).createSupabaseServiceClient()
-
-  const [
-    { count: coachesCount },
-    { count: plansCount },
-    { count: postsCount },
-    { count: leadsCount },
-  ] = await Promise.all([
-    supabase.from('coaches').select('*', { count: 'exact', head: true }),
-    supabase.from('plans').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
-    serviceSupabase.from('contact_leads').select('*', { count: 'exact', head: true }),
-  ])
+  const [[{ n: coachesCount }], [{ n: plansCount }], [{ n: postsCount }], [{ n: leadsCount }]] =
+    await Promise.all([
+      db.select({ n: count() }).from(coaches),
+      db.select({ n: count() }).from(plans),
+      db.select({ n: count() }).from(posts),
+      db.select({ n: count() }).from(contactLeads),
+    ])
 
   return (
     <div className="space-y-8">
@@ -72,7 +66,7 @@ export default async function DashboardHome() {
         <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[3px] mb-1">
           Panel
         </p>
-        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl uppercase leading-tight">
+        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl md:leading-[var(--text-3xl--line-height)] uppercase leading-tight">
           Bienvenidos
         </h1>
         <p className="text-white/40 text-sm mt-1">
@@ -98,7 +92,7 @@ export default async function DashboardHome() {
             style={{ background: '#0D2247', border: '1px solid #102E66' }}
           >
             <span
-              className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-accent"
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-accent"
               style={{ background: '#102E66' }}
             >
               <Icon size={16} />
@@ -109,7 +103,7 @@ export default async function DashboardHome() {
               </p>
               <p className="text-white/40 text-xs leading-snug truncate">{desc}</p>
             </div>
-            <ArrowRight size={15} className="text-white/20 group-hover:text-accent transition-colors flex-shrink-0" />
+            <ArrowRight size={15} className="text-white/20 group-hover:text-accent transition-colors shrink-0" />
           </Link>
         ))}
       </div>

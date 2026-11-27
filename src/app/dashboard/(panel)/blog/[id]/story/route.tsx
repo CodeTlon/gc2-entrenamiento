@@ -1,37 +1,27 @@
 import { ImageResponse } from '@vercel/og'
-import sharp from 'sharp'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { posts } from '@/db/schema'
+import { isUuid } from '@/db/queries'
+import { getUser } from '@/lib/session'
 import { parseFocal } from '@/lib/image-focal'
-
-// Satori (@vercel/og) no soporta WebP y todas las portadas se guardan en WebP (uploadMediaAction):
-// sin esto la Story fallaba con 502 en cualquier post con portada. Se baja la imagen, se pasa a JPEG
-// y se embebe como data URI. Solo hosts propios (evita que el server pida URLs arbitrarias).
-async function coverAsJpeg(src: string): Promise<string | null> {
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\/media\//i.test(src)) return null
-  try {
-    const res = await fetch(src)
-    if (!res.ok) return null
-    const buf = Buffer.from(await res.arrayBuffer())
-    const jpeg = await sharp(buf).rotate().resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer()
-    return `data:image/jpeg;base64,${jpeg.toString('base64')}`
-  } catch {
-    return null
-  }
-}
+import { portadaParaStory } from '@/lib/story-cover'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
-  const { data: post } = await supabase
-    .from('posts')
-    .select('title, slug, cover_image')
-    .eq('id', id)
-    .single()
+  // Esta ruta queda fuera del layout del panel: valida la sesión acá.
+  if (!(await getUser())) return new Response('No autenticado', { status: 401 })
+  if (!isUuid(id)) return new Response('No encontrado', { status: 404 })
+  const [post] = await db
+    .select({ title: posts.title, slug: posts.slug, cover_image: posts.cover_image })
+    .from(posts)
+    .where(eq(posts.id, id))
+    .limit(1)
 
   if (!post) return new Response('No encontrado', { status: 404 })
 
   const focal = parseFocal(post.cover_image)
-  const coverSrc = focal.src ? await coverAsJpeg(focal.src) : null
+  const coverSrc = await portadaParaStory(focal.src)
   const titleSize = post.title.length > 50 ? 52 : post.title.length > 30 ? 60 : 68
 
   return new ImageResponse(

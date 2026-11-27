@@ -33,7 +33,7 @@ function PlanCard({
         Plan
       </p>
       <div
-        className="font-heading font-black uppercase leading-none text-white mb-5 min-h-[4.5rem] flex items-start"
+        className="font-heading font-black uppercase leading-none text-white mb-5 min-h-18 flex items-start"
         style={{ fontSize: isLongName ? 'clamp(1.5rem, 3vw, 2rem)' : 'clamp(2.5rem, 5vw, 3.5rem)' }}
       >
         <span>
@@ -46,7 +46,7 @@ function PlanCard({
         {plan.features.map((feat, i) => (
           <div key={i} className="flex items-start gap-2.5">
             <span
-              className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
+              className="shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
               style={{ background: '#38BDF8' }}
             >
               ✓

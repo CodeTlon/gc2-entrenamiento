@@ -79,7 +79,7 @@ export default function About({ data }: { data: AboutSettings }) {
             {data.title_line_1}{' '}
             <span className="gradient-text">{data.title_line_2}</span>
           </h2>
-          <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base">
+          <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base md:leading-[var(--text-base--line-height)]">
             {data.paragraphs.map((p, i) => (
               <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeBasicHtml(p) }} />
             ))}

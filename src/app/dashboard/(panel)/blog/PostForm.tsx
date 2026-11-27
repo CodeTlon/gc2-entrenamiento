@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import Link from 'next/link'
 import { Node, mergeAttributes } from '@tiptap/core'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -132,9 +133,9 @@ export default function PostForm({
         ) : (
           <p className="text-white/40 text-sm mt-1">
             No hay categorías creadas todavía.{' '}
-            <a href="/dashboard/categorias/nuevo" className="text-accent hover:underline">
+            <Link href="/dashboard/categorias/nuevo" className="text-accent hover:underline">
               Crear una
-            </a>
+            </Link>
           </p>
         )}
       </div>
@@ -453,10 +454,10 @@ function ContentEditor({
             className="field-input text-sm flex-1 py-1.5"
             autoFocus
           />
-          <button type="button" onClick={insertYoutube} className="px-3 py-1.5 rounded text-xs font-semibold flex-shrink-0" style={{ background: '#38BDF8', color: '#0A1628' }}>
+          <button type="button" onClick={insertYoutube} className="px-3 py-1.5 rounded text-xs font-semibold shrink-0" style={{ background: '#38BDF8', color: '#0A1628' }}>
             Insertar
           </button>
-          <button type="button" onClick={() => { setShowYt(false); setYtInput(''); setErr(null) }} className="px-2 py-1.5 rounded text-white/50 hover:text-white flex-shrink-0" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+          <button type="button" onClick={() => { setShowYt(false); setYtInput(''); setErr(null) }} className="px-2 py-1.5 rounded text-white/50 hover:text-white shrink-0" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
             <X size={14} />
           </button>
         </div>

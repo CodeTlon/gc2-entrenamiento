@@ -2,19 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 import sharp from 'sharp'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { db } from '@/lib/db'
+import { requireUser } from '@/lib/session'
+import { errorMessage } from '@/lib/errors'
+import { eq } from 'drizzle-orm'
+import { siteSettings } from '@/db/schema'
+import { putObject, TIPOS_POR_EXT } from '@/lib/storage'
 import { extForPassthroughMime, maxBytesForMime } from '@/lib/upload-limits'
+import { liberarArchivos } from '@/lib/media-cleanup'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
-
-async function requireUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado.')
-  return supabase
-}
 
 const SETTING_PATHS: Record<string, string[]> = {
   page_banners: ['/', '/planes', '/blog'],
@@ -39,48 +36,36 @@ export async function saveSiteSettingAction(
   value: unknown,
 ): Promise<SaveState> {
   try {
-    const supabase = await requireUser()
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+    await requireUser()
+    const updated_at = new Date().toISOString()
+    const [antes] = await db.select({ value: siteSettings.value }).from(siteSettings).where(eq(siteSettings.key, key)).limit(1)
+    await db
+      .insert(siteSettings)
+      .values({ key, value, updated_at })
+      .onConflictDoUpdate({ target: siteSettings.key, set: { value, updated_at } })
 
-    if (error) return { error: error.message }
-
+    if (antes) await liberarArchivos(JSON.stringify(antes.value))
     // `contact` alimenta Navbar/Footer/CTAs de WhatsApp en todas las páginas públicas.
     if (key === 'contact') revalidatePath('/', 'layout')
     else for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
-}
-
-function extractStoragePath(url: string): string | null {
-  // URLs de Supabase Storage: .../storage/v1/object/public/media/<path>
-  const match = url.split('#')[0].match(/\/storage\/v1\/object\/public\/media\/(.+)/)
-  return match?.[1] ?? null
 }
 
 export async function uploadMediaAction(formData: FormData): Promise<{ url?: string; error?: string }> {
   try {
-    const supabase = await requireUser()
+    await requireUser()
     const file = formData.get('file')
     if (!(file instanceof File)) return { error: 'Archivo inválido.' }
     const maxBytes = maxBytesForMime(file.type || '')
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
+    // Carpeta de una lista cerrada (la del dashboard): un `folder` armado a mano no puede salirse.
+    // El archivo anterior lo libera liberarArchivos al guardar el setting o el post.
     const folder = sanitizeFolder(String(formData.get('folder') ?? 'uploads'))
 
-    // Borrar imagen anterior si viene del mismo bucket
-    const oldUrl = String(formData.get('oldUrl') ?? '')
-    if (oldUrl) {
-      const oldPath = extractStoragePath(oldUrl)
-      // Solo se borra dentro de carpetas conocidas: oldUrl viene del cliente.
-      const oldFolder = oldPath ? oldPath.slice(0, oldPath.lastIndexOf('/')) : ''
-      if (oldPath && !oldPath.includes('..') && ALLOWED_UPLOAD_FOLDERS.has(oldFolder)) {
-        await supabase.storage.from('media').remove([oldPath])
-      }
-    }
     const id = crypto.randomUUID()
     const original = Buffer.from(await file.arrayBuffer())
     const mime = file.type || ''
@@ -92,7 +77,6 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
 
     let buf: Buffer
     let ext: string
-    let contentType: string
 
     if (optimizable) {
       buf = await sharp(original)
@@ -101,25 +85,19 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
         .webp({ quality: 82, effort: 2 })
         .toBuffer()
       ext = 'webp'
-      contentType = 'image/webp'
     } else {
       const safeExt = extForPassthroughMime(mime)
       if (!safeExt) return { error: 'Tipo de archivo no permitido.' }
       buf = original
       ext = safeExt
-      contentType = mime
     }
 
+    // Solo se guarda lo que /media sabe servir: SVG y otros formatos quedan afuera (un SVG propio sería XSS).
+    if (!TIPOS_POR_EXT[ext]) return { error: 'Formato no permitido.' }
     const path = `${folder}/${id}.${ext}`
 
-    const { error: upErr } = await supabase.storage
-      .from('media')
-      .upload(path, buf, { contentType, upsert: false })
-    if (upErr) return { error: upErr.message }
-
-    const { data } = supabase.storage.from('media').getPublicUrl(path)
-    return { url: data.publicUrl }
+    return { url: await putObject(path, buf) }
   } catch (e) {
-    return { error: e instanceof Error ? e.message : 'Error desconocido' }
+    return { error: errorMessage(e) }
   }
 }

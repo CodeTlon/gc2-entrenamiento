@@ -41,10 +41,10 @@ export default function Hero({ data }: { data: HeroSettings }) {
     const revealEls = section.querySelectorAll<HTMLElement>('.reveal')
     const timeouts: ReturnType<typeof setTimeout>[] = []
     revealEls.forEach((el) => {
-      const delay = el.classList.contains('delay-1') ? 100
-        : el.classList.contains('delay-2') ? 200
-        : el.classList.contains('delay-3') ? 300
-        : el.classList.contains('delay-4') ? 400
+      const delay = el.classList.contains('reveal-delay-1') ? 100
+        : el.classList.contains('reveal-delay-2') ? 200
+        : el.classList.contains('reveal-delay-3') ? 300
+        : el.classList.contains('reveal-delay-4') ? 400
         : 50
       timeouts.push(setTimeout(() => el.classList.add('visible'), delay))
     })
@@ -90,7 +90,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
       />
 
       {/* Decor circle: 400px, opacidad muy baja, rotación lenta */}
-      <div className="absolute top-[15%] right-[8%] z-[1] pointer-events-none hidden lg:block opacity-[0.06]">
+      <div className="absolute top-[15%] right-[8%] z-1 pointer-events-none hidden lg:block opacity-[0.06]">
         <div
           className="relative rounded-full animate-rotate-slow"
           style={{
@@ -111,7 +111,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
 
       {/* Chevrons (top-right, opacidad baja) */}
       <div
-        className="absolute top-[20%] right-[5%] z-[1] gap-1.5 pointer-events-none hidden lg:flex"
+        className="absolute top-[20%] right-[5%] z-1 gap-1.5 pointer-events-none hidden lg:flex"
         style={{ opacity: 0.15 }}
       >
         {CHEVRONS.map((i) => (
@@ -144,7 +144,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
         </h1>
 
         <p
-          className="hidden sm:block text-white/55 text-base md:text-lg max-w-[480px] mb-8 reveal delay-2 font-light"
+          className="hidden sm:block text-white/55 text-base md:text-lg max-w-[480px] mb-8 reveal reveal-delay-2 font-light"
           style={{ lineHeight: 1.7 }}
           dangerouslySetInnerHTML={{ __html: sanitizeBasicHtml(data.subtitle) }}
         />
@@ -166,7 +166,7 @@ export default function Hero({ data }: { data: HeroSettings }) {
         </div>
 
         {/* Stats */}
-        <div className="flex flex-wrap gap-6 md:gap-12 reveal delay-4">
+        <div className="flex flex-wrap gap-6 md:gap-12 reveal reveal-delay-4">
           {data.stats.map((stat, i) => (
             <div key={`${stat.label}-${i}`}>
               <div

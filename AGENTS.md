@@ -1,6 +1,6 @@
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+## This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
@@ -16,10 +16,10 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## ⚠️ Este proyecto está en producción
 
-Sirve tráfico y usuarios reales (`gc2entrenamientoderesistencia.com.ar`): leads de contacto, coaches, planes y posts de blog reales en Supabase.
+Sirve tráfico y usuarios reales (`gc2entrenamientoderesistencia.com.ar`): leads de contacto, coaches, planes y posts de blog reales (hoy en Supabase; en migración a Postgres propio, ver `PENDIENTES.md`).
 
 - **Nunca ejecutes nada que escriba/modifique/mute datos contra el ambiente de producción real**, ni "solo para probar". Leer datos de prod para diagnosticar está bien; escribir no, salvo autorización explícita puntual.
-- **Verificá el mecanismo de deploy y a qué ambiente apunta tu `.env.local` antes de asumir nada** — no confíes en lo que diga esta u otra doc sin comprobarlo contra la config real. Ejemplo concreto ya detectado: el `.env.local` de este repo hoy probablemente apunta al Supabase de **producción**, no a uno de desarrollo — ver `.ai/context/KNOWN_ISSUES.md` (severidad CRÍTICA) antes de correr `npm run dev` y tocar cualquier formulario/CRUD del dashboard.
+- **Verificá a qué base apuntan tus variables de entorno antes de asumir nada.** Producción sigue en Supabase hasta el corte; el código de esta rama ya no lo usa y en desarrollo se trabaja contra Postgres local (`docker compose`) o, sin Docker, con `node --import tsx tests/db/verificar-db.mts` (PGlite en memoria). Nunca apuntes `DATABASE_URL` a la base de producción para probar.
 - Cualquier verificación que requiera mutar algo se hace contra un ambiente de desarrollo/staging, o se pide confirmación explícita antes de tocar prod.
 
 ## Qué es
@@ -28,7 +28,7 @@ Sitio web + CMS de **GC² Entrenamiento de la Resistencia** (Córdoba, AR): equi
 
 ## Stack
 
-Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 3 · Supabase (`@supabase/ssr` + Postgres + Auth + Storage) · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: **Coolify** (`codetlon-vps`, app `gc2-web`, Dockerfile standalone) desde 2026-11-24 — antes Vercel. Ver `.ai/context/ARCHITECTURE.md`.
+Next.js 16 (App Router, RSC, Turbopack) · React 19 · TypeScript estricto (`@/* → src/*`) · Tailwind CSS 4 · PostgreSQL + Drizzle ORM + Better Auth + archivos en volumen del servidor · Resend (emails) · Zod (validación) · TipTap (editor rich-text del dashboard) · `@vercel/og` (export a Instagram Story) · Playwright (e2e). Deploy: Coolify (app + Postgres en la misma red interna, `docker-compose.coolify.yml`); Vercel ya no se usa para este proyecto (regla de CodeTlon: solo sitios sin base van a Vercel).
 
 ## Comandos básicos
 
@@ -43,10 +43,10 @@ npm run test:e2e:ui    # Playwright UI
 ## Convenciones críticas
 
 - **Server-first**: páginas y secciones son Server Components salvo que necesiten estado/efectos.
-- **Server Actions** (`src/actions/*.ts`), firma estándar `(prevState, formData) => Promise<State>`, usadas con `useFormState`/`useFormStatus`. Toda acción que muta datos del dashboard llama `requireUser()`/`getUser()` además de depender de RLS (defensa en profundidad — no quites ese chequeo).
-- **Fallback de contenido obligatorio**: `src/lib/content.ts` siempre debe devolver datos, cayendo a `FALLBACK_*` (`src/lib/constants.ts`) si Supabase no responde. No rompas esta cadena.
-- **RLS real por tabla**: lectura pública, escritura sólo `authenticated` — excepto `contact_leads`, que usa el cliente `service_role` (el único caso legítimo). Si agregás una tabla nueva escrita desde el dashboard, la policy de escritura tiene que ser para `authenticated`, no sólo `service_role`.
-- **Uploads grandes** (PDF/video en posts) van directo al bucket `media` desde el browser (`uploadDirectToStorage`, bypass del Server Action) porque Vercel corta el body real en ~4.5MB — no muevas ese código a un Server Action.
+- **Server Actions** (`src/actions/*.ts`), firma estándar `(prevState, formData) => Promise<State>`, usadas con `useFormState`/`useFormStatus`. Toda acción que muta datos del dashboard llama `requireUser()`/`getUser()` porque ya no hay RLS: ese chequeo es la autorización (no lo quites).
+- **Fallback de contenido obligatorio**: `src/lib/content.ts` siempre debe devolver datos, cayendo a `FALLBACK_*` (`src/lib/constants.ts`) si la base no responde. No rompas esta cadena.
+- **Sin RLS**: la autorización vive en el servidor (`requireUser()` en `src/lib/session.ts`). `contact_leads` se inserta solo desde `submitContact`. Si agregás una tabla escrita desde el dashboard, toda acción que la muta debe llamar `requireUser()`.
+- **Uploads grandes** (PDF/video en posts) van por `uploadDirectToStorage` → `POST /api/upload` (cuerpo crudo en streaming al volumen, bypass del Server Action, que limita el body a 20MB) — no muevas ese código a un Server Action. Los videos se recomprimen ahí mismo con el servicio global (`src/lib/transcode.ts`, `TRANSCODE_API_KEY` solo en Coolify): siempre con soft-fail, el original nunca se pierde.
 - **i18n**: todo en español (es_AR). Mantenelo así.
 - **Comentarios**: en español, sólo cuando aportan — no comentarios obvios.
 - `src/proxy.ts` (no `middleware.ts`, renombrado por Next 16) es el auth gate de `/dashboard/**`.

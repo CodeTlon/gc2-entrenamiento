@@ -1,12 +1,16 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { createSupabaseClient } from '@/lib/supabase'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { categories as categoriesTable } from '@/db/schema'
+import { listPublishedPostSummaries } from '@/db/queries'
 import { getSiteSettings } from '@/lib/content'
 import MiniHero from '@/components/ui/MiniHero'
 import BlogList, { type PostSummary, type Category } from './BlogList'
 
-export const revalidate = 3600
+// Dinámica: en Coolify el build corre sin base de datos, así que prerenderizar dejaría el contenido de respaldo hasta la próxima revalidación.
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -15,25 +19,19 @@ export const metadata: Metadata = {
 }
 
 async function getData(): Promise<{ posts: PostSummary[]; categories: Category[] }> {
-  const supabase = createSupabaseClient()
-  const [postsRes, catsRes] = await Promise.all([
-    supabase
-      .from('posts')
-      .select('id, title, slug, excerpt, cover_image, youtube_url, created_at, post_categories(category_id, categories(name, slug)), post_authors(coaches(name, photo_url))')
-      .eq('published', true)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('categories')
-      .select('id, name, slug')
-      .order('display_order', { ascending: true }),
-  ])
-
-  if (postsRes.error) console.error('Blog posts fetch error:', postsRes.error)
-  if (catsRes.error) console.error('Categories fetch error:', catsRes.error)
-
-  return {
-    posts: (postsRes.data ?? []) as unknown as PostSummary[],
-    categories: (catsRes.data ?? []) as unknown as Category[],
+  // El sitio público renderiza aunque la DB no responda (lista vacía).
+  try {
+    const [posts, categories] = await Promise.all([
+      listPublishedPostSummaries(),
+      db
+        .select({ id: categoriesTable.id, name: categoriesTable.name, slug: categoriesTable.slug })
+        .from(categoriesTable)
+        .orderBy(asc(categoriesTable.display_order)),
+    ])
+    return { posts: posts as unknown as PostSummary[], categories }
+  } catch (err) {
+    console.error('Blog fetch error:', err)
+    return { posts: [], categories: [] }
   }
 }
 
@@ -52,7 +50,7 @@ export default async function BlogPage() {
       {/* Content */}
       <section className="py-section bg-blue-900">
         <div className="container">
-          <p className="text-white/60 text-base md:text-lg leading-relaxed max-w-3xl mb-4">
+          <p className="text-white/60 text-base md:text-lg md:leading-[var(--text-lg--line-height)] leading-relaxed max-w-3xl mb-4">
             Guías y consejos prácticos sobre entrenamiento de running, duatlón y triatlón: técnica de
             carrera, planificación de cargas, nutrición y prevención de lesiones, escritos por los
             coaches de GC² Entrenamiento en Córdoba.
@@ -86,7 +84,7 @@ export default async function BlogPage() {
                     Elegí un plan a tu medida o contanos tu objetivo y te asesoramos sin cargo.
                   </p>
                 </div>
-                <div className="flex gap-3 flex-shrink-0">
+                <div className="flex gap-3 shrink-0">
                   <Link href="/planes" className="btn btn--primary uppercase tracking-widest text-xs font-extrabold">
                     Ver Planes
                   </Link>

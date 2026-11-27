@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, FileText } from 'lucide-react'
-import { createSupabaseClient } from '@/lib/supabase'
+import { getPublishedPostBySlug, listRelatedPosts } from '@/db/queries'
 import { formatDate } from '@/lib/utils'
 import { youtubeEmbedUrl } from '@/lib/youtube'
 import type { Coach } from '@/lib/content'
@@ -14,7 +14,8 @@ import ShareButton from '@/components/ui/ShareButton'
 import AuthorCard from './AuthorCard'
 import '../blog.css'
 
-export const revalidate = 3600
+// Dinámica: en Coolify el build corre sin base de datos, así que prerenderizar dejaría el contenido de respaldo hasta la próxima revalidación.
+export const dynamic = 'force-dynamic'
 
 interface Post {
   id: string
@@ -37,46 +38,19 @@ interface RelatedPost {
 }
 
 async function getPost(slug: string): Promise<Post | null> {
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('posts')
-    .select('id, title, slug, excerpt, content, cover_image, youtube_url, attachment_url, video_url, created_at, post_authors(coaches(*))')
-    .eq('slug', slug)
-    .eq('published', true)
-    .single()
-
-  if (error) return null
-  return data as unknown as Post
+  try {
+    return (await getPublishedPostBySlug(slug)) as unknown as Post | null
+  } catch (err) {
+    console.error('Post fetch error:', err)
+    return null
+  }
 }
 
 async function getRelatedPosts(currentSlug: string): Promise<RelatedPost[]> {
-  const supabase = createSupabaseClient()
-  const { data, error } = await supabase
-    .from('posts')
-    .select('title, slug, cover_image')
-    .eq('published', true)
-    .neq('slug', currentSlug)
-    .order('created_at', { ascending: false })
-    .limit(3)
-
-  if (error || !data) return []
-  return data as RelatedPost[]
-}
-
-async function getAllSlugs(): Promise<{ slug: string }[]> {
-  const supabase = createSupabaseClient()
-  const { data } = await supabase
-    .from('posts')
-    .select('slug')
-    .eq('published', true)
-  return data ?? []
-}
-
-export async function generateStaticParams() {
   try {
-    const slugs = await getAllSlugs()
-    return slugs.map((p) => ({ slug: p.slug }))
-  } catch {
+    return await listRelatedPosts(currentSlug, 3)
+  } catch (err) {
+    console.error('Related posts fetch error:', err)
     return []
   }
 }

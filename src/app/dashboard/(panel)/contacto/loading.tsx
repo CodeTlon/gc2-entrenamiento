@@ -7,8 +7,8 @@ export default function Loading() {
       <div className="max-w-3xl space-y-5">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="space-y-1.5">
-            <Skeleton className="h-3 w-24 bg-white/[0.05]" />
-            <Skeleton className="h-11 rounded-md border border-white/[0.06] bg-white/[0.04]" />
+            <Skeleton className="h-3 w-24 bg-white/5" />
+            <Skeleton className="h-11 rounded-md border border-white/6 bg-white/4" />
           </div>
         ))}
       </div>

@@ -24,7 +24,7 @@ export default function PlanModal({ plan, onClose }: Props) {
           <p className="text-[11px] font-body font-bold tracking-[3px] uppercase text-accent/70 mb-2">
             Plan
           </p>
-          <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl uppercase mb-5 leading-tight">
+          <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl md:leading-[var(--text-4xl--line-height)] uppercase mb-5 leading-tight">
             {plan.name_display ?? plan.name}
           </h3>
 
@@ -39,7 +39,7 @@ export default function PlanModal({ plan, onClose }: Props) {
               {plan.features.map((feat, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span
-                    className="flex-shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
+                    className="shrink-0 mt-0.5 w-4 h-4 rounded-sm flex items-center justify-center text-blue-900 text-[10px] font-extrabold"
                     style={{ background: '#38BDF8' }}
                   >
                     ✓

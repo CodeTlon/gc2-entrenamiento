@@ -32,7 +32,7 @@ export default async function CoachesListPage() {
             className="rounded-xl overflow-hidden flex hover:-translate-y-0.5 transition-all group"
             style={{ background: '#0D2247', border: '1px solid #102E66' }}
           >
-            <div className="relative w-28 flex-shrink-0" style={{ background: '#102E66' }}>
+            <div className="relative w-28 shrink-0" style={{ background: '#102E66' }}>
               {c.photo_url ? (
                 <Image
                   src={c.photo_url}

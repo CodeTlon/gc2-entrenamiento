@@ -51,7 +51,7 @@ export default function DashboardShell({
 
       {/* Sidebar desktop */}
       <aside
-        className="hidden md:flex w-[240px] flex-shrink-0 flex-col sticky top-0 h-screen"
+        className="hidden md:flex w-[240px] shrink-0 flex-col sticky top-0 h-screen"
         style={{ background: '#0D2247', borderRight: '1px solid #102E66' }}
       >
         <SidebarContent isActive={isActive} email={email} />
@@ -91,7 +91,7 @@ export default function DashboardShell({
         >
           {/* Mobile: hamburger + logo */}
           <button
-            className="md:hidden flex items-center justify-center w-9 h-9 rounded-md text-white/60 hover:text-white transition-colors flex-shrink-0"
+            className="md:hidden flex items-center justify-center w-9 h-9 rounded-md text-white/60 hover:text-white transition-colors shrink-0"
             style={{ border: '1px solid #102E66' }}
             onClick={() => setOpen(true)}
             aria-label="Abrir menú"
@@ -99,7 +99,7 @@ export default function DashboardShell({
             <Menu size={18} />
           </button>
 
-          <Link href="/dashboard" className="md:hidden flex-shrink-0">
+          <Link href="/dashboard" className="md:hidden shrink-0">
             <Image
               src="/images/logo.png"
               alt="GC2"
@@ -162,7 +162,7 @@ function SidebarContent({
     <>
       {/* Logo */}
       <div
-        className="h-14 px-4 flex items-center justify-between flex-shrink-0"
+        className="h-14 px-4 flex items-center justify-between shrink-0"
         style={{ borderBottom: '1px solid #102E66' }}
       >
         <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5">
@@ -202,11 +202,11 @@ function SidebarContent({
               onClick={onNavigate}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-body font-medium transition-all duration-150 group ${
                 active
-                  ? 'text-[#38BDF8] bg-[rgba(56,189,248,0.1)]'
-                  : 'text-white/60 hover:text-white/90 hover:bg-white/[0.05]'
+                  ? 'text-accent bg-[rgba(56,189,248,0.1)]'
+                  : 'text-white/60 hover:text-white/90 hover:bg-white/5'
               }`}
             >
-              <Icon size={15} className="flex-shrink-0" />
+              <Icon size={15} className="shrink-0" />
               <span className="flex-1">{label}</span>
               {active && <ChevronRight size={13} className="opacity-60" />}
             </Link>
@@ -216,7 +216,7 @@ function SidebarContent({
 
       {/* Footer */}
       <div
-        className="px-4 py-3 flex-shrink-0"
+        className="px-4 py-3 shrink-0"
         style={{ borderTop: '1px solid #102E66' }}
       >
         <p className="text-[11px] text-white/30 truncate">{email}</p>

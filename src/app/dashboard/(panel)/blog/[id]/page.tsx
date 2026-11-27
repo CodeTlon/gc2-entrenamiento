@@ -3,23 +3,29 @@ import { Instagram } from 'lucide-react'
 import PageHeader from '@/components/dashboard/PageHeader'
 import DeleteButton from '@/components/dashboard/DeleteButton'
 import PostForm from '../PostForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc, eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { categories, coaches, posts, postCategories, postAuthors } from '@/db/schema'
+import { isUuid } from '@/db/queries'
 import { deletePostAction } from '@/actions/posts'
 
 export default async function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
-  const [{ data, error }, { data: cats }, { data: coaches }, { data: postCats }, { data: postAuthors }] = await Promise.all([
-    supabase.from('posts').select('*').eq('id', id).single(),
-    supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
-    supabase.from('coaches').select('id, name, specialty').order('display_order', { ascending: true }),
-    supabase.from('post_categories').select('category_id').eq('post_id', id),
-    supabase.from('post_authors').select('coach_id').eq('post_id', id),
+  if (!isUuid(id)) notFound()
+  const [[data], cats, coachList, postCats, postAuthorRows] = await Promise.all([
+    db.select().from(posts).where(eq(posts.id, id)).limit(1),
+    db.select({ id: categories.id, name: categories.name }).from(categories).orderBy(asc(categories.display_order)),
+    db
+      .select({ id: coaches.id, name: coaches.name, specialty: coaches.specialty })
+      .from(coaches)
+      .orderBy(asc(coaches.display_order)),
+    db.select({ category_id: postCategories.category_id }).from(postCategories).where(eq(postCategories.post_id, id)),
+    db.select({ coach_id: postAuthors.coach_id }).from(postAuthors).where(eq(postAuthors.post_id, id)),
   ])
-  if (error || !data) notFound()
+  if (!data) notFound()
 
-  const postCategoryIds = postCats?.map((r) => r.category_id) ?? []
-  const postCoachIds = postAuthors?.map((r) => r.coach_id) ?? []
+  const postCategoryIds = postCats.map((r) => r.category_id)
+  const postCoachIds = postAuthorRows.map((r) => r.coach_id)
 
   return (
     <div>
@@ -48,8 +54,8 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       />
       <PostForm
         post={data}
-        categories={cats ?? []}
-        coaches={coaches ?? []}
+        categories={cats}
+        coaches={coachList}
         postCategoryIds={postCategoryIds}
         postCoachIds={postCoachIds}
       />

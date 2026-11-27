@@ -2,20 +2,22 @@ import { notFound } from 'next/navigation'
 import PageHeader from '@/components/dashboard/PageHeader'
 import DeleteButton from '@/components/dashboard/DeleteButton'
 import CoachForm from '../CoachForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { eq } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { coaches } from '@/db/schema'
+import { isUuid } from '@/db/queries'
 import { deleteCoachAction } from '@/actions/coaches'
 import type { Coach } from '@/lib/content'
 
 export default async function EditCoachPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createSupabaseServerClient()
-
-  const [{ data, error }, { data: ordersData }] = await Promise.all([
-    supabase.from('coaches').select('*').eq('id', id).single(),
-    supabase.from('coaches').select('id, display_order'),
+  if (!isUuid(id)) notFound()
+  const [[data], ordersData] = await Promise.all([
+    db.select().from(coaches).where(eq(coaches.id, id)).limit(1),
+    db.select({ id: coaches.id, display_order: coaches.display_order }).from(coaches),
   ])
 
-  if (error || !data) notFound()
+  if (!data) notFound()
   const coach = data as Coach
   const takenOrders = (ordersData ?? [])
     .filter((c) => c.id !== id)

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import Link from 'next/link'
 import { createPlanAction, updatePlanAction, type PlanState } from '@/actions/plans'
 import type { Plan } from '@/lib/content'
 import { TextField, TextArea, StringList, Checkbox } from '@/components/dashboard/Field'
@@ -45,9 +46,9 @@ export default function PlanForm({
         ) : (
           <p className="text-white/40 text-sm mt-1">
             No hay categorías creadas todavía.{' '}
-            <a href="/dashboard/planes/categorias/nuevo" className="text-accent hover:underline">
+            <Link href="/dashboard/planes/categorias/nuevo" className="text-accent hover:underline">
               Crear una
-            </a>
+            </Link>
           </p>
         )}
       </div>

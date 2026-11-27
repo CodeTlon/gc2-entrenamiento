@@ -5,7 +5,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Build autocontenido para el contenedor de Coolify (Dockerfile). Vercel lo ignora.
+  // Imagen mínima para Docker/Coolify: server.js autocontenido en .next/standalone.
   output: 'standalone',
   experimental: {
     serverActions: {
@@ -23,7 +23,6 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 60,
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
-      { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 'img.youtube.com' },
       { protocol: 'https', hostname: 'i.ytimg.com' },
     ],
@@ -36,35 +35,11 @@ const nextConfig = {
     ]
   },
   async headers() {
-    // CSP con 'unsafe-inline' en script-src/style-src: Next.js inyecta sus propios
-    // <script> inline de hidratación/RSC y GoogleAnalytics.tsx usa un <script>
-    // inline (snippet de gtag consent) — sin nonce/hash no hay forma de permitir
-    // esos y bloquear el resto. Igual acota bastante: bloquea scripts/objetos de
-    // terceros no listados, iframes que no sean YouTube, y fija object-src/
-    // base-uri/form-action/frame-ancestors (reemplaza X-Frame-Options en browsers
-    // modernos, se deja igual el header viejo por compat).
-    const csp = [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.google-analytics.com",
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: https://images.unsplash.com https://*.supabase.co https://img.youtube.com https://i.ytimg.com https://*.google-analytics.com https://www.googletagmanager.com",
-      "font-src 'self' data:",
-      "media-src 'self' https://*.supabase.co",
-      "connect-src 'self' https://*.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com",
-      // google.com: iframes de Google Maps en LocationCard (sedes).
-      "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://www.google.com https://maps.google.com",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
-    ].join('; ')
-
     return [
       {
         // Aplica a todas las rutas (sitio público + dashboard + API).
         source: '/:path*',
         headers: [
-          { key: 'Content-Security-Policy', value: csp },
           // Bloquea que el sitio se embeba en un <iframe> ajeno (clickjacking).
           { key: 'X-Frame-Options', value: 'DENY' },
           // Evita que el browser "adivine" el MIME type de una respuesta.

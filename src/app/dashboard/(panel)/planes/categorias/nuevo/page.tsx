@@ -1,11 +1,11 @@
 import PageHeader from '@/components/dashboard/PageHeader'
 import PlanCategoryForm from '../PlanCategoryForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { db } from '@/lib/db'
+import { planCategories } from '@/db/schema'
 
 export default async function NewPlanCategoryPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase.from('plan_categories').select('display_order')
-  const takenOrders = data?.map((c) => c.display_order) ?? []
+  const data = await db.select({ display_order: planCategories.display_order }).from(planCategories)
+  const takenOrders = data.map((c) => c.display_order)
 
   return (
     <div>

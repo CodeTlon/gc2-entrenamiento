@@ -2,8 +2,9 @@
 
 import { headers } from 'next/headers'
 import { z } from 'zod'
-import { createSupabaseServiceClient } from '@/lib/supabase'
-import { Resend } from 'resend'
+import { db } from '@/lib/db'
+import { contactLeads } from '@/db/schema'
+import { sendMail } from '@/lib/mail'
 
 // Rate limiting simple en memoria por IP, sin dependencias nuevas (mismo patrón que
 // codetlon-site/src/app/actions/contact.ts). No es distribuido (cada instancia/lambda
@@ -15,7 +16,13 @@ const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
 
 async function isRateLimited(): Promise<boolean> {
-  const headersList = await headers()
+  let headersList: Headers
+  try {
+    headersList = await headers()
+  } catch {
+    // Fuera de un request (scripts y tests de la base) no hay IP que limitar.
+    return false
+  }
   const ip =
     headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     headersList.get('x-real-ip') ||
@@ -106,10 +113,9 @@ export async function submitContact(
     return s.replace(/[\r\n]+/g, ' ').trim()
   }
 
-  // Save to Supabase
+  // Guardar el lead en la base
   try {
-    const supabase = createSupabaseServiceClient()
-    const { error: dbError } = await supabase.from('contact_leads').insert({
+    await db.insert(contactLeads).values({
       nombre: data.nombre,
       email: data.email,
       telefono: data.telefono,
@@ -117,29 +123,20 @@ export async function submitContact(
       servicio: data.servicio || null,
       objetivo: data.objetivo || null,
       mensaje: data.mensaje,
-      coach: coach || null,
+      coach,
     })
-
-    if (dbError) {
-      console.error('Supabase insert error:', dbError)
-      // No cortamos: intentamos igual el email.
-    } else {
-      savedToDb = true
-    }
+    savedToDb = true
   } catch (err) {
+    // No cortamos: intentamos igual el email.
     console.error('DB error:', err)
   }
 
-  // Send email via Resend
+  // Email vía Resend (sendMail aplica el sandbox de correo en APP_ENV=test)
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY)
-    const fromName = process.env.RESEND_FROM_NAME || 'GC2 Entrenamiento'
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
     const toEmail = process.env.COMPANY_EMAIL || 'gc2entrenamiento@gmail.com'
 
-    const { error: mailError } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: [toEmail],
+    emailSent = await sendMail({
+      to: toEmail,
       replyTo: data.email,
       subject: `Nueva Consulta${coach ? ` — ${stripHeaderInjection(coach)}` : ''}: ${stripHeaderInjection(data.servicio || 'Consulta General')} — ${stripHeaderInjection(data.nombre)}`,
       html: `
@@ -163,11 +160,8 @@ export async function submitContact(
         </div>
       `,
     })
-    // Resend no tira excepción ante errores de la API: los devuelve en `error`.
-    if (mailError) console.error('Resend error:', mailError)
-    else emailSent = true
   } catch (err) {
-    console.error('Resend error:', err)
+    console.error('Mail error:', err)
   }
 
   // Si no se guardó ni se envió, el lead se perdería sin que nadie se entere: avisamos al usuario.

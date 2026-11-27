@@ -1,5 +1,16 @@
 # KNOWN_ISSUES
 
+## Vigente (2026-10-16)
+- **`npm audit` completo conserva 5 altas de herramientas de desarrollo**, todas de una cadena: `braces` <= 3.0.3 via `eslint-config-next` -> `@next/eslint-plugin-next` -> `fast-glob` -> `micromatch`. No hay version corregida publicada; no entra a la imagen ni al runtime (`npm audit --omit=dev` = 0). No usar `npm audit fix --force` (baja Next). Reevaluar al subir `eslint-config-next`.
+- **5 avisos de lint** `react-hooks/set-state-in-effect` (patrones de hidratacion). Deuda, no error.
+- **Sin recursos de Coolify ni backup B2 todavia**: ver `docs/produccion-coolify.md`.
+- Las secciones de abajo son anteriores a la migracion a backend propio (Supabase/Vercel). Las que hablan de `.env.local` con Supabase y de credenciales de Supabase ya no aplican al codigo de `dev`.
+
+> **2026-10-13:** el hallazgo CRÍTICO (`.env.local` apuntando a producción) queda cerrado por diseño en `feature/dev2-backend-propio`: dev usa Postgres local en Docker (`docker compose`), test y prod son bases separadas en Coolify y no hay credenciales de Supabase en el flujo de desarrollo. Hasta mergear y cortar, el `main` actual sigue con Supabase y el riesgo aplica.
+
+> **2026-10-13 (npm audit):** en la rama de migracion se actualizaron Next (16.4.0, cerraba un RCE critico en `next/og` y SSRF/cache poisoning), TipTap 3.32, sharp 0.35.5 y @vercel/og 1.0.3. `main` sigue con las versiones vulnerables hasta que se promueva.
+
+
 Severidad explícita. Generado 2026-09-18 por auditoría de evidencia real (no se mutó ningún dato de producción para producir este archivo). Ningún fix se aplicó todavía — son hallazgos con remediación propuesta, no cambios ya hechos.
 
 ---
@@ -71,3 +82,6 @@ Severidad explícita. Generado 2026-09-18 por auditoría de evidencia real (no s
 ## ✅ Verificado sin hallazgos — autorización server-side
 
 Auditoría completa de `proxy.ts`, las 8 familias de server actions, todos los route handlers y las policies RLS de las 9 tablas: **no se encontró ningún caso de "chequeo sólo en cliente sin enforcement de servidor."** Toda acción mutante llama `requireUser()`/`getUser()` además de depender de RLS. El bug histórico de `post_authors` (RLS sólo para `service_role`) está confirmado arreglado por la migración `010`. El open-redirect histórico en `next` param de `/auth/callback`/`/auth/confirm` está confirmado arreglado y sigue arreglado hoy.
+
+## Dependencias (auditoria 2026-10-15)
+`npm audit --omit=dev --audit-level=high` pasa. Quedan 2 moderadas solo de herramientas: `esbuild` (via `drizzle-kit`, dev) y `fflate` (via `@vercel/og`). Sin parche estable sin cambio mayor; se documentan, no traban. Revisar en la proxima subida de `drizzle-kit`/`@vercel/og`.

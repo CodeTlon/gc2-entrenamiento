@@ -36,6 +36,8 @@ export default function GlobalErrorBoundary({
           <button type="button" onClick={() => reset()} className="btn btn--primary">
             Reintentar
           </button>
+          {/* <a> a propósito: recarga completa para salir del estado de error */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" className="btn btn--outline-accent">
             Volver al inicio
           </a>

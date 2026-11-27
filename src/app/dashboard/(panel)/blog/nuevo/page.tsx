@@ -1,12 +1,16 @@
 import PageHeader from '@/components/dashboard/PageHeader'
 import PostForm from '../PostForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { categories, coaches } from '@/db/schema'
 
 export default async function NewPostPage() {
-  const supabase = await createSupabaseServerClient()
-  const [{ data: cats }, { data: coaches }] = await Promise.all([
-    supabase.from('categories').select('id, name').order('display_order', { ascending: true }),
-    supabase.from('coaches').select('id, name, specialty').order('display_order', { ascending: true }),
+  const [cats, coachList] = await Promise.all([
+    db.select({ id: categories.id, name: categories.name }).from(categories).orderBy(asc(categories.display_order)),
+    db
+      .select({ id: coaches.id, name: coaches.name, specialty: coaches.specialty })
+      .from(coaches)
+      .orderBy(asc(coaches.display_order)),
   ])
 
   return (
@@ -16,7 +20,7 @@ export default async function NewPostPage() {
         title="Nuevo post"
         back={{ href: '/dashboard/blog', label: 'Volver al blog' }}
       />
-      <PostForm categories={cats ?? []} coaches={coaches ?? []} postCategoryIds={[]} />
+      <PostForm categories={cats} coaches={coachList} postCategoryIds={[]} />
     </div>
   )
 }

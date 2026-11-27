@@ -64,7 +64,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
             const spanClass = tall
               ? ' md:row-span-2 md:aspect-auto'
               : wide
-                ? ' md:col-span-2 md:aspect-[2/1]'
+                ? ' md:col-span-2 md:aspect-2/1'
                 : isLastAlone
                   ? ' col-span-2 md:col-span-1'
                   : ''
@@ -78,7 +78,7 @@ export default function TeamGallery({ data }: { data: TeamGallerySettings }) {
             return (
             <div
               key={`${item.label}-${i}`}
-              className={`gallery-item reveal relative rounded-xl overflow-hidden group aspect-square${spanClass}`}
+              className={`gallery-item reveal relative rounded-xl overflow-hidden group aspect-square ${spanClass}`}
             >
               {/* Focal scale sits on its own layer so hover scale-110 on Image compounds correctly */}
               <div className="absolute inset-0" style={focalScale}>

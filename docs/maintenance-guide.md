@@ -1,3 +1,5 @@
+> **Obsoleto:** este documento describe la versión previa (Supabase, Next 14). Vigente: `README.md`, `ARCHITECTURE.md`, `docs/environments.md` y `docs/BACKUPS.md`.
+
 # Guía de Mantenimiento — GC² Entrenamiento
 
 ## Tareas Comunes

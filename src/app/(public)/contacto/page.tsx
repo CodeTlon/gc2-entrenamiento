@@ -79,7 +79,7 @@ export default async function ContactoPage({
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
-                    className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-accent"
+                    className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-accent"
                     style={{ background: '#102E66' }}
                   >
                     <WhatsAppIcon size={18} />
@@ -98,7 +98,7 @@ export default async function ContactoPage({
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
-                    className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-accent"
+                    className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-accent"
                     style={{ background: '#102E66' }}
                   >
                     <Instagram size={18} />
@@ -115,7 +115,7 @@ export default async function ContactoPage({
                   style={{ background: '#0D2247', border: '1px solid #102E66' }}
                 >
                   <span
-                    className="w-9 h-9 rounded-lg flex-shrink-0 flex items-center justify-center text-accent"
+                    className="w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-accent"
                     style={{ background: '#102E66' }}
                   >
                     <Mail size={18} />

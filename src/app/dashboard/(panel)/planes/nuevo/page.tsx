@@ -1,13 +1,14 @@
 import PageHeader from '@/components/dashboard/PageHeader'
 import PlanForm from '../PlanForm'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { asc } from 'drizzle-orm'
+import { db } from '@/lib/db'
+import { planCategories } from '@/db/schema'
 
 export default async function NewPlanPage() {
-  const supabase = await createSupabaseServerClient()
-  const { data } = await supabase
-    .from('plan_categories')
-    .select('id, name, slug')
-    .order('display_order', { ascending: true })
+  const data = await db
+    .select({ id: planCategories.id, name: planCategories.name, slug: planCategories.slug })
+    .from(planCategories)
+    .orderBy(asc(planCategories.display_order))
 
   return (
     <div>

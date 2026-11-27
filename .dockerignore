@@ -3,12 +3,14 @@ node_modules
 .git
 .github
 .env*
-.vercel
+screenshots
 test-results
 playwright-report
 tests
 docs
-supabase
+scripts/migracion/out
+scripts/migracion/.env.migracion
+storage
 *.log
 .claude
 .ai

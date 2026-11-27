@@ -37,7 +37,7 @@ export default function ScrollReveal({
     return () => observer.disconnect()
   }, [])
 
-  const delayClass = delay ? `delay-${delay}` : ''
+  const delayClass = delay ? `reveal-delay-${delay}` : ''
 
   return (
     <div ref={ref} className={`reveal ${delayClass} ${className}`} style={style}>
