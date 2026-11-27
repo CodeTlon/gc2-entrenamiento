@@ -34,7 +34,7 @@ export default async function LoginPage({
           >
             Panel privado
           </p>
-          <h1 className="font-heading font-extrabold text-white text-3xl md:text-4xl uppercase leading-tight">
+          <h1 className="font-heading font-extrabold text-white text-3xl md:text-4xl md:leading-[var(--text-4xl--line-height)] uppercase leading-tight">
             GC<span className="gradient-text">²</span> Dashboard
           </h1>
           <p className="text-white/45 text-sm mt-3">

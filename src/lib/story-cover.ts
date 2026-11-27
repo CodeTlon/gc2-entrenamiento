@@ -6,7 +6,8 @@ import { fileInfo, keyFromUrl } from '@/lib/storage'
 // Se pasa a JPEG de 1080 px de ancho (también cubre WebP, que es lo que deja la subida del dashboard).
 export async function portadaParaStory(src: string | null | undefined): Promise<string | null> {
   if (!src) return null
-  if (/^https?:\/\//.test(src)) return src
+  // Solo archivos propios: una URL externa haría que el server pida orígenes arbitrarios (y Satori no lee WebP).
+  if (/^https?:\/\//.test(src)) return null
   const key = keyFromUrl(src)
   const info = key ? await fileInfo(key) : null
   if (!info) return null

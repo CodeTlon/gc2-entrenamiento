@@ -8,13 +8,27 @@ import { errorMessage } from '@/lib/errors'
 import { eq } from 'drizzle-orm'
 import { siteSettings } from '@/db/schema'
 import { putObject, TIPOS_POR_EXT } from '@/lib/storage'
-import { maxBytesForMime } from '@/lib/upload-limits'
+import { extForPassthroughMime, maxBytesForMime } from '@/lib/upload-limits'
 import { liberarArchivos } from '@/lib/media-cleanup'
 
 export type SaveState = { ok?: boolean; error?: string } | undefined
 
 const SETTING_PATHS: Record<string, string[]> = {
   page_banners: ['/', '/planes', '/blog'],
+}
+
+// Whitelist de carpetas del bucket `media` — coincide con los `folder` hardcodeados
+// que pasan los forms del dashboard (ImageUpload/FileUpload, ver src/components/dashboard/Field.tsx
+// y ContentEditor en PostForm.tsx). El `folder` llega como FormData de un Server Action:
+// sin esto, un `folder` con `../` armado a mano escribiría fuera de la carpeta esperada
+// dentro del mismo bucket.
+const ALLOWED_UPLOAD_FOLDERS = new Set([
+  'uploads', 'gallery', 'about', 'banners', 'blog', 'blog/video',
+  'blog/adjuntos', 'blog/content', 'disciplines', 'hero', 'group', 'coaches',
+])
+
+function sanitizeFolder(raw: string): string {
+  return ALLOWED_UPLOAD_FOLDERS.has(raw) ? raw : 'uploads'
 }
 
 export async function saveSiteSettingAction(
@@ -31,7 +45,9 @@ export async function saveSiteSettingAction(
       .onConflictDoUpdate({ target: siteSettings.key, set: { value, updated_at } })
 
     if (antes) await liberarArchivos(JSON.stringify(antes.value))
-    for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
+    // `contact` alimenta Navbar/Footer/CTAs de WhatsApp en todas las páginas públicas.
+    if (key === 'contact') revalidatePath('/', 'layout')
+    else for (const p of SETTING_PATHS[key] ?? ['/']) revalidatePath(p)
     return { ok: true }
   } catch (e) {
     return { error: errorMessage(e) }
@@ -46,8 +62,9 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
     const maxBytes = maxBytesForMime(file.type || '')
     if (file.size > maxBytes) return { error: `Máximo ${Math.round(maxBytes / (1024 * 1024))}MB.` }
 
-    const rawFolder = String(formData.get('folder') ?? 'uploads')
-    const folder = /^[a-z0-9_-]{1,40}(\/[a-z0-9_-]{1,40}){0,2}$/i.test(rawFolder) ? rawFolder : 'uploads'
+    // Carpeta de una lista cerrada (la del dashboard): un `folder` armado a mano no puede salirse.
+    // El archivo anterior lo libera liberarArchivos al guardar el setting o el post.
+    const folder = sanitizeFolder(String(formData.get('folder') ?? 'uploads'))
 
     const id = crypto.randomUUID()
     const original = Buffer.from(await file.arrayBuffer())
@@ -69,8 +86,10 @@ export async function uploadMediaAction(formData: FormData): Promise<{ url?: str
         .toBuffer()
       ext = 'webp'
     } else {
+      const safeExt = extForPassthroughMime(mime)
+      if (!safeExt) return { error: 'Tipo de archivo no permitido.' }
       buf = original
-      ext = file.name.split('.').pop()?.toLowerCase() ?? 'bin'
+      ext = safeExt
     }
 
     // Solo se guarda lo que /media sabe servir: SVG y otros formatos quedan afuera (un SVG propio sería XSS).

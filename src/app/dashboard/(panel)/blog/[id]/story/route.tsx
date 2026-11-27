@@ -20,7 +20,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   if (!post) return new Response('No encontrado', { status: 404 })
 
-  const coverSrc = await portadaParaStory(parseFocal(post.cover_image).src)
+  const focal = parseFocal(post.cover_image)
+  const coverSrc = await portadaParaStory(focal.src)
   const titleSize = post.title.length > 50 ? 52 : post.title.length > 30 ? 60 : 68
 
   return new ImageResponse(
@@ -39,7 +40,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
           <img
             src={coverSrc}
             alt=""
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            width={1080}
+            height={1920}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: focal.position }}
           />
         )}
         <div

@@ -31,6 +31,8 @@ COPY --from=build --chown=app:app /app/.next/static ./.next/static
 COPY --from=build --chown=app:app /app/public ./public
 COPY --from=build --chown=app:app /app/drizzle ./drizzle
 COPY --from=build --chown=app:app /app/dist/migrate.mjs /app/dist/crear-usuario.mjs ./scripts/
+# Migración desde Supabase dentro del contenedor (solo corre con MIGRAR_DESDE_SUPABASE=1; ver scripts/migracion/en-contenedor.mjs).
+COPY --from=build --chown=app:app /app/scripts/migracion/*.mjs ./scripts/migracion/
 COPY --chown=app:app docker-entrypoint.sh ./
 USER app
 VOLUME /data/storage

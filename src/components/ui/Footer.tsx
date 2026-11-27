@@ -15,7 +15,7 @@ interface Props {
 
 export default function Footer({ contact }: Props) {
   return (
-    <footer className="bg-blue-800 pt-16 pb-0" style={{ borderTop: '1px solid #0D2247' }}>
+    <footer className="bg-blue-800 pt-16 pb-20 md:pb-0" style={{ borderTop: '1px solid #0D2247' }}>
       <div className="container">
         <div className="flex flex-col md:grid md:grid-cols-3 items-center gap-8 pb-12">
           <Link href="/" className="md:justify-self-start">
@@ -34,8 +34,8 @@ export default function Footer({ contact }: Props) {
               href={contact.instagram_link}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent transition-all"
+              aria-label="Instagram de GC² Entrenamiento"
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent hover:-translate-y-0.5 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
               style={{ border: '1px solid #102E66' }}
             >
               <Instagram size={18} />
@@ -44,16 +44,16 @@ export default function Footer({ contact }: Props) {
               href={contact.whatsapp_link}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="WhatsApp"
-              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent transition-all"
+              aria-label="WhatsApp de GC² Entrenamiento"
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent hover:-translate-y-0.5 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
               style={{ border: '1px solid #102E66' }}
             >
               <WhatsAppIcon size={18} />
             </a>
             <a
               href={`mailto:${contact.email}`}
-              aria-label="Email"
-              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent transition-all"
+              aria-label="Enviar email a GC² Entrenamiento"
+              className="w-10 h-10 rounded-md flex items-center justify-center text-white/40 hover:text-accent hover:-translate-y-0.5 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
               style={{ border: '1px solid #102E66' }}
             >
               <Mail size={18} />
@@ -71,11 +71,11 @@ export default function Footer({ contact }: Props) {
           style={{ borderTop: '1px solid #102E66' }}
         >
           <div className="flex items-center gap-4">
-            <Link href="/terminos" className="hover:text-white/50 transition-colors">
+            <Link href="/terminos" className="hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded">
               Términos y condiciones
             </Link>
             <span>·</span>
-            <Link href="/privacidad" className="hover:text-white/50 transition-colors">
+            <Link href="/privacidad" className="hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded">
               Política de privacidad
             </Link>
           </div>
@@ -83,7 +83,7 @@ export default function Footer({ contact }: Props) {
             href="https://codetlon.com.ar"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-white/45 transition-colors"
+            className="hover:text-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
           >
             Desarrollado por CodeTlon
           </a>

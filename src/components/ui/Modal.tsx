@@ -65,7 +65,7 @@ export default function Modal({ open, onClose, children, label, maxWidth = 720 }
           onClick={onClose}
           aria-label="Cerrar"
           className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full flex items-center justify-center
-            text-white/70 hover:text-white transition-colors"
+            text-white/70 hover:text-white active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
           style={{
             background: 'rgba(10,22,40,0.6)',
             border: '1px solid rgba(255,255,255,0.1)',

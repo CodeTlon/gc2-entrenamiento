@@ -135,7 +135,8 @@
 @utility btn {
   /* Buttons */
   @apply inline-flex items-center justify-center gap-2 font-body font-semibold no-underline
-           transition-all duration-300 cursor-pointer border-0;
+           transition-all duration-300 cursor-pointer border-0 active:scale-[0.98]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-900;
   padding: 10px 20px;
   border-radius: 6px;
   font-size: 0.8rem;
@@ -146,13 +147,15 @@
   }
 }
 
+/* Gradiente oscurecido para contraste AA con texto blanco (antes #38BDF8 daba ~2.2:1).
+   El shimmer corre solo en hover: infinito repintaba todos los CTAs todo el tiempo. */
 @utility btn--primary {
-  background: linear-gradient(90deg, #2563eb, #38bdf8, #2563eb);
+  background: linear-gradient(90deg, #1D4ED8, #0369A1, #1D4ED8);
   background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
   @apply text-white;
   &:hover {
     @apply shadow-accent -translate-y-0.5;
+    animation: shimmer 3s linear infinite;
   }
 }
 
@@ -413,5 +416,23 @@
   @keyframes modal-pop-in {
     from { opacity: 0; transform: translateY(20px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+}
+
+/* Entrada del hero sin depender de JS: el h1 es el LCP y con .reveal quedaba en opacity 0 hasta hidratar. */
+@utility hero-in {
+  animation: hero-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes hero-in {
+  from { transform: translateY(16px); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

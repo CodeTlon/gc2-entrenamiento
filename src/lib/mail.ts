@@ -48,6 +48,7 @@ export async function sendMail(args: { to: string; subject: string; html: string
   const apiKey = limpiarValorEnv(process.env.RESEND_API_KEY);
   const from = limpiarValorEnv(process.env.RESEND_FROM_EMAIL);
   if (!apiKey || !from) return false;
+  const nombreRemitente = limpiarValorEnv(process.env.RESEND_FROM_NAME);
   const destino = resolverDestinoMail({
     appEnv: process.env.APP_ENV,
     sandboxTo: limpiarValorEnv(process.env.MAIL_SANDBOX_TO),
@@ -59,7 +60,8 @@ export async function sendMail(args: { to: string; subject: string; html: string
     method: 'POST',
     headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from,
+      // Con RESEND_FROM_NAME el remitente se ve como "Nombre <email>" (igual que el sitio anterior).
+      from: nombreRemitente ? `${nombreRemitente.replace(/[\r\n<>"]/g, '')} <${from}>` : from,
       to: destino.to,
       subject: destino.subject,
       html: args.html,

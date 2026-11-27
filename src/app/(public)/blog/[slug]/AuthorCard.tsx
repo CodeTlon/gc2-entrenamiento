@@ -14,7 +14,7 @@ export default function AuthorCard({ coach }: { coach: Coach }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group flex items-center gap-4 w-full text-left p-5 rounded-xl transition-all hover:-translate-y-0.5"
+        className="group flex items-center gap-4 w-full text-left p-5 rounded-xl transition-all hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
         style={{ background: '#0D2247', border: '1px solid #102E66' }}
       >
         {coach.photo_url && (() => {

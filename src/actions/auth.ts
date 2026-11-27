@@ -2,24 +2,9 @@
 
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { eq } from 'drizzle-orm'
 import { auth } from '@/lib/auth'
-import { db } from '@/lib/db'
-import { user } from '@/db/schema'
 
 export type SignInState = { error?: string; clearEmail?: boolean } | undefined
-
-// Solo decide si conviene conservar el email que ya escribió el usuario o limpiarlo por ser un
-// typo. El mensaje de error mostrado es idéntico en los dos casos. Ante cualquier fallo
-// asumimos que existe para no borrarle lo que escribió.
-async function emailExists(email: string): Promise<boolean> {
-  try {
-    const rows = await db.select({ id: user.id }).from(user).where(eq(user.email, email.toLowerCase())).limit(1)
-    return rows.length > 0
-  } catch {
-    return true
-  }
-}
 
 export async function signInAction(
   _prev: SignInState,
@@ -36,7 +21,9 @@ export async function signInAction(
   try {
     await auth.api.signInEmail({ body: { email, password }, headers: await headers() })
   } catch {
-    return { error: 'Email o contraseña incorrectos.', clearEmail: !(await emailExists(email)) }
+    // Mismo texto siempre y se conserva el email: distinguir si la cuenta existe (clearEmail)
+    // revelaba qué emails están registrados (hallazgo de la auditoría 2026-11-24).
+    return { error: 'Email o contraseña incorrectos.' }
   }
 
   redirect(next.startsWith('/dashboard') && !next.startsWith('//') ? next : '/dashboard')

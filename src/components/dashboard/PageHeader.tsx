@@ -33,7 +33,7 @@ export default function PageHeader({
             {eyebrow}
           </p>
         )}
-        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl uppercase leading-tight">
+        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl md:leading-[var(--text-3xl--line-height)] uppercase leading-tight">
           {title}
         </h1>
         {description && (
