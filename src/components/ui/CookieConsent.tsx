@@ -73,7 +73,7 @@ export default function CookieConsent() {
         <p className="font-body text-sm text-white/80">
           Usamos cookies analíticas para entender cómo se usa el sitio y mejorarlo. Podés aceptarlas o
           rechazarlas. Más info en nuestra{' '}
-          <Link href="/privacidad" className="font-semibold text-accent underline underline-offset-4">
+          <Link href="/privacidad" className="font-semibold text-accent underline underline-offset-4 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded">
             política de privacidad
           </Link>
           .
@@ -82,7 +82,7 @@ export default function CookieConsent() {
           <button
             type="button"
             onClick={() => decidir('denied')}
-            className="rounded-pill border border-white/20 px-4 py-2 font-body text-sm font-semibold text-white/90 transition-colors hover:bg-white/10"
+            className="rounded-pill border border-white/20 px-4 py-2 font-body text-sm font-semibold text-white/90 transition-colors hover:bg-white/10 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
           >
             Rechazar
           </button>
@@ -90,7 +90,7 @@ export default function CookieConsent() {
             ref={aceptarRef}
             type="button"
             onClick={() => decidir('granted')}
-            className="rounded-pill bg-accent px-4 py-2 font-body text-sm font-semibold text-blue-900 transition-opacity hover:opacity-90"
+            className="rounded-pill bg-accent px-4 py-2 font-body text-sm font-semibold text-blue-900 transition-opacity hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             Aceptar
           </button>

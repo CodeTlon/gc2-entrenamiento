@@ -1,40 +1,88 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { contactLeads } from '@/db/schema'
 import { sendMail } from '@/lib/mail'
 
+// Rate limiting simple en memoria por IP, sin dependencias nuevas (mismo patrón que
+// codetlon-site/src/app/actions/contact.ts). No es distribuido (cada instancia/lambda
+// tiene su propio Map), pero corta el caso común de un script/bot golpeando el form
+// repetidas veces y agotando la cuota de envíos de Resend. Ventana fija: 5 envíos
+// cada 10 minutos por IP.
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
+
+async function isRateLimited(): Promise<boolean> {
+  let headersList: Headers
+  try {
+    headersList = await headers()
+  } catch {
+    // Fuera de un request (scripts y tests de la base) no hay IP que limitar.
+    return false
+  }
+  const ip =
+    headersList.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    headersList.get('x-real-ip') ||
+    'unknown'
+
+  const now = Date.now()
+  const entry = rateLimitStore.get(ip)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true
+  }
+
+  entry.count += 1
+  return false
+}
+
 const contactSchema = z.object({
-  nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
-  email: z.string().email('Email inválido'),
-  telefono: z.string().min(8, 'Teléfono inválido'),
-  ciudad: z.string().optional(),
-  servicio: z.string().optional(),
-  objetivo: z.string().optional(),
-  mensaje: z.string().min(10, 'El mensaje debe tener al menos 10 caracteres'),
+  nombre: z.string().trim().min(2, 'Ingresá tu nombre completo (mínimo 2 caracteres)').max(120, 'Nombre demasiado largo'),
+  email: z.string().trim().email('Ingresá un email válido, ej: nombre@ejemplo.com').max(200),
+  telefono: z.string().trim().min(8, 'Ingresá un teléfono válido con código de área (mínimo 8 dígitos)').max(40, 'Teléfono demasiado largo'),
+  ciudad: z.string().max(120).optional(),
+  servicio: z.string().max(120).optional(),
+  objetivo: z.string().max(300).optional(),
+  coach: z.string().max(120).optional(),
+  mensaje: z.string().trim().min(10, 'Contanos un poco más: el mensaje debe tener al menos 10 caracteres').max(5000, 'El mensaje es demasiado largo (máximo 5000 caracteres)'),
 })
+
+const FIELDS = ['nombre', 'email', 'telefono', 'ciudad', 'servicio', 'objetivo', 'coach', 'mensaje'] as const
 
 export type ContactState = {
   success: boolean
   error: string | null
   fieldErrors?: Record<string, string[]>
+  // Se devuelven al form para repoblarlo si falla (React 19 resetea el form tras la action).
+  values?: Record<string, string>
 }
 
 export async function submitContact(
   prevState: unknown,
   formData: FormData
 ): Promise<ContactState> {
-  const coach = String(formData.get('coach') ?? '').trim().slice(0, 100) || null
+  // Honeypot: un humano nunca ve ni completa este campo. Respondemos éxito para no darle señal al bot.
+  if (String(formData.get('website') ?? '').trim() !== '') {
+    return { success: true, error: null }
+  }
 
-  const raw = {
-    nombre: String(formData.get('nombre') ?? '').trim(),
-    email: String(formData.get('email') ?? '').trim(),
-    telefono: String(formData.get('telefono') ?? '').trim(),
-    ciudad: String(formData.get('ciudad') ?? '').trim(),
-    servicio: String(formData.get('servicio') ?? '').trim(),
-    objetivo: String(formData.get('objetivo') ?? '').trim(),
-    mensaje: String(formData.get('mensaje') ?? '').trim(),
+  const raw: Record<string, string> = {}
+  for (const k of FIELDS) raw[k] = String(formData.get(k) ?? '').slice(0, 6000)
+
+  if (await isRateLimited()) {
+    return {
+      success: false,
+      error: 'Hiciste demasiados envíos en poco tiempo. Probá de nuevo en unos minutos.',
+      values: raw,
+    }
   }
 
   const parsed = contactSchema.safeParse(raw)
@@ -44,17 +92,28 @@ export async function submitContact(
       success: false,
       error: 'Por favor completá los campos obligatorios.',
       fieldErrors: parsed.error.flatten().fieldErrors,
+      values: raw,
     }
   }
 
   const data = parsed.data
+  const coach = data.coach || null
+  let savedToDb = false
+  let emailSent = false
 
   function esc(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   }
 
+  // El subject del email interpola nombre/servicio/coach tal cual los mandó el
+  // usuario del form público — sin esto, un \r\n dentro de esos campos podría
+  // inyectar headers de email si la API de Resend no los sanitiza internamente
+  // (defensa en profundidad, header injection).
+  function stripHeaderInjection(s: string): string {
+    return s.replace(/[\r\n]+/g, ' ').trim()
+  }
+
   // Guardar el lead en la base
-  let leadSaved = false
   try {
     await db.insert(contactLeads).values({
       nombre: data.nombre,
@@ -64,23 +123,22 @@ export async function submitContact(
       servicio: data.servicio || null,
       objetivo: data.objetivo || null,
       mensaje: data.mensaje,
-      coach: coach || null,
+      coach,
     })
-    leadSaved = true
+    savedToDb = true
   } catch (err) {
-    // No fallamos: igual intentamos mandar el email
+    // No cortamos: intentamos igual el email.
     console.error('DB error:', err)
   }
 
   // Email vía Resend (sendMail aplica el sandbox de correo en APP_ENV=test)
-  let mailSent = false
   try {
     const toEmail = process.env.COMPANY_EMAIL || 'gc2entrenamiento@gmail.com'
 
-    mailSent = await sendMail({
+    emailSent = await sendMail({
       to: toEmail,
       replyTo: data.email,
-      subject: `Nueva Consulta${coach ? ` — ${coach}` : ''}: ${data.servicio || 'Consulta General'} — ${data.nombre}`,
+      subject: `Nueva Consulta${coach ? ` — ${stripHeaderInjection(coach)}` : ''}: ${stripHeaderInjection(data.servicio || 'Consulta General')} — ${stripHeaderInjection(data.nombre)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #f8fafc;">
           <div style="background: #0A1628; padding: 24px; border-radius: 12px; margin-bottom: 24px;">
@@ -104,14 +162,14 @@ export async function submitContact(
     })
   } catch (err) {
     console.error('Mail error:', err)
-    // Falló el email pero la base pudo guardar: igual devolvemos success
   }
 
-  // Si no se guardó ni se envió nada, no le decimos al usuario que salió bien.
-  if (!leadSaved && !mailSent) {
+  // Si no se guardó ni se envió, el lead se perdería sin que nadie se entere: avisamos al usuario.
+  if (!savedToDb && !emailSent) {
     return {
       success: false,
-      error: 'No pudimos enviar tu consulta. Intentá de nuevo en unos minutos o escribinos por WhatsApp.',
+      error: 'No pudimos enviar tu consulta. Probá de nuevo en unos minutos o escribinos por WhatsApp.',
+      values: raw,
     }
   }
 

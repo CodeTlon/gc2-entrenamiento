@@ -1,7 +1,10 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 import ScrollReveal from '@/components/ui/ScrollReveal'
 import type { AboutSettings } from '@/lib/content'
 import { focalImageProps } from '@/lib/image-focal'
+import { sanitizeBasicHtml } from '@/lib/sanitize'
 
 export default function About({ data }: { data: AboutSettings }) {
   const fp = focalImageProps(data.image)
@@ -78,9 +81,16 @@ export default function About({ data }: { data: AboutSettings }) {
           </h2>
           <div className="space-y-4 text-white/65 leading-relaxed font-light text-[15px] md:text-base">
             {data.paragraphs.map((p, i) => (
-              <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
+              <p key={i} dangerouslySetInnerHTML={{ __html: sanitizeBasicHtml(p) }} />
             ))}
           </div>
+          <Link
+            href="/planes"
+            className="group inline-flex items-center gap-2 mt-6 text-accent text-sm font-body font-bold uppercase tracking-widest hover:gap-3 active:scale-[0.98] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
+          >
+            Ver planes de entrenamiento
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </ScrollReveal>
       </div>
     </section>

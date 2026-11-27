@@ -2,8 +2,6 @@ import type { Metadata } from 'next'
 import type { Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
-import GoogleAnalytics from '@/components/ui/GoogleAnalytics'
-import CookieConsent from '@/components/ui/CookieConsent'
 
 // Fuentes autoalojadas (src/app/fonts, subset latin): el build no depende de Google Fonts. Ver FONTS.md.
 const barlow = localFont({
@@ -28,7 +26,7 @@ const barlowCondensed = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gc2entrenamientoderesistencia.com.ar',
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.gc2entrenamientoderesistencia.com.ar',
   ),
   icons: {
     icon: [
@@ -44,7 +42,7 @@ export const metadata: Metadata = {
   description:
     'Equipo de entrenamiento para corredores, duatletas y triatletas. Planificación individualizada y grupal, presencial y a distancia. Córdoba, Argentina.',
   alternates: {
-    canonical: 'https://gc2entrenamientoderesistencia.com.ar',
+    canonical: 'https://www.gc2entrenamientoderesistencia.com.ar',
   },
   keywords: [
     'entrenamiento running Córdoba',
@@ -60,7 +58,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'es_AR',
-    url: 'https://gc2entrenamientoderesistencia.com.ar',
+    url: 'https://www.gc2entrenamientoderesistencia.com.ar',
     siteName: 'GC² Entrenamiento de la Resistencia',
     title: 'GC² Entrenamiento de la Resistencia | Córdoba',
     description:
@@ -98,7 +96,7 @@ const schemaOrg = {
   name: 'GC² Entrenamiento de la Resistencia',
   description:
     'Equipo de entrenamiento para corredores, duatletas y triatletas. Planificación individualizada y grupal, presencial y a distancia.',
-  url: 'https://gc2entrenamientoderesistencia.com.ar',
+  url: 'https://www.gc2entrenamientoderesistencia.com.ar',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Córdoba',
@@ -131,11 +129,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-blue-900 text-white font-body">
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-        )}
         {children}
-        <CookieConsent />
       </body>
     </html>
   )

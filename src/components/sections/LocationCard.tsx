@@ -37,7 +37,7 @@ export default function LocationCard({ loc }: { loc: LocationItem }) {
         <button
           onClick={toggle}
           disabled={!hasMap}
-          className="mt-auto flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+          className="mt-auto flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:active:scale-100"
           style={
             !hasMap
               ? {
