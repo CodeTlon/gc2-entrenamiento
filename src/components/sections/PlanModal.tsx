@@ -24,7 +24,7 @@ export default function PlanModal({ plan, onClose }: Props) {
           <p className="text-[11px] font-body font-bold tracking-[3px] uppercase text-accent/70 mb-2">
             Plan
           </p>
-          <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl uppercase mb-5 leading-tight">
+          <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl md:leading-[var(--text-4xl--line-height)] uppercase mb-5 leading-tight">
             {plan.name_display ?? plan.name}
           </h3>
 

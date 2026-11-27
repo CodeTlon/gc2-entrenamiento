@@ -49,7 +49,7 @@ export default function CoachModal({ coach, onClose }: Props) {
             >
               {coach.specialty}
             </p>
-            <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl uppercase mb-5 leading-tight">
+            <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl md:leading-[var(--text-4xl--line-height)] uppercase mb-5 leading-tight">
               {coach.name}
             </h3>
 
@@ -104,7 +104,7 @@ export default function CoachModal({ coach, onClose }: Props) {
                   href={coach.ig_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-body font-semibold text-accent transition-all hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-body font-semibold text-accent transition-all hover:-translate-y-0.5 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                   style={{
                     background: 'rgba(56,189,248,0.08)',
                     border: '1px solid rgba(56,189,248,0.3)',

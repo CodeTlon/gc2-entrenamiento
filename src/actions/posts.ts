@@ -85,6 +85,7 @@ export async function createPostAction(_prev: PostState, formData: FormData): Pr
 
     revalidatePath('/blog')
     revalidatePath(`/blog/${slug}`)
+    revalidatePath('/sitemap.xml')
   } catch (e) {
     return { error: errorMessage(e) }
   }
@@ -102,11 +103,12 @@ export async function updatePostAction(
     if (!data.title) return { error: 'El título es obligatorio.' }
 
     const [existing] = await db
-      .select({ slug: posts.slug, title: posts.title, content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
+      .select({ slug: posts.slug, title: posts.title, published: posts.published, content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
       .from(posts).where(eq(posts.id, id)).limit(1)
     if (!existing) return { error: 'El artículo no existe.' }
     let slug = existing.slug
-    if (existing.title !== data.title) {
+    // Una vez publicado el slug queda fijo: cambiarlo rompía la URL vieja (404, backlinks, indexación).
+    if (!existing.published && existing.title !== data.title) {
       const baseSlug = slugify(data.title, { lower: true, strict: true })
       slug = await uniqueSlug(baseSlug, id)
     }
@@ -128,6 +130,8 @@ export async function updatePostAction(
     await liberarArchivos(existing.content, existing.cover_image, existing.video_url, existing.attachment_url)
     revalidatePath('/blog')
     if (slug) revalidatePath(`/blog/${slug}`)
+    if (existing.slug !== slug) revalidatePath(`/blog/${existing.slug}`)
+    revalidatePath('/sitemap.xml')
   } catch (e) {
     return { error: errorMessage(e) }
   }
@@ -139,12 +143,14 @@ export async function deletePostAction(formData: FormData) {
   if (!id) return
   await requireUser()
   const [antes] = await db
-    .select({ content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
+    .select({ slug: posts.slug, content: posts.content, cover_image: posts.cover_image, video_url: posts.video_url, attachment_url: posts.attachment_url })
     .from(posts)
     .where(eq(posts.id, id))
     .limit(1)
   await db.delete(posts).where(eq(posts.id, id))
   if (antes) await liberarArchivos(antes.content, antes.cover_image, antes.video_url, antes.attachment_url)
   revalidatePath('/blog')
+  if (antes?.slug) revalidatePath(`/blog/${antes.slug}`)
+  revalidatePath('/sitemap.xml')
   redirect('/dashboard/blog')
 }

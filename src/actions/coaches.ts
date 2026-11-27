@@ -61,7 +61,7 @@ export async function createCoachAction(_prev: CoachState, formData: FormData): 
     const slug = slugify(data.name, { lower: true, strict: true })
     await db.insert(coaches).values({ ...data, slug })
 
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
   } catch (e) {
     return { error: errorMessage(e) }
   }
@@ -85,7 +85,7 @@ export async function updateCoachAction(
     await db.update(coaches).set({ ...data, updated_at: new Date().toISOString() }).where(eq(coaches.id, id))
     await liberarArchivos(antes?.photo_url)
 
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
   } catch (e) {
     return { error: errorMessage(e) }
   }

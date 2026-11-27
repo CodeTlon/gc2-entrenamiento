@@ -37,7 +37,7 @@ function ArticleCard({ post }: { post: PostSummary }) {
     <Link
       href={`/blog/${post.slug}`}
       // Mobile: apilado vertical. sm+: fila horizontal de altura fija
-      className="group flex flex-col sm:flex-row sm:min-h-44 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5"
+      className="group flex flex-col sm:flex-row sm:min-h-44 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
       style={{ background: '#0D2247', border: '1px solid rgba(255,255,255,0.07)' }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(56,189,248,0.2)' }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.07)' }}
@@ -167,7 +167,7 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
           {search && (
             <button
               onClick={() => setSearch('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
             >
               <X size={14} />
             </button>
@@ -182,7 +182,7 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setActiveCategory('')}
-              className="px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+              className="px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
               style={{
                 background: !activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${!activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -197,7 +197,7 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(active ? '' : cat.slug)}
-                  className="px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+                  className="px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                   style={{
                     background: active ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                     border: `1px solid ${active ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -221,7 +221,7 @@ function Sidebar({ posts, categories, activeCategory, setActiveCategory, search,
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="flex gap-3 group"
+                className="flex gap-3 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
               >
                 {post.cover_image && (() => {
                   const fp = focalImageProps(post.cover_image)
@@ -302,7 +302,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white active:scale-[0.98] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded"
               >
                 <X size={14} />
               </button>
@@ -313,7 +313,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
             <div className="flex gap-2 mt-3 overflow-x-auto pb-1 scrollbar-none">
               <button
                 onClick={() => setActiveCategory('')}
-                className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+                className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 style={{
                   background: !activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                   border: `1px solid ${!activeCategory ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -328,7 +328,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
                   <button
                     key={cat.id}
                     onClick={() => setActiveCategory(active ? '' : cat.slug)}
-                    className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200"
+                    className="shrink-0 px-3 py-1.5 rounded text-xs font-body font-semibold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                     style={{
                       background: active ? '#38BDF8' : 'rgba(255,255,255,0.05)',
                       border: `1px solid ${active ? '#38BDF8' : 'rgba(255,255,255,0.1)'}`,
@@ -347,7 +347,7 @@ export default function BlogList({ posts, categories }: { posts: PostSummary[]; 
           <div className="py-20 text-center">
             <p className="text-white/40 text-sm">No se encontraron artículos{search ? ` para "${search}"` : ''}.</p>
             {search && (
-              <button onClick={() => setSearch('')} className="text-accent text-xs mt-2 hover:underline">
+              <button onClick={() => setSearch('')} className="text-accent text-xs mt-2 hover:underline active:scale-[0.98] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded">
                 Limpiar búsqueda
               </button>
             )}
@@ -411,7 +411,8 @@ function Pagination({
       <button
         onClick={() => onChange(page - 1)}
         disabled={page === 1}
-        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-label="Página anterior"
+        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-[0.98] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-30 disabled:cursor-not-allowed"
         style={{ background: '#0D2247', border: '1px solid #102E66' }}
       >
         <ChevronLeft size={16} className="text-white/70" />
@@ -426,7 +427,9 @@ function Pagination({
           <button
             key={p}
             onClick={() => onChange(p as number)}
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-body font-semibold transition-all"
+            aria-label={`Ir a la página ${p}`}
+            aria-current={p === page ? 'page' : undefined}
+            className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-body font-semibold transition-all active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             style={{
               background: p === page ? '#38BDF8' : '#0D2247',
               border: `1px solid ${p === page ? '#38BDF8' : '#102E66'}`,
@@ -441,7 +444,8 @@ function Pagination({
       <button
         onClick={() => onChange(page + 1)}
         disabled={page === totalPages}
-        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        aria-label="Página siguiente"
+        className="w-9 h-9 rounded-lg flex items-center justify-center transition-all active:scale-[0.98] disabled:active:scale-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-30 disabled:cursor-not-allowed"
         style={{ background: '#0D2247', border: '1px solid #102E66' }}
       >
         <ChevronRight size={16} className="text-white/70" />

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne } from 'drizzle-orm'
 import { db } from '@/lib/db'
 import { categories, coaches, postAuthors, postCategories, posts } from '@/db/schema'
 
@@ -84,6 +84,16 @@ export async function getPublishedPostBySlug(slug: string) {
     .orderBy(asc(coaches.display_order))
 
   return { ...post, post_authors: authors.map((a) => ({ coaches: a.coach })) }
+}
+
+/** Últimos posts publicados distintos del actual (bloque "Seguí leyendo" del detalle). */
+export async function listRelatedPosts(currentSlug: string, limit: number) {
+  return db
+    .select({ title: posts.title, slug: posts.slug, cover_image: posts.cover_image })
+    .from(posts)
+    .where(and(eq(posts.published, true), ne(posts.slug, currentSlug)))
+    .orderBy(desc(posts.created_at))
+    .limit(limit)
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i

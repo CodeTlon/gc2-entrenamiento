@@ -66,7 +66,7 @@ export default async function DashboardHome() {
         <p className="text-accent text-[11px] font-body font-bold uppercase tracking-[3px] mb-1">
           Panel
         </p>
-        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl uppercase leading-tight">
+        <h1 className="font-heading font-extrabold text-white text-2xl md:text-3xl md:leading-[var(--text-3xl--line-height)] uppercase leading-tight">
           Bienvenidos
         </h1>
         <p className="text-white/40 text-sm mt-1">
