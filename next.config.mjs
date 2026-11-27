@@ -32,6 +32,13 @@ const nextConfig = {
       { source: '/index.php', destination: '/', permanent: true },
       { source: '/contacto.php', destination: '/contacto', permanent: true },
       { source: '/planes.php', destination: '/planes', permanent: true },
+      // El dominio sin www redirige a www (antes lo hacía Coolify en el recurso viejo; en compose no aplica).
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'gc2entrenamientoderesistencia.com.ar' }],
+        destination: 'https://www.gc2entrenamientoderesistencia.com.ar/:path*',
+        permanent: false,
+      },
     ]
   },
   async headers() {
