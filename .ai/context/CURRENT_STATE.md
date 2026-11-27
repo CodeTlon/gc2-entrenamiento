@@ -1,5 +1,16 @@
 # CURRENT_STATE
 
+**Corte a backend propio, 2026-11-27 (hecho):** producción corre en Coolify `gc2-prod` (rama `main`, compose con Postgres propio, Better Auth y archivos en volumen) en https://www.gc2entrenamientoderesistencia.com.ar. Ya no usa Supabase.
+- **Datos:** migrados dentro del contenedor (`scripts/migracion/en-contenedor.mjs`), con reimport `corte-2` en el cambio de dominio. Paridad OK: 1 categoría, 4 coaches, 6 leads, 3 categorías de planes, 5 planes, 8 settings, 2 usuarios con su hash bcrypt y 33 archivos con sha256 idéntico.
+- **Hotfixes de main:** los de la auditoría 2026-11-24 y post-Coolify, portados a la versión nueva antes del corte (merge de main en dev).
+- **Aspecto:** comparado contra el sitio anterior (7 páginas, desktop y mobile), con diferencias de píxeles de 0,05 % o menos; se igualaron las Barlow de Google y los line-height de Tailwind 3.
+- **Dominio:** la raíz redirige a `www` con 307 desde `next.config.mjs`, igual que antes.
+- **Recurso viejo:** `gc2-web` (Dockerfile + Supabase) quedó detenido, sin dominio propio y sin auto-deploy, como rollback.
+- **Test:** `gc2-test` (rama `test`, https://gc2-test.51.91.253.54.sslip.io, `APP_ENV=test`, leads anonimizados, sin Resend).
+- **Supabase:** vivo como respaldo 1 a 2 semanas y después se da de baja.
+- **Sesiones:** los 2 usuarios del panel tienen que volver a iniciar sesión con su contraseña de siempre.
+- **Pendiente obligatorio:** backups a B2 con prueba de restauración.
+
 **Actualizacion 2026-11-26:** Next 16.4.2 → 16.4.6 por advisories de seguridad (rama `feature/dev1-next-16-4-6`, promovida a `dev` y `test`; `main` sin tocar). Verificado: tsc, lint (5 avisos, los mismos que en `dev`), `test:db` (16 verificaciones) y build; `npm audit --omit=dev` en 0. E2E en la CI de `test`.
 
 Estado al **2026-10-16** (rama `feature/dev2-estandar-2026`, integrada en `dev` y `test` al cerrar la sesion). El detalle del 2026-10-15 sigue abajo.
