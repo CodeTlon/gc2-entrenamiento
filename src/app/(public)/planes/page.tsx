@@ -96,7 +96,7 @@ export default async function PlanesPage() {
       {/* Intro: intención de búsqueda + TL:DR + CTA */}
       <section className="pt-section pb-0 bg-blue-900">
         <div className="container max-w-3xl">
-          <p className="text-white/65 text-base md:text-lg leading-relaxed mb-6">
+          <p className="text-white/65 text-base md:text-lg md:leading-[var(--text-lg--line-height)] leading-relaxed mb-6">
             Si buscás un <strong className="text-white">plan de entrenamiento para running, duatlón o triatlón en Córdoba</strong>,
             acá vas a encontrar opciones individuales y grupales, presenciales y a distancia, para
             todos los niveles: desde quien corre sus primeros kilómetros hasta quien compite en larga distancia.
@@ -142,7 +142,7 @@ export default async function PlanesPage() {
                 className="group rounded-xl p-5 md:p-6"
                 style={{ background: '#0D2247', border: '1px solid #102E66' }}
               >
-                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none font-heading font-bold text-white text-base md:text-lg leading-snug rounded-md transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none font-heading font-bold text-white text-base md:text-lg md:leading-[var(--text-lg--line-height)] leading-snug rounded-md transition-colors hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60">
                   {item.question}
                   <span className="flex-shrink-0 text-accent text-xl leading-none transition-transform duration-300 group-open:rotate-45">
                     +

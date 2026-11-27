@@ -49,7 +49,7 @@ export default function CoachModal({ coach, onClose }: Props) {
             >
               {coach.specialty}
             </p>
-            <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl uppercase mb-5 leading-tight">
+            <h3 className="font-heading font-extrabold text-white text-3xl md:text-4xl md:leading-[var(--text-4xl--line-height)] uppercase mb-5 leading-tight">
               {coach.name}
             </h3>
 

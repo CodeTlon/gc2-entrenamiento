@@ -50,7 +50,7 @@ export default async function BlogPage() {
       {/* Content */}
       <section className="py-section bg-blue-900">
         <div className="container">
-          <p className="text-white/60 text-base md:text-lg leading-relaxed max-w-3xl mb-4">
+          <p className="text-white/60 text-base md:text-lg md:leading-[var(--text-lg--line-height)] leading-relaxed max-w-3xl mb-4">
             Guías y consejos prácticos sobre entrenamiento de running, duatlón y triatlón: técnica de
             carrera, planificación de cargas, nutrición y prevención de lesiones, escritos por los
             coaches de GC² Entrenamiento en Córdoba.

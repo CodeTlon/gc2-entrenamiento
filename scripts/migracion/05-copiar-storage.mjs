@@ -9,7 +9,7 @@
 // Cargar en el volumen:  tar -C out/storage -cf - . | docker exec -i <contenedor-app> tar -C /data/storage -xf -
 import { writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
-import { env, need, ro, out } from './lib-supabase.mjs'
+import { env, need, ro, out, cerrar } from './lib-supabase.mjs'
 
 need('SUPABASE_URL')
 const APPLY = process.argv.includes('--yes')
@@ -88,3 +88,4 @@ for (const o of objetos) {
 console.log(`Descargados ${ok}, ya existían ${salteados}, fallidos ${fallos.length}`)
 if (fallos.length) { writeFileSync(resolve(out, 'storage-fallos.txt'), fallos.join('\n')); console.error('Ver out/storage-fallos.txt'); process.exit(1) }
 console.log(`Listo en ${destino}`)
+await cerrar()
